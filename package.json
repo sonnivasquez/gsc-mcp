@@ -1,0 +1,69 @@
+{
+  "name": "@sonnivasquez/gsc-mcp",
+  "version": "1.0.0",
+  "packageManager": "bun@1.4.2",
+  "description": "Local Google Search Console MCP server, read-only by default (29 tools: 24 canonical gsc_* plus 5 legacy). GSC_ACCESS_MODE=full enables three Google write operations; legacy access settings remain compatible. OAuth, service accounts, Bun and Node.",
+  "main": "dist/index.js",
+  "bin": {
+    "gsc": "dist/index.js",
+    "gsc-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "bunx --bun tsc",
+    "build:node": "node ./node_modules/typescript/bin/tsc",
+    "typecheck": "bunx --bun tsc --noEmit",
+    "typecheck:node": "node ./node_modules/typescript/bin/tsc --noEmit",
+    "test": "bun run build && bun --test test",
+    "test:node": "npm run build:node && node --test",
+    "test:mcp": "scripts/test-mcp.sh",
+    "test:package": "scripts/test-package.sh",
+    "start": "bun --bun dist/index.js",
+    "start:node": "node dist/index.js",
+    "dev": "bunx --bun tsc --watch",
+    "dev:node": "node ./node_modules/typescript/bin/tsc --watch"
+  },
+  "keywords": [
+    "mcp",
+    "google-search-console",
+    "seo",
+    "claude",
+    "gsc"
+  ],
+  "author": "Sonni Vasquez",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sonnivasquez/gsc-mcp.git"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "exifr": "^7.1.3",
+    "googleapis": "^176.0.0",
+    "image-size": "^2.0.2",
+    "node-html-parser": "^9.0.1",
+    "open": "^10.1.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "PRIVACY.md",
+    "ROADMAP.md",
+    "docs/tools.md",
+    "docs/quickstart.md",
+    "docs/quickstart.es.md",
+    "LICENSE",
+    "NOTICE",
+    "CHANGELOG.md",
+    "scripts/test-mcp.sh",
+    "skills/google-search-console-mcp/**/*"
+  ],
+  "engines": {
+    "node": ">=22",
+    "bun": ">=1"
+  }
+}

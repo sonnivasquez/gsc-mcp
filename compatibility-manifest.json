@@ -1,0 +1,290 @@
+{
+  "schemaVersion": "1.0",
+  "base": {
+    "repo": "original Apache-2.0 base project (see NOTICE)",
+    "revision": "426a7c7653b27e595893ed34dc46e329388d08e7",
+    "version": "2.5.1",
+    "capturedAt": "2026-09-21",
+    "captureMethod": "tools/list against dist/index.js built from working branch, no credentials",
+    "liveToolCount": 29
+  },
+  "propertySelector": {
+    "site_url_required": 25,
+    "site_urls_list": [
+      "multi_site_dashboard"
+    ],
+    "no_selector": [
+      "gsc_submit_url",
+      "gsc_submit_batch",
+      "gsc_image_page_audit"
+    ]
+  },
+  "capabilities": [
+    {
+      "id": "U01",
+      "legacy": "site_snapshot",
+      "decision": "keep",
+      "target": "T04+T05",
+      "status": "implemented"
+    },
+    {
+      "id": "U02",
+      "legacy": "quick_wins",
+      "decision": "keep",
+      "target": "T11:striking_distance",
+      "status": "implemented"
+    },
+    {
+      "id": "U03",
+      "legacy": "ctr_opportunities",
+      "decision": "keep",
+      "target": "T11:low_ctr",
+      "status": "implemented"
+    },
+    {
+      "id": "U04",
+      "legacy": "traffic_drops",
+      "decision": "keep_harden",
+      "target": "T15",
+      "status": "intentional_fix"
+    },
+    {
+      "id": "U05",
+      "legacy": "content_gaps",
+      "decision": "keep_reframe",
+      "target": "T18",
+      "status": "intentional_fix"
+    },
+    {
+      "id": "U06",
+      "legacy": "cannibalization_check",
+      "decision": "keep_harden",
+      "target": "T12",
+      "status": "intentional_fix"
+    },
+    {
+      "id": "U07",
+      "legacy": "content_decay",
+      "decision": "keep",
+      "target": "T16",
+      "status": "implemented"
+    },
+    {
+      "id": "U08",
+      "legacy": "topic_cluster_performance",
+      "decision": "keep",
+      "target": "T13",
+      "status": "implemented"
+    },
+    {
+      "id": "U09",
+      "legacy": "ctr_vs_benchmark",
+      "decision": "keep_methodology",
+      "target": "T11:ctr_benchmark",
+      "status": "intentional_fix"
+    },
+    {
+      "id": "U10",
+      "legacy": "inspect_url",
+      "decision": "keep_extend",
+      "target": "T08",
+      "status": "implemented"
+    },
+    {
+      "id": "U11",
+      "legacy": "check_alerts",
+      "decision": "keep",
+      "target": "T17",
+      "status": "implemented"
+    },
+    {
+      "id": "U12",
+      "legacy": "content_recommendations",
+      "decision": "keep_scope",
+      "target": "T19",
+      "status": "intentional_fix"
+    },
+    {
+      "id": "U13",
+      "legacy": "advanced_search_analytics",
+      "decision": "keep",
+      "target": "T03",
+      "status": "implemented"
+    },
+    {
+      "id": "U14",
+      "legacy": "generate_report",
+      "decision": "keep",
+      "target": "T21+T14",
+      "status": "implemented"
+    },
+    {
+      "id": "U15",
+      "legacy": "multi_site_dashboard",
+      "decision": "keep_local_only",
+      "target": "T20",
+      "status": "implemented"
+    },
+    {
+      "id": "U16",
+      "legacy": "image_keyword_overview",
+      "decision": "keep",
+      "target": "T03:type=image",
+      "status": "implemented"
+    },
+    {
+      "id": "U17",
+      "legacy": "image_search_quick_wins",
+      "decision": "keep",
+      "target": "T11:type=image",
+      "status": "implemented"
+    },
+    {
+      "id": "U18",
+      "legacy": "compare_web_vs_image",
+      "decision": "keep",
+      "target": "T23",
+      "status": "implemented"
+    },
+    {
+      "id": "U19",
+      "legacy": "image_pages_overview",
+      "decision": "keep",
+      "target": "T03:type=image,page",
+      "status": "implemented"
+    },
+    {
+      "id": "U20",
+      "legacy": "image_keyword_trends",
+      "decision": "keep",
+      "target": "T05:type=image",
+      "status": "implemented"
+    },
+    {
+      "id": "U21",
+      "legacy": "image_impressions_no_clicks",
+      "decision": "keep",
+      "target": "T11:low_clicks",
+      "status": "implemented"
+    },
+    {
+      "id": "U22",
+      "legacy": "image_content_decay",
+      "decision": "keep",
+      "target": "T16:type=image",
+      "status": "implemented"
+    },
+    {
+      "id": "U23",
+      "legacy": "image_page_audit",
+      "decision": "deferred_P2-A",
+      "target": null,
+      "status": "deferred"
+    },
+    {
+      "id": "U24",
+      "legacy": "genai_conversation_queries",
+      "decision": "deferred_P2-B",
+      "target": null,
+      "status": "deferred"
+    },
+    {
+      "id": "U25",
+      "legacy": "submit_url",
+      "decision": "excluded_readonly",
+      "target": null,
+      "status": "excluded_readonly"
+    },
+    {
+      "id": "U26",
+      "legacy": "submit_batch",
+      "decision": "excluded_readonly",
+      "target": null,
+      "status": "excluded_readonly"
+    },
+    {
+      "id": "U27",
+      "legacy": "submit_sitemap",
+      "decision": "excluded_readonly",
+      "target": null,
+      "status": "excluded_readonly"
+    },
+    {
+      "id": "U28",
+      "legacy": "list_sitemaps",
+      "decision": "keep",
+      "target": "T09",
+      "status": "implemented"
+    },
+    {
+      "id": "U29",
+      "legacy": "verify_claim",
+      "decision": "keep_improve",
+      "target": "T22",
+      "status": "implemented"
+    }
+  ],
+  "publicRegistry": {
+    "version": "0.1.0",
+    "canonical": [
+      "gsc_capabilities",
+      "gsc_list_sites",
+      "gsc_search_analytics",
+      "gsc_performance_overview",
+      "gsc_compare_periods",
+      "gsc_page_queries",
+      "gsc_query_pages",
+      "gsc_inspect_urls",
+      "gsc_list_sitemaps",
+      "gsc_get_dataset",
+      "gsc_find_opportunities",
+      "gsc_detect_cannibalization",
+      "gsc_analyze_segments",
+      "gsc_export_dataset",
+      "gsc_analyze_traffic_drop",
+      "gsc_content_decay",
+      "gsc_check_alerts",
+      "gsc_content_candidates",
+      "gsc_content_recommendations",
+      "gsc_multi_site_overview",
+      "gsc_generate_report",
+      "gsc_verify_claim",
+      "gsc_compare_web_image",
+      "gsc_check_update_impact"
+    ],
+    "legacyKept": [
+      "gsc_submit_url",
+      "gsc_submit_batch",
+      "gsc_submit_sitemap",
+      "gsc_genai_conversation_queries",
+      "gsc_image_page_audit"
+    ],
+    "retiredLegacy": [
+      "quick_wins",
+      "ctr_opportunities",
+      "traffic_drops",
+      "content_gaps",
+      "site_snapshot",
+      "inspect_url",
+      "cannibalization_check",
+      "content_decay",
+      "topic_cluster_performance",
+      "ctr_vs_benchmark",
+      "verify_claim",
+      "advanced_search_analytics",
+      "check_alerts",
+      "content_recommendations",
+      "generate_report",
+      "multi_site_dashboard",
+      "list_sitemaps",
+      "image_keyword_overview",
+      "image_search_quick_wins",
+      "compare_web_vs_image",
+      "image_pages_overview",
+      "image_keyword_trends",
+      "image_impressions_no_clicks",
+      "image_content_decay"
+    ],
+    "note": "Capabilities of retired names live on in canonical tools (see capabilities[].target). No alias profile is published in 0.1.0."
+  }
+}

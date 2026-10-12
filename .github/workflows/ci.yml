@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Cheap Linux detector: classifies which areas changed so MCP and Web jobs
+  # run only when their inputs changed. Skipped jobs report as skipped, not
+  # failed: the workflow stays green when nothing relevant changed.
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+    outputs:
+      mcp_changed: ${{ steps.detect.outputs.mcp_changed }}
+      web_changed: ${{ steps.detect.outputs.web_changed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - id: detect
+        name: Detect changed areas
+        run: node scripts/ci-changed.mjs
+  node:
+    name: Node
+    needs: changes
+    if: needs.changes.outputs.mcp_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Typecheck
+        run: npm run typecheck:node
+      - name: Release workflow validation
+        run: go run github.com/rhysd/actionlint/cmd/actionlint@v1.7.12 .github/workflows/release-stage.yml .github/workflows/release-finalize.yml
+      - name: Tests
+        run: npm run test:node
+      - name: Tests with Spanish locale
+        env:
+          LC_ALL: es_PE.UTF-8
+          LC_MESSAGES: es_PE.UTF-8
+          LANG: es_PE.UTF-8
+        run: node --test
+      - name: MCP smoke (node)
+        run: sh scripts/test-mcp.sh dist/index.js node
+
+  bun:
+    name: Bun
+    needs: changes
+    if: needs.changes.outputs.mcp_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.2
+      - name: Install
+        run: bun install --frozen-lockfile
+      - name: Typecheck
+        run: bun run typecheck
+      - name: Tests
+        run: bun run test
+      - name: Tests with Spanish locale
+        env:
+          LC_ALL: es_PE.UTF-8
+          LC_MESSAGES: es_PE.UTF-8
+          LANG: es_PE.UTF-8
+        run: bun test ./test
+      - name: MCP smoke (bun)
+        run: sh scripts/test-mcp.sh dist/index.js bun
+  # The marketing site under web/ is a separate package with its own lockfile,
+  # so the root install above does not cover it. Without this job nothing
+  # typechecked or built web/ on CI: changes to it reached production
+  # unverified, which is how the deployed Worker drifted ahead of the repo.
+  web:
+    name: Web
+    needs: changes
+    if: needs.changes.outputs.web_changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Install
+        # `cd web` rather than `--prefix web`: npm ci resolves its lockfile from
+        # the current directory and ignores --prefix for that lookup, so a
+        # prefix-scoped install in web/ dies with EUSAGE. cd also keeps every
+        # later `npm run` bound to web/package.json instead of walking up to
+        # the root one, which would install the MCP server and go green anyway.
+        run: cd web && npm ci
+      - name: Typecheck
+        run: cd web && npm run typecheck:node
+      - name: Design tokens in sync
+        run: cd web && npm run design:check:node
+      - name: Build
+        run: cd web && npm run build:node
+      - name: SEO assets present in build output
+        # These ship from web/public/. If one goes missing the site silently
+        # loses its social preview, robots or sitemap on the next deploy.
+        run: |
+          cd web
+          for asset in og.png robots.txt sitemap.xml favicon.svg install.sh; do
+            if [ ! -f "dist/client/$asset" ]; then
+              echo "::error::missing web/dist/client/$asset"
+              exit 1
+            fi
+            echo "ok dist/client/$asset"
+          done
+      - name: Generated sitemap is committed
+        # build regenerates sitemap.xml, so a stale committed copy shows up as
+        # a diff here. Sitemap freshness is what keeps lastmod honest.
+        run: |
+          if [ -n "$(git status --porcelain web/public/sitemap.xml)" ]; then
+            echo "::error::web/public/sitemap.xml is out of date; run 'cd web && npm run sitemap' and commit it"
+            git --no-pager diff -- web/public/sitemap.xml
+            exit 1
+          fi
+          echo "sitemap.xml up to date"
+

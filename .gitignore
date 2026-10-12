@@ -1,0 +1,58 @@
+node_modules/
+.env
+*.json
+!package.json
+!compatibility-manifest.json
+!fixtures/*.json
+!package-lock.json
+!tsconfig.json
+*.mcpb
+!manifest.json
+# Public metadata and development configs
+!/server.json
+!/glama.json
+!/web/components.json
+!/web/.impeccable/live/config.json
+demo-mock/
+probe-platform-properties.mjs
+# Local AI runtime state and private verification backups
+.atl/
+
+# Generated design audits/captures stay local; retain the build inputs.
+.impeccable/*
+!.impeccable/config.json
+!.impeccable/design.json
+
+# Legacy screenshots may contain real property data; keep only the generic diagram.
+screenshots/*
+!screenshots/google search console MCP.png
+
+# Private development context; user-facing docs remain versioned.
+/docs/internal/
+
+# Local environment files; review templates before committing.
+.env.*
+!.env.example
+!.env.*.example
+.DS_Store
+/.codegraph/
+/.engram/
+/.gsc-mcp/
+/oauth-token.json
+/exports/
+/coverage/
+/web/coverage/
+/*.log
+/web/*.log
+npm-debug.log*
+*.tsbuildinfo
+/*.tgz
+
+# Operational records live in the separate private repository.
+/docs/verification/
+/docs/promotion-directory-pack/
+/plans/
+/odd/tasks/
+/GSC_MCP_LOCAL_ESPECIFICACION_AGENTE.md
+/gsc-mcp-build-spec.md
+/article.md

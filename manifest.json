@@ -1,0 +1,66 @@
+{
+  "manifest_version": "0.2",
+  "name": "sonnivasquez-gsc-mcp",
+  "display_name": "GSC MCP local",
+  "version": "1.0.0",
+  "description": "Local Google Search Console MCP server, read-only by default (29 tools: 24 canonical plus 5 legacy). Local and private.",
+  "long_description": "A local Google Search Console MCP server, read-only by default: 29 tools (24 canonical gsc_* with typed envelopes plus 5 non-equivalent legacy tools). New CLI configuration uses GSC_ACCESS_MODE=readonly|full. This bundle preserves its legacy scope setting, which does not enable writes by itself. Apache-2.0 licensed. The MCP server runs locally and queries Google directly. Your MCP client may send tool results to its configured AI provider; review that client's privacy settings.",
+  "author": {
+    "name": "Sonni Vasquez"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "seo",
+    "google-search-console",
+    "gsc",
+    "search-analytics",
+    "image-seo"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/dist/index.js"
+      ],
+      "env": {
+        "GSC_AUTH_MODE": "oauth",
+        "GSC_SCOPES": "${user_config.access_level}",
+        "GSC_SITE_URLS": "${user_config.site_urls}",
+        "GSC_OAUTH_SECRETS_FILE": "${user_config.secrets_file}"
+      }
+    }
+  },
+  "user_config": {
+    "site_urls": {
+      "type": "string",
+      "title": "Allowed Search Console properties",
+      "description": "Comma-separated exact Search Console property identifiers allowed for property-scoped tools. Configure authorized properties before querying them.",
+      "required": false
+    },
+    "access_level": {
+      "type": "string",
+      "title": "Legacy scope tier",
+      "description": "Legacy compatibility: readonly (recommended) or full. Full requests broader Google scopes but does not enable writes. Existing saved choices retain their behavior; use the CLI access workflow to migrate explicitly.",
+      "default": "readonly",
+      "required": false
+    },
+    "secrets_file": {
+      "type": "file",
+      "title": "Google OAuth client secrets JSON",
+      "description": "Optional path to your own OAuth client JSON. Quick Connect uses the shared read-only OAuth client by default; see the README quick start.",
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=22"
+    }
+  }
+}

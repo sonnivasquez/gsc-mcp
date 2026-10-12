@@ -1,0 +1,125 @@
+/* Normative runtime tokens. DESIGN.md documents roles and usage.
+   @theme owns the shared palette; the homepage adds example-only colors. */
+
+@theme {
+  --font-sans: "Archivo Variable", "Archivo", ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Archivo Variable", "Archivo", ui-sans-serif, system-ui,
+    -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace,
+    SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+
+  --color-paper: #03090f;
+  --color-card: #0b161f;
+  --color-ink: #e8eef4;
+  --color-ink-soft: #a3afbc;
+  --color-ink-faint: #879aac;
+  --color-line: #1b2d3a;
+  --color-line-strong: #304657;
+
+  --color-cobalt: #1da9ef;
+  --color-cobalt-deep: #70cdff;
+  --color-cobalt-wash: #102b3d;
+  --color-ink-on-cobalt: #06121d;
+  --color-bright: #ffffff;
+
+  --color-panel: #08141e;
+  --color-panel-raised: #10222f;
+  --color-panel-line: #233a4b;
+  --color-panel-soft: #a9bfd1;
+  --color-panel-faint: #8fa6b8;
+
+  --color-warn-bg: #0e1c25;
+  --color-warn-line: #304657;
+  --color-warn-ink: #f0cd7e;
+  --color-warn-on-dark: #f0cd7e;
+
+  /* Light focus ring for dark surfaces; tracks cobalt-wash for contrast. */
+  --color-focus-on-dark: #e9ecff;
+}
+
+:root {
+  --ds-action-surface: #d5e6f4;
+  --ds-action-ink: #0a1b29;
+  --ds-action-hover: #bfdced;
+
+  /* Shared geometry: a 4px base, only steps consumed by this interface. */
+  --ds-space-2: 8px;
+  --ds-space-3: 12px;
+  --ds-space-4: 16px;
+  --ds-space-5: 20px;
+  --ds-space-6: 24px;
+  --ds-space-8: 32px;
+  --ds-space-10: 40px;
+  --ds-space-16: 64px;
+  --ds-space-18: 72px;
+  --ds-space-24: 96px;
+
+  --ds-type-caption: 0.75rem;
+  --ds-type-label: 0.875rem;
+  --ds-type-body-sm: 0.875rem;
+  --ds-type-body: 1rem;
+  --ds-type-code: 0.875rem;
+  --ds-type-lead: 1.125rem;
+  --ds-type-title: 1.25rem;
+  --ds-type-heading: 1.5rem;
+  --ds-type-page: clamp(1.75rem, 2.5vw, 2rem);
+  --ds-type-display: clamp(2.25rem, 5vw, 4rem);
+  --ds-leading-body: 1.6;
+  --ds-leading-heading: 1.2;
+  --ds-leading-label: 1.4;
+  --ds-radius-sm: 7px;
+  --ds-radius-md: 9px;
+  --ds-radius-lg: 10px;
+  --ds-tracking-heading: -0.025em;
+  --ds-duration-hover: 180ms;
+}
+
+html:has([data-home-theme]) {
+  color-scheme: dark;
+  --home-prompt-surface: #142735;
+  --home-prompt-ink: #bdcddc;
+  --home-button-surface: var(--ds-action-surface);
+  --home-button-ink: var(--ds-action-ink);
+  --home-button-hover: var(--ds-action-hover);
+  --home-row-surface: #101f2a;
+  --home-data-ink: #c5d8e6;
+  --home-data-muted: #96adc0;
+  --home-tool-ink: #d6e5ef;
+  --home-conversation-label: #d1dfe9;
+  --home-success-surface: #7bdd99;
+  --home-success-ink: #0d2a19;
+  --home-positive: #84dc9f;
+  --home-link-hover: #99dcff;
+  --home-badge-line: #1a3345;
+  --home-badge-ink: #b7d0e2;
+  --home-command-ink: #d7e4ef;
+  --home-copy-hover: #142736;
+  --home-secondary-hover-line: #698599;
+  --home-icon-accent: #a9d1eb;
+  --home-client-ink: #d8e2ea;
+  --home-trust-code: #c7d9e7;
+  --home-hero-glow-a: #072c4838;
+  --home-hero-glow-b: #082a4338;
+  --home-primary-highlight: #ffffff70;
+  --home-chip-surface: #122531;
+  --home-numeral-surface: #112c3e;
+  --home-close-line: #244056;
+  --home-close-surface: #0b1c29;
+  --home-close-mark: #102f43;
+  --home-workbench-shadow: 0 24px 60px -24px rgba(20,19,16,0.55);
+}
+
+html:has([data-home-theme]) {
+  --home-section-pad: var(--ds-space-16);
+  --home-group-gap: var(--ds-space-8);
+  --home-case-gap: var(--ds-space-24);
+}
+
+@media (max-width: 767px) {
+  html:has([data-home-theme]) {
+    --home-section-pad: var(--ds-space-10);
+    --home-group-gap: var(--ds-space-6);
+    --home-case-gap: var(--ds-space-18);
+  }
+}

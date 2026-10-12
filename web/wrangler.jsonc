@@ -1,0 +1,1 @@
+{"$schema": "node_modules/wrangler/config-schema.json", "main": "@tanstack/react-start/server-entry", "compatibility_date": "2026-10-02", "compatibility_flags": ["nodejs_compat"], "name": "gsc-mcp-site", "account_id": "c251cb6323883d1617acb7e823f138c1", "routes": [{"pattern": "gscmcp.dev", "custom_domain": true}]}

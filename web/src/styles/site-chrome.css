@@ -1,0 +1,71 @@
+/* The shared footer layout needs the spacing alias normally set by home. */
+[data-site-chrome-variant="internal"] {
+  --home-group-gap: var(--ds-space-8);
+}
+
+header[data-site-chrome-variant="internal"] {
+  border-bottom-color: var(--color-line);
+  background-color: var(--color-paper);
+}
+
+header[data-site-chrome-variant="internal"] > nav {
+  height: 88px;
+  gap: 36px;
+  max-width: 86rem;
+  padding-inline: 0;
+  width: min(calc(100% - 2rem), 86rem);
+}
+
+/* Shared header adapts to available inline size in rem, so enlarged root
+   fonts enter the compact disclosure layout at the same 768px breakpoint.
+   The header queries its own width; only descendants change. */
+header[data-site-chrome="header"] {
+  container: site-header / inline-size;
+}
+
+header[data-site-chrome="header"] > nav .site-header-nav,
+header[data-site-chrome="header"] > nav .home-header-github,
+header[data-site-chrome="header"] > nav .home-nav-install {
+  display: none;
+}
+
+@container site-header (min-width: 48rem) {
+  header[data-site-chrome="header"] > nav .site-header-nav {
+    display: flex;
+  }
+  header[data-site-chrome="header"] > nav .home-header-github {
+    display: inline-flex;
+  }
+  header[data-site-chrome="header"] > nav .home-nav-install {
+    display: inline-flex;
+  }
+  header[data-site-chrome="header"] > nav .site-header-toggle {
+    display: none;
+  }
+  header[data-site-chrome="header"] .site-header-menu {
+    display: none;
+  }
+}
+
+header[data-site-chrome-variant="internal"] .home-nav-install {
+  border-radius: var(--ds-radius-sm);
+  background-color: var(--ds-action-surface);
+  color: var(--ds-action-ink);
+}
+
+header[data-site-chrome-variant="internal"] .home-nav-install:hover {
+  background-color: var(--ds-action-hover);
+  color: var(--ds-action-ink);
+}
+
+footer[data-site-chrome-variant="internal"] {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+}
+
+@media (max-width: 767px) {
+  header[data-site-chrome-variant="internal"] > nav {
+    height: 72px;
+    gap: var(--ds-space-4);
+  }
+}

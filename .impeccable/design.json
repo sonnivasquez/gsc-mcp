@@ -1,0 +1,977 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-04T05:14:08.533Z",
+  "title": "Design System: GSC MCP — Terminal SEO",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Midnight Canvas",
+        "tonalRamp": [
+          "oklch(from #03090f 0.15 calc(c * 0.35) h)",
+          "oklch(from #03090f 0.26 calc(c * 0.65) h)",
+          "oklch(from #03090f 0.37 calc(c * 0.85) h)",
+          "oklch(from #03090f 0.48 calc(c * 1) h)",
+          "oklch(from #03090f 0.59 calc(c * 1) h)",
+          "oklch(from #03090f 0.7 calc(c * 0.85) h)",
+          "oklch(from #03090f 0.83 calc(c * 0.6) h)",
+          "oklch(from #03090f 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Raised Midnight Surface",
+        "tonalRamp": [
+          "oklch(from #0b161f 0.15 calc(c * 0.35) h)",
+          "oklch(from #0b161f 0.26 calc(c * 0.65) h)",
+          "oklch(from #0b161f 0.37 calc(c * 0.85) h)",
+          "oklch(from #0b161f 0.48 calc(c * 1) h)",
+          "oklch(from #0b161f 0.59 calc(c * 1) h)",
+          "oklch(from #0b161f 0.7 calc(c * 0.85) h)",
+          "oklch(from #0b161f 0.83 calc(c * 0.6) h)",
+          "oklch(from #0b161f 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ice Text",
+        "tonalRamp": [
+          "oklch(from #e8eef4 0.15 calc(c * 0.35) h)",
+          "oklch(from #e8eef4 0.26 calc(c * 0.65) h)",
+          "oklch(from #e8eef4 0.37 calc(c * 0.85) h)",
+          "oklch(from #e8eef4 0.48 calc(c * 1) h)",
+          "oklch(from #e8eef4 0.59 calc(c * 1) h)",
+          "oklch(from #e8eef4 0.7 calc(c * 0.85) h)",
+          "oklch(from #e8eef4 0.83 calc(c * 0.6) h)",
+          "oklch(from #e8eef4 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Muted Ice Text",
+        "tonalRamp": [
+          "oklch(from #a3afbc 0.15 calc(c * 0.35) h)",
+          "oklch(from #a3afbc 0.26 calc(c * 0.65) h)",
+          "oklch(from #a3afbc 0.37 calc(c * 0.85) h)",
+          "oklch(from #a3afbc 0.48 calc(c * 1) h)",
+          "oklch(from #a3afbc 0.59 calc(c * 1) h)",
+          "oklch(from #a3afbc 0.7 calc(c * 0.85) h)",
+          "oklch(from #a3afbc 0.83 calc(c * 0.6) h)",
+          "oklch(from #a3afbc 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "ink-faint": {
+        "role": "neutral",
+        "displayName": "Quiet Ice Text",
+        "tonalRamp": [
+          "oklch(from #879aac 0.15 calc(c * 0.35) h)",
+          "oklch(from #879aac 0.26 calc(c * 0.65) h)",
+          "oklch(from #879aac 0.37 calc(c * 0.85) h)",
+          "oklch(from #879aac 0.48 calc(c * 1) h)",
+          "oklch(from #879aac 0.59 calc(c * 1) h)",
+          "oklch(from #879aac 0.7 calc(c * 0.85) h)",
+          "oklch(from #879aac 0.83 calc(c * 0.6) h)",
+          "oklch(from #879aac 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Midnight Divider",
+        "tonalRamp": [
+          "oklch(from #1b2d3a 0.15 calc(c * 0.35) h)",
+          "oklch(from #1b2d3a 0.26 calc(c * 0.65) h)",
+          "oklch(from #1b2d3a 0.37 calc(c * 0.85) h)",
+          "oklch(from #1b2d3a 0.48 calc(c * 1) h)",
+          "oklch(from #1b2d3a 0.59 calc(c * 1) h)",
+          "oklch(from #1b2d3a 0.7 calc(c * 0.85) h)",
+          "oklch(from #1b2d3a 0.83 calc(c * 0.6) h)",
+          "oklch(from #1b2d3a 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Structural Blue Gray",
+        "tonalRamp": [
+          "oklch(from #304657 0.15 calc(c * 0.35) h)",
+          "oklch(from #304657 0.26 calc(c * 0.65) h)",
+          "oklch(from #304657 0.37 calc(c * 0.85) h)",
+          "oklch(from #304657 0.48 calc(c * 1) h)",
+          "oklch(from #304657 0.59 calc(c * 1) h)",
+          "oklch(from #304657 0.7 calc(c * 0.85) h)",
+          "oklch(from #304657 0.83 calc(c * 0.6) h)",
+          "oklch(from #304657 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "cobalt": {
+        "role": "primary",
+        "displayName": "Cyan Signal",
+        "tonalRamp": [
+          "oklch(from #1da9ef 0.15 calc(c * 0.35) h)",
+          "oklch(from #1da9ef 0.26 calc(c * 0.65) h)",
+          "oklch(from #1da9ef 0.37 calc(c * 0.85) h)",
+          "oklch(from #1da9ef 0.48 calc(c * 1) h)",
+          "oklch(from #1da9ef 0.59 calc(c * 1) h)",
+          "oklch(from #1da9ef 0.7 calc(c * 0.85) h)",
+          "oklch(from #1da9ef 0.83 calc(c * 0.6) h)",
+          "oklch(from #1da9ef 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "cobalt-deep": {
+        "role": "primary",
+        "displayName": "Bright Cyan",
+        "tonalRamp": [
+          "oklch(from #70cdff 0.15 calc(c * 0.35) h)",
+          "oklch(from #70cdff 0.26 calc(c * 0.65) h)",
+          "oklch(from #70cdff 0.37 calc(c * 0.85) h)",
+          "oklch(from #70cdff 0.48 calc(c * 1) h)",
+          "oklch(from #70cdff 0.59 calc(c * 1) h)",
+          "oklch(from #70cdff 0.7 calc(c * 0.85) h)",
+          "oklch(from #70cdff 0.83 calc(c * 0.6) h)",
+          "oklch(from #70cdff 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "cobalt-wash": {
+        "role": "primary",
+        "displayName": "Cyan Wash",
+        "tonalRamp": [
+          "oklch(from #102b3d 0.15 calc(c * 0.35) h)",
+          "oklch(from #102b3d 0.26 calc(c * 0.65) h)",
+          "oklch(from #102b3d 0.37 calc(c * 0.85) h)",
+          "oklch(from #102b3d 0.48 calc(c * 1) h)",
+          "oklch(from #102b3d 0.59 calc(c * 1) h)",
+          "oklch(from #102b3d 0.7 calc(c * 0.85) h)",
+          "oklch(from #102b3d 0.83 calc(c * 0.6) h)",
+          "oklch(from #102b3d 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "ink-on-cobalt": {
+        "role": "neutral",
+        "displayName": "Ink on Cyan Signal",
+        "tonalRamp": [
+          "oklch(from #06121d 0.15 calc(c * 0.35) h)",
+          "oklch(from #06121d 0.26 calc(c * 0.65) h)",
+          "oklch(from #06121d 0.37 calc(c * 0.85) h)",
+          "oklch(from #06121d 0.48 calc(c * 1) h)",
+          "oklch(from #06121d 0.59 calc(c * 1) h)",
+          "oklch(from #06121d 0.7 calc(c * 0.85) h)",
+          "oklch(from #06121d 0.83 calc(c * 0.6) h)",
+          "oklch(from #06121d 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "bright": {
+        "role": "neutral",
+        "displayName": "Bright Surface Text",
+        "tonalRamp": [
+          "oklch(from #ffffff 0.15 calc(c * 0.35) h)",
+          "oklch(from #ffffff 0.26 calc(c * 0.65) h)",
+          "oklch(from #ffffff 0.37 calc(c * 0.85) h)",
+          "oklch(from #ffffff 0.48 calc(c * 1) h)",
+          "oklch(from #ffffff 0.59 calc(c * 1) h)",
+          "oklch(from #ffffff 0.7 calc(c * 0.85) h)",
+          "oklch(from #ffffff 0.83 calc(c * 0.6) h)",
+          "oklch(from #ffffff 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Terminal Panel",
+        "tonalRamp": [
+          "oklch(from #08141e 0.15 calc(c * 0.35) h)",
+          "oklch(from #08141e 0.26 calc(c * 0.65) h)",
+          "oklch(from #08141e 0.37 calc(c * 0.85) h)",
+          "oklch(from #08141e 0.48 calc(c * 1) h)",
+          "oklch(from #08141e 0.59 calc(c * 1) h)",
+          "oklch(from #08141e 0.7 calc(c * 0.85) h)",
+          "oklch(from #08141e 0.83 calc(c * 0.6) h)",
+          "oklch(from #08141e 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "panel-raised": {
+        "role": "neutral",
+        "displayName": "Raised Terminal Panel",
+        "tonalRamp": [
+          "oklch(from #10222f 0.15 calc(c * 0.35) h)",
+          "oklch(from #10222f 0.26 calc(c * 0.65) h)",
+          "oklch(from #10222f 0.37 calc(c * 0.85) h)",
+          "oklch(from #10222f 0.48 calc(c * 1) h)",
+          "oklch(from #10222f 0.59 calc(c * 1) h)",
+          "oklch(from #10222f 0.7 calc(c * 0.85) h)",
+          "oklch(from #10222f 0.83 calc(c * 0.6) h)",
+          "oklch(from #10222f 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "panel-line": {
+        "role": "neutral",
+        "displayName": "Panel Divider",
+        "tonalRamp": [
+          "oklch(from #233a4b 0.15 calc(c * 0.35) h)",
+          "oklch(from #233a4b 0.26 calc(c * 0.65) h)",
+          "oklch(from #233a4b 0.37 calc(c * 0.85) h)",
+          "oklch(from #233a4b 0.48 calc(c * 1) h)",
+          "oklch(from #233a4b 0.59 calc(c * 1) h)",
+          "oklch(from #233a4b 0.7 calc(c * 0.85) h)",
+          "oklch(from #233a4b 0.83 calc(c * 0.6) h)",
+          "oklch(from #233a4b 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "panel-soft": {
+        "role": "neutral",
+        "displayName": "Terminal Supporting Text",
+        "tonalRamp": [
+          "oklch(from #a9bfd1 0.15 calc(c * 0.35) h)",
+          "oklch(from #a9bfd1 0.26 calc(c * 0.65) h)",
+          "oklch(from #a9bfd1 0.37 calc(c * 0.85) h)",
+          "oklch(from #a9bfd1 0.48 calc(c * 1) h)",
+          "oklch(from #a9bfd1 0.59 calc(c * 1) h)",
+          "oklch(from #a9bfd1 0.7 calc(c * 0.85) h)",
+          "oklch(from #a9bfd1 0.83 calc(c * 0.6) h)",
+          "oklch(from #a9bfd1 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "panel-faint": {
+        "role": "neutral",
+        "displayName": "Terminal Muted Text",
+        "tonalRamp": [
+          "oklch(from #8fa6b8 0.15 calc(c * 0.35) h)",
+          "oklch(from #8fa6b8 0.26 calc(c * 0.65) h)",
+          "oklch(from #8fa6b8 0.37 calc(c * 0.85) h)",
+          "oklch(from #8fa6b8 0.48 calc(c * 1) h)",
+          "oklch(from #8fa6b8 0.59 calc(c * 1) h)",
+          "oklch(from #8fa6b8 0.7 calc(c * 0.85) h)",
+          "oklch(from #8fa6b8 0.83 calc(c * 0.6) h)",
+          "oklch(from #8fa6b8 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "warn-bg": {
+        "role": "warning",
+        "displayName": "Warning Night Surface",
+        "tonalRamp": [
+          "oklch(from #0e1c25 0.15 calc(c * 0.35) h)",
+          "oklch(from #0e1c25 0.26 calc(c * 0.65) h)",
+          "oklch(from #0e1c25 0.37 calc(c * 0.85) h)",
+          "oklch(from #0e1c25 0.48 calc(c * 1) h)",
+          "oklch(from #0e1c25 0.59 calc(c * 1) h)",
+          "oklch(from #0e1c25 0.7 calc(c * 0.85) h)",
+          "oklch(from #0e1c25 0.83 calc(c * 0.6) h)",
+          "oklch(from #0e1c25 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "warn-line": {
+        "role": "warning",
+        "displayName": "Warning Divider",
+        "tonalRamp": [
+          "oklch(from #304657 0.15 calc(c * 0.35) h)",
+          "oklch(from #304657 0.26 calc(c * 0.65) h)",
+          "oklch(from #304657 0.37 calc(c * 0.85) h)",
+          "oklch(from #304657 0.48 calc(c * 1) h)",
+          "oklch(from #304657 0.59 calc(c * 1) h)",
+          "oklch(from #304657 0.7 calc(c * 0.85) h)",
+          "oklch(from #304657 0.83 calc(c * 0.6) h)",
+          "oklch(from #304657 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "warn-ink": {
+        "role": "warning",
+        "displayName": "Warm Warning Text",
+        "tonalRamp": [
+          "oklch(from #f0cd7e 0.15 calc(c * 0.35) h)",
+          "oklch(from #f0cd7e 0.26 calc(c * 0.65) h)",
+          "oklch(from #f0cd7e 0.37 calc(c * 0.85) h)",
+          "oklch(from #f0cd7e 0.48 calc(c * 1) h)",
+          "oklch(from #f0cd7e 0.59 calc(c * 1) h)",
+          "oklch(from #f0cd7e 0.7 calc(c * 0.85) h)",
+          "oklch(from #f0cd7e 0.83 calc(c * 0.6) h)",
+          "oklch(from #f0cd7e 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "warn-on-dark": {
+        "role": "warning",
+        "displayName": "Warning Text on Dark",
+        "tonalRamp": [
+          "oklch(from #f0cd7e 0.15 calc(c * 0.35) h)",
+          "oklch(from #f0cd7e 0.26 calc(c * 0.65) h)",
+          "oklch(from #f0cd7e 0.37 calc(c * 0.85) h)",
+          "oklch(from #f0cd7e 0.48 calc(c * 1) h)",
+          "oklch(from #f0cd7e 0.59 calc(c * 1) h)",
+          "oklch(from #f0cd7e 0.7 calc(c * 0.85) h)",
+          "oklch(from #f0cd7e 0.83 calc(c * 0.6) h)",
+          "oklch(from #f0cd7e 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "focus-on-dark": {
+        "role": "neutral",
+        "displayName": "Ice Focus Ring",
+        "tonalRamp": [
+          "oklch(from #e9ecff 0.15 calc(c * 0.35) h)",
+          "oklch(from #e9ecff 0.26 calc(c * 0.65) h)",
+          "oklch(from #e9ecff 0.37 calc(c * 0.85) h)",
+          "oklch(from #e9ecff 0.48 calc(c * 1) h)",
+          "oklch(from #e9ecff 0.59 calc(c * 1) h)",
+          "oklch(from #e9ecff 0.7 calc(c * 0.85) h)",
+          "oklch(from #e9ecff 0.83 calc(c * 0.6) h)",
+          "oklch(from #e9ecff 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "action-surface": {
+        "role": "primary",
+        "displayName": "Ice Action Surface",
+        "tonalRamp": [
+          "oklch(from #d5e6f4 0.15 calc(c * 0.35) h)",
+          "oklch(from #d5e6f4 0.26 calc(c * 0.65) h)",
+          "oklch(from #d5e6f4 0.37 calc(c * 0.85) h)",
+          "oklch(from #d5e6f4 0.48 calc(c * 1) h)",
+          "oklch(from #d5e6f4 0.59 calc(c * 1) h)",
+          "oklch(from #d5e6f4 0.7 calc(c * 0.85) h)",
+          "oklch(from #d5e6f4 0.83 calc(c * 0.6) h)",
+          "oklch(from #d5e6f4 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "action-ink": {
+        "role": "primary",
+        "displayName": "Ink on Ice",
+        "tonalRamp": [
+          "oklch(from #0a1b29 0.15 calc(c * 0.35) h)",
+          "oklch(from #0a1b29 0.26 calc(c * 0.65) h)",
+          "oklch(from #0a1b29 0.37 calc(c * 0.85) h)",
+          "oklch(from #0a1b29 0.48 calc(c * 1) h)",
+          "oklch(from #0a1b29 0.59 calc(c * 1) h)",
+          "oklch(from #0a1b29 0.7 calc(c * 0.85) h)",
+          "oklch(from #0a1b29 0.83 calc(c * 0.6) h)",
+          "oklch(from #0a1b29 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "action-hover": {
+        "role": "primary",
+        "displayName": "Ice Action Hover",
+        "tonalRamp": [
+          "oklch(from #bfdced 0.15 calc(c * 0.35) h)",
+          "oklch(from #bfdced 0.26 calc(c * 0.65) h)",
+          "oklch(from #bfdced 0.37 calc(c * 0.85) h)",
+          "oklch(from #bfdced 0.48 calc(c * 1) h)",
+          "oklch(from #bfdced 0.59 calc(c * 1) h)",
+          "oklch(from #bfdced 0.7 calc(c * 0.85) h)",
+          "oklch(from #bfdced 0.83 calc(c * 0.6) h)",
+          "oklch(from #bfdced 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-prompt-surface": {
+        "role": "neutral",
+        "displayName": "Prompt Blue Surface",
+        "tonalRamp": [
+          "oklch(from #142735 0.15 calc(c * 0.35) h)",
+          "oklch(from #142735 0.26 calc(c * 0.65) h)",
+          "oklch(from #142735 0.37 calc(c * 0.85) h)",
+          "oklch(from #142735 0.48 calc(c * 1) h)",
+          "oklch(from #142735 0.59 calc(c * 1) h)",
+          "oklch(from #142735 0.7 calc(c * 0.85) h)",
+          "oklch(from #142735 0.83 calc(c * 0.6) h)",
+          "oklch(from #142735 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-prompt-ink": {
+        "role": "neutral",
+        "displayName": "Prompt Ice Text",
+        "tonalRamp": [
+          "oklch(from #bdcddc 0.15 calc(c * 0.35) h)",
+          "oklch(from #bdcddc 0.26 calc(c * 0.65) h)",
+          "oklch(from #bdcddc 0.37 calc(c * 0.85) h)",
+          "oklch(from #bdcddc 0.48 calc(c * 1) h)",
+          "oklch(from #bdcddc 0.59 calc(c * 1) h)",
+          "oklch(from #bdcddc 0.7 calc(c * 0.85) h)",
+          "oklch(from #bdcddc 0.83 calc(c * 0.6) h)",
+          "oklch(from #bdcddc 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-button-surface": {
+        "role": "neutral",
+        "displayName": "Homepage Ice Action",
+        "tonalRamp": [
+          "oklch(from #d5e6f4 0.15 calc(c * 0.35) h)",
+          "oklch(from #d5e6f4 0.26 calc(c * 0.65) h)",
+          "oklch(from #d5e6f4 0.37 calc(c * 0.85) h)",
+          "oklch(from #d5e6f4 0.48 calc(c * 1) h)",
+          "oklch(from #d5e6f4 0.59 calc(c * 1) h)",
+          "oklch(from #d5e6f4 0.7 calc(c * 0.85) h)",
+          "oklch(from #d5e6f4 0.83 calc(c * 0.6) h)",
+          "oklch(from #d5e6f4 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-button-ink": {
+        "role": "neutral",
+        "displayName": "Ink on Homepage Action",
+        "tonalRamp": [
+          "oklch(from #0a1b29 0.15 calc(c * 0.35) h)",
+          "oklch(from #0a1b29 0.26 calc(c * 0.65) h)",
+          "oklch(from #0a1b29 0.37 calc(c * 0.85) h)",
+          "oklch(from #0a1b29 0.48 calc(c * 1) h)",
+          "oklch(from #0a1b29 0.59 calc(c * 1) h)",
+          "oklch(from #0a1b29 0.7 calc(c * 0.85) h)",
+          "oklch(from #0a1b29 0.83 calc(c * 0.6) h)",
+          "oklch(from #0a1b29 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-button-hover": {
+        "role": "neutral",
+        "displayName": "Homepage Ice Hover",
+        "tonalRamp": [
+          "oklch(from #bfdced 0.15 calc(c * 0.35) h)",
+          "oklch(from #bfdced 0.26 calc(c * 0.65) h)",
+          "oklch(from #bfdced 0.37 calc(c * 0.85) h)",
+          "oklch(from #bfdced 0.48 calc(c * 1) h)",
+          "oklch(from #bfdced 0.59 calc(c * 1) h)",
+          "oklch(from #bfdced 0.7 calc(c * 0.85) h)",
+          "oklch(from #bfdced 0.83 calc(c * 0.6) h)",
+          "oklch(from #bfdced 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-row-surface": {
+        "role": "neutral",
+        "displayName": "Alternate Data Row",
+        "tonalRamp": [
+          "oklch(from #101f2a 0.15 calc(c * 0.35) h)",
+          "oklch(from #101f2a 0.26 calc(c * 0.65) h)",
+          "oklch(from #101f2a 0.37 calc(c * 0.85) h)",
+          "oklch(from #101f2a 0.48 calc(c * 1) h)",
+          "oklch(from #101f2a 0.59 calc(c * 1) h)",
+          "oklch(from #101f2a 0.7 calc(c * 0.85) h)",
+          "oklch(from #101f2a 0.83 calc(c * 0.6) h)",
+          "oklch(from #101f2a 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-data-ink": {
+        "role": "neutral",
+        "displayName": "Table Values",
+        "tonalRamp": [
+          "oklch(from #c5d8e6 0.15 calc(c * 0.35) h)",
+          "oklch(from #c5d8e6 0.26 calc(c * 0.65) h)",
+          "oklch(from #c5d8e6 0.37 calc(c * 0.85) h)",
+          "oklch(from #c5d8e6 0.48 calc(c * 1) h)",
+          "oklch(from #c5d8e6 0.59 calc(c * 1) h)",
+          "oklch(from #c5d8e6 0.7 calc(c * 0.85) h)",
+          "oklch(from #c5d8e6 0.83 calc(c * 0.6) h)",
+          "oklch(from #c5d8e6 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-data-muted": {
+        "role": "neutral",
+        "displayName": "Table Headings",
+        "tonalRamp": [
+          "oklch(from #96adc0 0.15 calc(c * 0.35) h)",
+          "oklch(from #96adc0 0.26 calc(c * 0.65) h)",
+          "oklch(from #96adc0 0.37 calc(c * 0.85) h)",
+          "oklch(from #96adc0 0.48 calc(c * 1) h)",
+          "oklch(from #96adc0 0.59 calc(c * 1) h)",
+          "oklch(from #96adc0 0.7 calc(c * 0.85) h)",
+          "oklch(from #96adc0 0.83 calc(c * 0.6) h)",
+          "oklch(from #96adc0 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-tool-ink": {
+        "role": "neutral",
+        "displayName": "Tool Identifier",
+        "tonalRamp": [
+          "oklch(from #d6e5ef 0.15 calc(c * 0.35) h)",
+          "oklch(from #d6e5ef 0.26 calc(c * 0.65) h)",
+          "oklch(from #d6e5ef 0.37 calc(c * 0.85) h)",
+          "oklch(from #d6e5ef 0.48 calc(c * 1) h)",
+          "oklch(from #d6e5ef 0.59 calc(c * 1) h)",
+          "oklch(from #d6e5ef 0.7 calc(c * 0.85) h)",
+          "oklch(from #d6e5ef 0.83 calc(c * 0.6) h)",
+          "oklch(from #d6e5ef 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-conversation-label": {
+        "role": "neutral",
+        "displayName": "Conversation Label",
+        "tonalRamp": [
+          "oklch(from #d1dfe9 0.15 calc(c * 0.35) h)",
+          "oklch(from #d1dfe9 0.26 calc(c * 0.65) h)",
+          "oklch(from #d1dfe9 0.37 calc(c * 0.85) h)",
+          "oklch(from #d1dfe9 0.48 calc(c * 1) h)",
+          "oklch(from #d1dfe9 0.59 calc(c * 1) h)",
+          "oklch(from #d1dfe9 0.7 calc(c * 0.85) h)",
+          "oklch(from #d1dfe9 0.83 calc(c * 0.6) h)",
+          "oklch(from #d1dfe9 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-success-surface": {
+        "role": "success",
+        "displayName": "Success Surface",
+        "tonalRamp": [
+          "oklch(from #7bdd99 0.15 calc(c * 0.35) h)",
+          "oklch(from #7bdd99 0.26 calc(c * 0.65) h)",
+          "oklch(from #7bdd99 0.37 calc(c * 0.85) h)",
+          "oklch(from #7bdd99 0.48 calc(c * 1) h)",
+          "oklch(from #7bdd99 0.59 calc(c * 1) h)",
+          "oklch(from #7bdd99 0.7 calc(c * 0.85) h)",
+          "oklch(from #7bdd99 0.83 calc(c * 0.6) h)",
+          "oklch(from #7bdd99 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-success-ink": {
+        "role": "success",
+        "displayName": "Success Text",
+        "tonalRamp": [
+          "oklch(from #0d2a19 0.15 calc(c * 0.35) h)",
+          "oklch(from #0d2a19 0.26 calc(c * 0.65) h)",
+          "oklch(from #0d2a19 0.37 calc(c * 0.85) h)",
+          "oklch(from #0d2a19 0.48 calc(c * 1) h)",
+          "oklch(from #0d2a19 0.59 calc(c * 1) h)",
+          "oklch(from #0d2a19 0.7 calc(c * 0.85) h)",
+          "oklch(from #0d2a19 0.83 calc(c * 0.6) h)",
+          "oklch(from #0d2a19 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-positive": {
+        "role": "success",
+        "displayName": "Positive Value",
+        "tonalRamp": [
+          "oklch(from #84dc9f 0.15 calc(c * 0.35) h)",
+          "oklch(from #84dc9f 0.26 calc(c * 0.65) h)",
+          "oklch(from #84dc9f 0.37 calc(c * 0.85) h)",
+          "oklch(from #84dc9f 0.48 calc(c * 1) h)",
+          "oklch(from #84dc9f 0.59 calc(c * 1) h)",
+          "oklch(from #84dc9f 0.7 calc(c * 0.85) h)",
+          "oklch(from #84dc9f 0.83 calc(c * 0.6) h)",
+          "oklch(from #84dc9f 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-link-hover": {
+        "role": "neutral",
+        "displayName": "Bright Cyan Link Hover",
+        "tonalRamp": [
+          "oklch(from #99dcff 0.15 calc(c * 0.35) h)",
+          "oklch(from #99dcff 0.26 calc(c * 0.65) h)",
+          "oklch(from #99dcff 0.37 calc(c * 0.85) h)",
+          "oklch(from #99dcff 0.48 calc(c * 1) h)",
+          "oklch(from #99dcff 0.59 calc(c * 1) h)",
+          "oklch(from #99dcff 0.7 calc(c * 0.85) h)",
+          "oklch(from #99dcff 0.83 calc(c * 0.6) h)",
+          "oklch(from #99dcff 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-badge-line": {
+        "role": "neutral",
+        "displayName": "Hero Badge Edge",
+        "tonalRamp": [
+          "oklch(from #1a3345 0.15 calc(c * 0.35) h)",
+          "oklch(from #1a3345 0.26 calc(c * 0.65) h)",
+          "oklch(from #1a3345 0.37 calc(c * 0.85) h)",
+          "oklch(from #1a3345 0.48 calc(c * 1) h)",
+          "oklch(from #1a3345 0.59 calc(c * 1) h)",
+          "oklch(from #1a3345 0.7 calc(c * 0.85) h)",
+          "oklch(from #1a3345 0.83 calc(c * 0.6) h)",
+          "oklch(from #1a3345 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-badge-ink": {
+        "role": "neutral",
+        "displayName": "Hero Badge Text",
+        "tonalRamp": [
+          "oklch(from #b7d0e2 0.15 calc(c * 0.35) h)",
+          "oklch(from #b7d0e2 0.26 calc(c * 0.65) h)",
+          "oklch(from #b7d0e2 0.37 calc(c * 0.85) h)",
+          "oklch(from #b7d0e2 0.48 calc(c * 1) h)",
+          "oklch(from #b7d0e2 0.59 calc(c * 1) h)",
+          "oklch(from #b7d0e2 0.7 calc(c * 0.85) h)",
+          "oklch(from #b7d0e2 0.83 calc(c * 0.6) h)",
+          "oklch(from #b7d0e2 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-command-ink": {
+        "role": "neutral",
+        "displayName": "Command Code Text",
+        "tonalRamp": [
+          "oklch(from #d7e4ef 0.15 calc(c * 0.35) h)",
+          "oklch(from #d7e4ef 0.26 calc(c * 0.65) h)",
+          "oklch(from #d7e4ef 0.37 calc(c * 0.85) h)",
+          "oklch(from #d7e4ef 0.48 calc(c * 1) h)",
+          "oklch(from #d7e4ef 0.59 calc(c * 1) h)",
+          "oklch(from #d7e4ef 0.7 calc(c * 0.85) h)",
+          "oklch(from #d7e4ef 0.83 calc(c * 0.6) h)",
+          "oklch(from #d7e4ef 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-copy-hover": {
+        "role": "neutral",
+        "displayName": "Copy Action Hover",
+        "tonalRamp": [
+          "oklch(from #142736 0.15 calc(c * 0.35) h)",
+          "oklch(from #142736 0.26 calc(c * 0.65) h)",
+          "oklch(from #142736 0.37 calc(c * 0.85) h)",
+          "oklch(from #142736 0.48 calc(c * 1) h)",
+          "oklch(from #142736 0.59 calc(c * 1) h)",
+          "oklch(from #142736 0.7 calc(c * 0.85) h)",
+          "oklch(from #142736 0.83 calc(c * 0.6) h)",
+          "oklch(from #142736 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-secondary-hover-line": {
+        "role": "neutral",
+        "displayName": "Secondary Hover Edge",
+        "tonalRamp": [
+          "oklch(from #698599 0.15 calc(c * 0.35) h)",
+          "oklch(from #698599 0.26 calc(c * 0.65) h)",
+          "oklch(from #698599 0.37 calc(c * 0.85) h)",
+          "oklch(from #698599 0.48 calc(c * 1) h)",
+          "oklch(from #698599 0.59 calc(c * 1) h)",
+          "oklch(from #698599 0.7 calc(c * 0.85) h)",
+          "oklch(from #698599 0.83 calc(c * 0.6) h)",
+          "oklch(from #698599 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-icon-accent": {
+        "role": "neutral",
+        "displayName": "Pale Icon Accent",
+        "tonalRamp": [
+          "oklch(from #a9d1eb 0.15 calc(c * 0.35) h)",
+          "oklch(from #a9d1eb 0.26 calc(c * 0.65) h)",
+          "oklch(from #a9d1eb 0.37 calc(c * 0.85) h)",
+          "oklch(from #a9d1eb 0.48 calc(c * 1) h)",
+          "oklch(from #a9d1eb 0.59 calc(c * 1) h)",
+          "oklch(from #a9d1eb 0.7 calc(c * 0.85) h)",
+          "oklch(from #a9d1eb 0.83 calc(c * 0.6) h)",
+          "oklch(from #a9d1eb 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-client-ink": {
+        "role": "neutral",
+        "displayName": "Client Resting Text",
+        "tonalRamp": [
+          "oklch(from #d8e2ea 0.15 calc(c * 0.35) h)",
+          "oklch(from #d8e2ea 0.26 calc(c * 0.65) h)",
+          "oklch(from #d8e2ea 0.37 calc(c * 0.85) h)",
+          "oklch(from #d8e2ea 0.48 calc(c * 1) h)",
+          "oklch(from #d8e2ea 0.59 calc(c * 1) h)",
+          "oklch(from #d8e2ea 0.7 calc(c * 0.85) h)",
+          "oklch(from #d8e2ea 0.83 calc(c * 0.6) h)",
+          "oklch(from #d8e2ea 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-trust-code": {
+        "role": "neutral",
+        "displayName": "Trust Code Text",
+        "tonalRamp": [
+          "oklch(from #c7d9e7 0.15 calc(c * 0.35) h)",
+          "oklch(from #c7d9e7 0.26 calc(c * 0.65) h)",
+          "oklch(from #c7d9e7 0.37 calc(c * 0.85) h)",
+          "oklch(from #c7d9e7 0.48 calc(c * 1) h)",
+          "oklch(from #c7d9e7 0.59 calc(c * 1) h)",
+          "oklch(from #c7d9e7 0.7 calc(c * 0.85) h)",
+          "oklch(from #c7d9e7 0.83 calc(c * 0.6) h)",
+          "oklch(from #c7d9e7 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-hero-glow-a": {
+        "role": "neutral",
+        "displayName": "Hero Glow West",
+        "tonalRamp": [
+          "oklch(from #072c4838 0.15 calc(c * 0.35) h)",
+          "oklch(from #072c4838 0.26 calc(c * 0.65) h)",
+          "oklch(from #072c4838 0.37 calc(c * 0.85) h)",
+          "oklch(from #072c4838 0.48 calc(c * 1) h)",
+          "oklch(from #072c4838 0.59 calc(c * 1) h)",
+          "oklch(from #072c4838 0.7 calc(c * 0.85) h)",
+          "oklch(from #072c4838 0.83 calc(c * 0.6) h)",
+          "oklch(from #072c4838 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-hero-glow-b": {
+        "role": "neutral",
+        "displayName": "Hero Glow East",
+        "tonalRamp": [
+          "oklch(from #082a4338 0.15 calc(c * 0.35) h)",
+          "oklch(from #082a4338 0.26 calc(c * 0.65) h)",
+          "oklch(from #082a4338 0.37 calc(c * 0.85) h)",
+          "oklch(from #082a4338 0.48 calc(c * 1) h)",
+          "oklch(from #082a4338 0.59 calc(c * 1) h)",
+          "oklch(from #082a4338 0.7 calc(c * 0.85) h)",
+          "oklch(from #082a4338 0.83 calc(c * 0.6) h)",
+          "oklch(from #082a4338 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-primary-highlight": {
+        "role": "neutral",
+        "displayName": "Primary Top Highlight",
+        "tonalRamp": [
+          "oklch(from #ffffff70 0.15 calc(c * 0.35) h)",
+          "oklch(from #ffffff70 0.26 calc(c * 0.65) h)",
+          "oklch(from #ffffff70 0.37 calc(c * 0.85) h)",
+          "oklch(from #ffffff70 0.48 calc(c * 1) h)",
+          "oklch(from #ffffff70 0.59 calc(c * 1) h)",
+          "oklch(from #ffffff70 0.7 calc(c * 0.85) h)",
+          "oklch(from #ffffff70 0.83 calc(c * 0.6) h)",
+          "oklch(from #ffffff70 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-chip-surface": {
+        "role": "neutral",
+        "displayName": "Overflow Chip Surface",
+        "tonalRamp": [
+          "oklch(from #122531 0.15 calc(c * 0.35) h)",
+          "oklch(from #122531 0.26 calc(c * 0.65) h)",
+          "oklch(from #122531 0.37 calc(c * 0.85) h)",
+          "oklch(from #122531 0.48 calc(c * 1) h)",
+          "oklch(from #122531 0.59 calc(c * 1) h)",
+          "oklch(from #122531 0.7 calc(c * 0.85) h)",
+          "oklch(from #122531 0.83 calc(c * 0.6) h)",
+          "oklch(from #122531 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-numeral-surface": {
+        "role": "neutral",
+        "displayName": "Numeral Chip Surface",
+        "tonalRamp": [
+          "oklch(from #112c3e 0.15 calc(c * 0.35) h)",
+          "oklch(from #112c3e 0.26 calc(c * 0.65) h)",
+          "oklch(from #112c3e 0.37 calc(c * 0.85) h)",
+          "oklch(from #112c3e 0.48 calc(c * 1) h)",
+          "oklch(from #112c3e 0.59 calc(c * 1) h)",
+          "oklch(from #112c3e 0.7 calc(c * 0.85) h)",
+          "oklch(from #112c3e 0.83 calc(c * 0.6) h)",
+          "oklch(from #112c3e 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-close-line": {
+        "role": "neutral",
+        "displayName": "Closing Band Edge",
+        "tonalRamp": [
+          "oklch(from #244056 0.15 calc(c * 0.35) h)",
+          "oklch(from #244056 0.26 calc(c * 0.65) h)",
+          "oklch(from #244056 0.37 calc(c * 0.85) h)",
+          "oklch(from #244056 0.48 calc(c * 1) h)",
+          "oklch(from #244056 0.59 calc(c * 1) h)",
+          "oklch(from #244056 0.7 calc(c * 0.85) h)",
+          "oklch(from #244056 0.83 calc(c * 0.6) h)",
+          "oklch(from #244056 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-close-surface": {
+        "role": "neutral",
+        "displayName": "Closing Band Surface",
+        "tonalRamp": [
+          "oklch(from #0b1c29 0.15 calc(c * 0.35) h)",
+          "oklch(from #0b1c29 0.26 calc(c * 0.65) h)",
+          "oklch(from #0b1c29 0.37 calc(c * 0.85) h)",
+          "oklch(from #0b1c29 0.48 calc(c * 1) h)",
+          "oklch(from #0b1c29 0.59 calc(c * 1) h)",
+          "oklch(from #0b1c29 0.7 calc(c * 0.85) h)",
+          "oklch(from #0b1c29 0.83 calc(c * 0.6) h)",
+          "oklch(from #0b1c29 0.95 calc(c * 0.25) h)"
+        ]
+      },
+      "home-close-mark": {
+        "role": "neutral",
+        "displayName": "Closing Mark Surface",
+        "tonalRamp": [
+          "oklch(from #102f43 0.15 calc(c * 0.35) h)",
+          "oklch(from #102f43 0.26 calc(c * 0.65) h)",
+          "oklch(from #102f43 0.37 calc(c * 0.85) h)",
+          "oklch(from #102f43 0.48 calc(c * 1) h)",
+          "oklch(from #102f43 0.59 calc(c * 1) h)",
+          "oklch(from #102f43 0.7 calc(c * 0.85) h)",
+          "oklch(from #102f43 0.83 calc(c * 0.6) h)",
+          "oklch(from #102f43 0.95 calc(c * 0.25) h)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Responsive hero headline; exported size is the desktop maximum."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings; preserve local responsive variants."
+      },
+      "body-default": {
+        "displayName": "Body Default",
+        "purpose": "Follow the corresponding role in DESIGN.md."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Follow the corresponding role in DESIGN.md."
+      },
+      "body-compact": {
+        "displayName": "Body Compact",
+        "purpose": "Follow the corresponding role in DESIGN.md."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Follow the corresponding role in DESIGN.md."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Follow the corresponding role in DESIGN.md."
+      },
+      "data": {
+        "displayName": "Data",
+        "purpose": "Measured data and code, 12px with tabular numerals."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "hover",
+        "value": "180ms",
+        "purpose": "Color feedback for menu, FAQ and client links."
+      },
+      {
+        "name": "hero-arrival",
+        "value": "600ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Existing finite hero entrance."
+      },
+      {
+        "name": "agent-cycle",
+        "value": "12s cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Existing four-name hero cycle; static first name under reduced motion."
+      },
+      {
+        "name": "stream-pause",
+        "value": "200ms",
+        "purpose": "Question precedes the illustrative response."
+      },
+      {
+        "name": "stream-character",
+        "value": "18ms",
+        "purpose": "Visual response progression, bounded to 1200–2400ms."
+      },
+      {
+        "name": "evidence-reveal",
+        "value": "200ms",
+        "purpose": "Tool and row visibility after the answer."
+      },
+      {
+        "name": "row-interval",
+        "value": "140ms",
+        "purpose": "Finite evidence sequence after an initial 180ms row delay."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact-cards",
+        "value": "480px"
+      },
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "wide-hero",
+        "value": "1600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary ice button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "A compact rectangular action with dark text.",
+      "html": "<button class=\"ds-button-primary\">Get started <svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M5 12h14M12 5l7 7-7 7\"/></svg></button>",
+      "css": ".ds-button-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 16px;border:0;border-radius:var(--ds-radius-sm);background:var(--ds-action-surface);color:var(--ds-action-ink);font:600 14px/1 var(--font-sans);cursor:pointer;transition:background-color 180ms}.ds-button-primary:hover,.ds-button-primary:active{background:var(--ds-action-hover)}.ds-button-primary:focus-visible{outline:2px solid var(--color-cobalt);outline-offset:3px}.ds-button-primary:disabled{opacity:.5;pointer-events:none}.ds-button-primary svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}"
+    },
+    {
+      "name": "Command copy button",
+      "kind": "button",
+      "refersTo": "button-command-copy",
+      "description": "A dark, outlined 44px copy control for command panels.",
+      "html": "<button class=\"ds-command-copy\" aria-label=\"Copy command\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><rect x=\"8\" y=\"8\" width=\"12\" height=\"12\" rx=\"2\"/><path d=\"M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3\"/></svg><span>Copy</span></button>",
+      "css": ".ds-command-copy{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border:1px solid var(--color-panel-line);border-radius:var(--ds-radius-sm);background:transparent;color:#fff;font:600 13px/1 var(--font-sans);cursor:pointer;transition:background-color 180ms}.ds-command-copy:hover,.ds-command-copy:active{background:rgba(255,255,255,.1);color:#fff}.ds-command-copy:focus-visible{outline:2px solid var(--color-focus-on-dark);outline-offset:3px}.ds-command-copy svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}"
+    },
+    {
+      "name": "Shared site header",
+      "kind": "nav",
+      "refersTo": "navigation-link",
+      "description": "The same midnight navigation and ice install action appear across routes.",
+      "html": "<header class=\"ds-site-header\"><nav aria-label=\"Primary\"><a class=\"ds-site-brand\" href=\"/\">GSC MCP</a><div class=\"ds-site-links\"><a class=\"ds-site-link\" href=\"/#use-cases\">Use cases</a><a class=\"ds-site-link\" href=\"/#tools\">Tools</a><a class=\"ds-site-link\" href=\"/docs\" aria-current=\"page\">Docs</a></div><button class=\"ds-github\">GitHub</button><a class=\"ds-install\" href=\"/docs\">Get started</a></nav></header>",
+      "css": ".ds-site-header{border-bottom:1px solid var(--color-line);background:var(--color-paper);color:var(--color-ink);font-family:var(--font-sans)}.ds-site-header nav{display:flex;min-height:88px;width:min(calc(100% - 64px),1120px);align-items:center;gap:36px;margin:0 auto}.ds-site-brand{display:inline-flex;min-height:44px;align-items:center;color:var(--color-ink);font-size:15px;font-weight:700;letter-spacing:-.025em;text-decoration:none}.ds-site-links{display:flex;gap:4px}.ds-site-link{display:inline-flex;min-height:44px;align-items:center;padding:8px 12px;color:var(--color-ink-soft);font-size:13px;text-decoration:none;text-underline-offset:6px;text-decoration-thickness:1px;transition:color 180ms}.ds-site-link:hover,.ds-site-link:focus-visible,.ds-site-link[aria-current=\"page\"]{color:var(--color-ink);text-decoration:underline;text-decoration-color:var(--color-cobalt)}.ds-site-link[aria-current=\"page\"]{font-weight:600}.ds-github{display:inline-flex;min-height:44px;align-items:center;justify-content:center;margin-left:auto;padding:0 15px;border:1px solid var(--color-line);border-radius:var(--ds-radius-sm);background:transparent;color:var(--color-ink);font:400 13px var(--font-sans)}.ds-install{display:inline-flex;min-height:44px;align-items:center;padding:0 16px;border-radius:var(--ds-radius-sm);background:var(--ds-action-surface);color:var(--ds-action-ink);font-size:14px;font-weight:600;text-decoration:none;transition:background-color 180ms}.ds-install:hover{background:var(--ds-action-hover)}.ds-site-header :focus-visible{outline:2px solid var(--color-cobalt);outline-offset:3px}@media(max-width:767px){.ds-site-header nav{min-height:72px;gap:16px}}"
+    },
+    {
+      "name": "Guide navigation rail",
+      "kind": "nav",
+      "refersTo": "guide-navigation-link",
+      "description": "A quiet left rail with a cyan marker for the active guide.",
+      "html": "<nav class=\"ds-guide-nav\" aria-label=\"Guide pages\"><p>Guides</p><a href=\"/docs\">Installation<span>Connect a client</span></a><a href=\"/docs/credentials\" aria-current=\"page\">Credentials<span>Choose an access mode</span></a></nav>",
+      "css": ".ds-guide-nav{position:sticky;top:5.5rem;font-family:var(--font-sans)}.ds-guide-nav>p{color:var(--color-ink-faint);font:400 12px/1.5 var(--font-mono);letter-spacing:.12em;text-transform:uppercase}.ds-guide-nav a{display:block;min-height:48px;margin-inline-start:-1px;padding:12px 20px;border-inline-start:1px solid transparent;color:var(--color-ink-soft);font-size:14px;line-height:1.4;text-decoration:none;transition:color 180ms,border-color 180ms}.ds-guide-nav a span{display:block;margin-top:2px;color:var(--color-ink-faint);font-size:12px}.ds-guide-nav a:hover,.ds-guide-nav a:focus-visible,.ds-guide-nav a[aria-current=\"page\"]{color:var(--color-ink);border-inline-start-color:var(--color-cobalt)}.ds-guide-nav a[aria-current=\"page\"]{font-weight:600}.ds-guide-nav :focus-visible{outline:2px solid var(--color-cobalt);outline-offset:3px}"
+    },
+    {
+      "name": "Terminal command panel",
+      "kind": "custom",
+      "refersTo": "command-panel",
+      "description": "A bordered terminal surface with a separate command label and copy action.",
+      "html": "<section class=\"ds-command-panel\"><header class=\"ds-command-heading\"><p class=\"ds-command-title\">Setup with npm</p><button class=\"ds-panel-copy\">Copy</button></header><pre class=\"ds-command-pre\" tabindex=\"0\"><code>npx gsc-mcp setup --client codex</code></pre></section>",
+      "css": ".ds-command-panel{overflow:hidden;border:1px solid var(--color-panel-line);border-radius:var(--ds-radius-lg);background:var(--color-panel);color:var(--color-ink)}.ds-command-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 16px;border-bottom:1px solid var(--color-panel-line)}.ds-command-title{margin:0;color:var(--color-panel-soft);font:400 12px/1.5 var(--font-mono)}.ds-panel-copy{min-height:44px;padding:0 16px;border:1px solid var(--color-panel-line);border-radius:var(--ds-radius-sm);background:transparent;color:#fff;font:600 13px var(--font-sans);cursor:pointer}.ds-panel-copy:hover{background:rgba(255,255,255,.1)}.ds-panel-copy:focus-visible{outline:2px solid var(--color-focus-on-dark);outline-offset:3px}.ds-command-pre{margin:0;overflow-x:auto;padding:12px 16px;color:#fff;font:400 13px/1.65 var(--font-mono);overscroll-behavior-inline:contain;scrollbar-width:thin}.ds-command-pre code{white-space:pre}.ds-command-pre:focus-visible{outline:2px solid var(--color-focus-on-dark);outline-offset:-3px}"
+    },
+    {
+      "name": "Documentation runtime tabs",
+      "kind": "custom",
+      "refersTo": "tab-underline",
+      "description": "Underlined runtime selection with a cyan active edge.",
+      "html": "<div class=\"ds-runtime-tabs\" role=\"tablist\" aria-label=\"Runtime\"><button role=\"tab\">Node</button><button role=\"tab\" aria-selected=\"true\">Hermes</button></div>",
+      "css": ".ds-runtime-tabs{display:flex;width:fit-content;gap:4px;border-bottom:1px solid var(--color-line);font-family:var(--font-sans)}.ds-runtime-tabs button{min-height:44px;padding:8px 12px;border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--color-ink-soft);font:400 14px var(--font-sans);cursor:pointer}.ds-runtime-tabs button[aria-selected=\"true\"]{border-bottom-color:var(--color-cobalt);color:var(--color-cobalt-deep);font-weight:600}.ds-runtime-tabs button:hover{color:var(--color-ink)}.ds-runtime-tabs button:focus-visible{outline:2px solid var(--color-cobalt);outline-offset:3px}"
+    },
+    {
+      "name": "Illustrative evidence card",
+      "kind": "card",
+      "refersTo": "conversation-card",
+      "description": "A homepage example that keeps the question, answer and data together.",
+      "html": "<figure class=\"ds-conversation\"><figcaption>Codex <small>Illustrative example</small></figcaption><p class=\"ds-prompt\">Compare the last 28 days for sc-domain:example.com.</p><p class=\"ds-answer\">Clicks increased in this sample.</p><code class=\"ds-tool\">gsc_compare_periods</code><div class=\"ds-table-wrap\"><table><caption>Sample data for example.com</caption><thead><tr><th>Metric</th><th>Current</th><th>Previous</th></tr></thead><tbody><tr><th>Clicks</th><td>12,540</td><td>10,200</td></tr><tr><th>Impressions</th><td>245,231</td><td>210,400</td></tr></tbody></table></div></figure>",
+      "css": ".ds-conversation{margin:0;padding:18px;border:1px solid var(--color-line);border-radius:var(--ds-radius-lg);background:var(--color-card);color:var(--color-ink);font:400 13px/1.7 var(--font-sans)}.ds-conversation figcaption{display:flex;justify-content:space-between;gap:8px;color:var(--home-conversation-label,#d1dfe9);font-size:12px}.ds-conversation small{color:var(--color-ink-faint);font-size:12px}.ds-prompt{margin:14px 0 16px;padding:11px 13px;border-radius:5px;background:var(--home-prompt-surface,#142735);color:var(--home-prompt-ink,#bdcddc);font:400 12px/1.75 var(--font-mono);overflow-wrap:anywhere}.ds-answer{margin:0 0 16px;color:var(--color-ink);font-size:13px}.ds-tool{color:var(--home-tool-ink,#d6e5ef);font:400 12px/1.65 var(--font-mono)}.ds-table-wrap{overflow-x:auto;margin-top:12px}.ds-conversation table{width:100%;border-collapse:collapse;color:var(--home-data-ink,#c5d8e6);font:400 12px/1.65 var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}.ds-conversation caption{margin:12px 0 4px;color:var(--color-ink-faint);font-size:12px;text-align:left}.ds-conversation th,.ds-conversation td{padding:6px 8px;text-align:right;font-weight:400}.ds-conversation th:first-child{text-align:left;padding-left:0}.ds-conversation thead{border-bottom:1px solid var(--color-line);color:var(--home-data-muted,#96adc0)}.ds-conversation tbody tr:nth-child(even){background:var(--home-row-surface,#101f2a)}"
+    },
+    {
+      "name": "Warning note",
+      "kind": "custom",
+      "refersTo": "warning-note",
+      "description": "A labelled warning on the shared dark surface.",
+      "html": "<aside class=\"ds-warning\" role=\"note\"><strong>Testing mode</strong><span>Access may expire while the OAuth app remains in testing.</span></aside>",
+      "css": ".ds-warning{display:flex;gap:12px;padding:12px 16px;border:1px solid var(--color-warn-line);border-radius:var(--ds-radius-md);background:var(--color-warn-bg);color:var(--color-warn-on-dark);font:400 14px/1.6 var(--font-sans)}.ds-warning strong{font-weight:600}.ds-warning:focus-visible{outline:2px solid var(--color-focus-on-dark);outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Terminal SEO",
+    "overview": "Terminal SEO makes Search Console work feel inspectable and calm. The homepage and internal guides share the same midnight canvas, cyan signals and ice actions. The guides extend that visual language with clear reading columns, persistent section navigation and terminal-like command panels.\n\nArchivo carries explanation, headings and navigation. JetBrains Mono marks commands, tool names and measured data. Keep prose conversational and readable; reserve monospaced type for material that benefits from a precise, fixed-width shape.",
+    "keyCharacteristics": [
+      "Midnight surfaces with a cyan signal and high-contrast ice actions.",
+      "Archivo for explanation; JetBrains Mono for commands and measurements.",
+      "Clear guide navigation and inspectable evidence close to its explanation.",
+      "Rectangular controls, quiet borders and explicit keyboard focus."
+    ],
+    "rules": [
+      {
+        "name": "The Shared Canvas Rule",
+        "body": "Homepage and internal routes use the same semantic canvas, card, text, line and cyan values. The home selector remains for prompt, table and status details that belong to its examples.",
+        "section": "colors"
+      },
+      {
+        "name": "The Border-and-Tone Rule",
+        "body": "Preserve tonal and border separation before adding any raised treatment.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do use the shared midnight, cyan and ice palette on homepage and internal routes.",
+      "Do use Archivo for explanation and navigation, and JetBrains Mono for commands, tool names and measured data.",
+      "Do keep guide prose within the article measure and place section navigation beside it on wide screens.",
+      "Do preserve underlines for text-link state, visible focus, 44px copy targets and native keyboard behavior.",
+      "Do label examples as illustrative and retain complete content when reduced motion is enabled.",
+      "Do group each homepage use case with its evidence and let wide data scroll."
+    ],
+    "donts": [
+      "Don't assign internal routes a separate page palette; they continue the shared Terminal SEO midnight system.",
+      "Don't use white text on the cyan link color for primary actions; use the ice action surface with dark text.",
+      "Don't turn command-copy controls into pills or add shadows to resting cards.",
+      "Don't put an exterior card around the homepage FAQ or split an explanation from its evidence.",
+      "Don't make status depend on color alone, shrink table data to force a fit, or hide full answers for motion effects.",
+      "Don't change factual claims, publication status, privacy boundaries or permissions as a visual effect."
+    ]
+  }
+}

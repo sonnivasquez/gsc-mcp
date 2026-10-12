@@ -1,0 +1,10 @@
+{
+  "comment": "Five rows to exercise pagination with rowLimit 2: pages of 2, 2, 1.",
+  "rows": [
+    { "keys": ["q1"], "clicks": 10, "impressions": 100, "ctr": 0.1, "position": 4 },
+    { "keys": ["q2"], "clicks": 20, "impressions": 200, "ctr": 0.1, "position": 5 },
+    { "keys": ["q3"], "clicks": 30, "impressions": 300, "ctr": 0.1, "position": 6 },
+    { "keys": ["q4"], "clicks": 40, "impressions": 400, "ctr": 0.1, "position": 7 },
+    { "keys": ["q5"], "clicks": 50, "impressions": 500, "ctr": 0.1, "position": 8 }
+  ]
+}

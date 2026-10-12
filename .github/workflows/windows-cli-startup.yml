@@ -1,0 +1,142 @@
+name: Windows CLI startup
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+    outputs:
+      mcp_changed: ${{ steps.detect.outputs.mcp_changed }}
+      web_changed: ${{ steps.detect.outputs.web_changed }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - id: detect
+        name: Detect changed areas
+        run: node scripts/ci-changed.mjs
+  verify:
+    name: Windows Node ${{ matrix.node }} and Bun 1.4.2
+    needs: changes
+    if: needs.changes.outputs.mcp_changed == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22', '26']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: '1.4.2'
+      - name: Install
+        run: npm ci
+      - name: Build
+        id: build
+        if: ${{ !cancelled() }}
+        run: npm run build:node
+      - name: Typecheck
+        if: ${{ !cancelled() }}
+        run: npm run typecheck:node
+      - name: Supervisor selfchecks
+        if: ${{ !cancelled() }}
+        run: node scripts/verify-cli-startup.mjs --selfcheck .atl/windows-cli-startup/artifacts/selfcheck
+      - name: MCP lifecycle diagnostics
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        timeout-minutes: 6
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force .atl/windows-cli-startup/artifacts/lifecycle | Out-Null
+          $failed = $false
+          foreach ($runtime in @('node', 'bun')) {
+            node scripts/diagnose-mcp-lifecycle.mjs --runtime $runtime 2>&1 | Tee-Object -FilePath ".atl/windows-cli-startup/artifacts/lifecycle/$runtime.log"
+            $diagnosticExit = $LASTEXITCODE
+            "exit_code=$diagnosticExit" | Set-Content ".atl/windows-cli-startup/artifacts/lifecycle/$runtime-exit.txt"
+            if ($diagnosticExit -ne 0) { $failed = $true }
+          }
+          if ($failed) { exit 1 }
+          exit 0
+      - name: Focused real CLI and suites
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: node scripts/verify-cli-startup.mjs --verify .atl/windows-cli-startup/artifacts/verify
+      # Run each runtime even when focused checks or the other full suite fail.
+      # Keep nonzero exits as failures; Tee-Object retains output for diagnosis.
+      - name: Full Node suite
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        timeout-minutes: 8
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force .atl/windows-cli-startup/artifacts/full | Out-Null
+          node --test --test-reporter=tap 2>&1 | Tee-Object -FilePath .atl/windows-cli-startup/artifacts/full/node.log
+          $testExit = $LASTEXITCODE
+          "exit_code=$testExit" | Set-Content .atl/windows-cli-startup/artifacts/full/node-exit.txt
+          exit $testExit
+      - name: Full Bun suite
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        timeout-minutes: 8
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force .atl/windows-cli-startup/artifacts/full | Out-Null
+          bun test ./test 2>&1 | Tee-Object -FilePath .atl/windows-cli-startup/artifacts/full/bun.log
+          $testExit = $LASTEXITCODE
+          "exit_code=$testExit" | Set-Content .atl/windows-cli-startup/artifacts/full/bun-exit.txt
+          exit $testExit
+      - name: Full Node suite with Spanish locale
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        timeout-minutes: 8
+        shell: pwsh
+        env:
+          LC_ALL: es_PE.UTF-8
+          LC_MESSAGES: es_PE.UTF-8
+          LANG: es_PE.UTF-8
+        run: |
+          New-Item -ItemType Directory -Force .atl/windows-cli-startup/artifacts/full | Out-Null
+          node --test --test-reporter=tap 2>&1 | Tee-Object -FilePath .atl/windows-cli-startup/artifacts/full/node-es.log
+          $testExit = $LASTEXITCODE
+          "exit_code=$testExit" | Set-Content .atl/windows-cli-startup/artifacts/full/node-es-exit.txt
+          exit $testExit
+      - name: Full Bun suite with Spanish locale
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        timeout-minutes: 8
+        shell: pwsh
+        env:
+          LC_ALL: es_PE.UTF-8
+          LC_MESSAGES: es_PE.UTF-8
+          LANG: es_PE.UTF-8
+        run: |
+          New-Item -ItemType Directory -Force .atl/windows-cli-startup/artifacts/full | Out-Null
+          bun test ./test 2>&1 | Tee-Object -FilePath .atl/windows-cli-startup/artifacts/full/bun-es.log
+          $testExit = $LASTEXITCODE
+          "exit_code=$testExit" | Set-Content .atl/windows-cli-startup/artifacts/full/bun-es-exit.txt
+          exit $testExit
+      - name: Retain report and logs (never HOME or cache)
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows-cli-startup-node-${{ matrix.node }}
+          path: |
+            .atl/windows-cli-startup/artifacts/selfcheck/selfcheck.json
+            .atl/windows-cli-startup/artifacts/verify/report.json
+            .atl/windows-cli-startup/artifacts/verify/*.stdout.log
+            .atl/windows-cli-startup/artifacts/verify/*.stderr.log
+            .atl/windows-cli-startup/artifacts/full/*.log
+            .atl/windows-cli-startup/artifacts/full/*-exit.txt
+            .atl/windows-cli-startup/artifacts/lifecycle/*.log
+            .atl/windows-cli-startup/artifacts/lifecycle/*-exit.txt
+          if-no-files-found: warn
+          include-hidden-files: true
