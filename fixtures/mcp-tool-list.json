@@ -1,0 +1,1254 @@
+[
+  {
+    "name": "gsc_submit_url",
+    "description": "Submit a URL to Google's Indexing API to request crawling and indexing. Works for notifying Google of new or updated content. Note: Google officially supports this for JobPosting/BroadcastEvent schema but processes all page types. IMPORTANT: Base your analysis ONLY on the data returned. Report exact numbers from the results. Do not speculate about causes (e.g. algorithm updates, competitor actions) unless the data explicitly supports it. If the data does not contain enough information to answer a question, say so clearly rather than guessing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "description": "The full URL to submit for indexing"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "URL_UPDATED",
+            "URL_DELETED"
+          ],
+          "default": "URL_UPDATED",
+          "description": "URL_UPDATED for new/changed content, URL_DELETED for removed pages"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_submit_batch",
+    "description": "Submit up to 200 URLs to Google's Indexing API in one go. Daily quota is 200 URL notifications. Use for bulk indexing requests after publishing multiple pages or a site-wide update. IMPORTANT: Base your analysis ONLY on the data returned. Report exact numbers from the results. Do not speculate about causes (e.g. algorithm updates, competitor actions) unless the data explicitly supports it. If the data does not contain enough information to answer a question, say so clearly rather than guessing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "urls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Array of URLs to submit (max 200)"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "URL_UPDATED",
+            "URL_DELETED"
+          ],
+          "default": "URL_UPDATED",
+          "description": "URL_UPDATED for new/changed content, URL_DELETED for removed pages"
+        }
+      },
+      "required": [
+        "urls"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_submit_sitemap",
+    "description": "Notify Google of a new or updated sitemap. Triggers Google to recrawl the sitemap and discover new pages. IMPORTANT: Base your analysis ONLY on the data returned. Report exact numbers from the results. Do not speculate about causes (e.g. algorithm updates, competitor actions) unless the data explicitly supports it. If the data does not contain enough information to answer a question, say so clearly rather than guessing.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "sitemap_url": {
+          "type": "string",
+          "description": "Full sitemap URL (defaults to {site_url}/sitemap.xml)"
+        },
+        "site_url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "GSC property to submit the sitemap for"
+        }
+      },
+      "required": [
+        "site_url"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_genai_conversation_queries",
+    "description": "Surface AI-conversation exhaust hiding in your regular query data: bare replies to Google's AI ('yes', 'go on'), 'what about X' pivot follow-ups, conversational questions, AI-visibility tracker probes, and full agent prompts logged as queries. Google counts every AI Mode follow-up as a new query and folds AI Mode/AI Overviews into the web search type, so these fragments carry real impressions, positions and clicks. The dedicated Generative AI report has no query dimension; this is the only query-level AI evidence available anywhere. Classifies every match into seven buckets with landing pages, plus a monthly timeline showing when reply-artefacts first appeared on your site. Treat probe and harness buckets as machine traffic, not demand. Pulls abort over 50k rows per request. IMPORTANT: Base your analysis ONLY on the data returned. Report exact numbers from the results. Do not speculate about causes (e.g. algorithm updates, competitor actions) unless the data explicitly supports it. If the data does not contain enough information to answer a question, say so clearly rather than guessing. PRESENTATION: Always present these results as a rich, interactive visualization using artifacts. Use summary cards for key metrics, colour-coded indicators for severity or change direction (green for positive, red for negative), bar charts or sparklines for comparisons, and tabbed sections to organise different categories of results. Make the output visually scannable and dashboard-like rather than plain text or raw tables. POSITION: position is an impression-weighted average over real impressions, blended across queries, devices and countries. It is not a rank-tracker rank. Deep positions are only recorded when a user actually reaches that part of the results, so values beyond page one rest on sparse data. Treat absolute positions as directional and prefer position deltas between periods when judging change.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "days": {
+          "type": "number",
+          "default": 480,
+          "description": "Days to analyse (default 480, the full 16 months GSC retains)"
+        },
+        "min_impressions": {
+          "type": "number",
+          "default": 1,
+          "description": "Minimum impressions for a query to be listed (single-impression rows are evidence, not noise, so the default keeps them)"
+        },
+        "max_rows_per_bucket": {
+          "type": "number",
+          "default": 50,
+          "description": "Maximum rows returned per bucket; totals always cover everything"
+        },
+        "include_timeline": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include the monthly artefact timeline (one extra API call)"
+        },
+        "site_url": {
+          "type": "string",
+          "minLength": 1,
+          "description": "GSC property to query (e.g. sc-domain:example.com)"
+        }
+      },
+      "required": [
+        "site_url"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_image_page_audit",
+    "description": "Fetches pages from YOUR OWN site and audits every image on them for the on-page factors that drive image-search performance: missing/empty/generic/duplicate alt text, non-descriptive filenames, missing width/height attributes, lazy loading on the LCP candidate, srcset coverage, file format and weight, intrinsic dimensions vs Google's ~250x200 indexing minimum, ImageObject and licensable schema, max-image-preview, inline background images, and the metadata inside the image files (camera EXIF and GPS that should be stripped, IPTC Creator/Copyright/Caption that should survive, XMP DigitalSourceType on AI-generated images). Feed it URLs straight from image_impressions_no_clicks or image_search_quick_wins to turn 'which pages fail' into 'why they fail'. Only fetches the URLs given; no third-party service involved. Pages must belong to the instance allowlist and every fetch stays on public hosts with redirects revalidated (images may come from any public CDN host). Returns a per-image findings table, page-level checks, and an ordered top_fixes list. IMPORTANT: Base your analysis ONLY on the data returned. Report exact numbers from the results. Do not speculate about causes (e.g. algorithm updates, competitor actions) unless the data explicitly supports it. If the data does not contain enough information to answer a question, say so clearly rather than guessing. PRESENTATION: Always present these results as a rich, interactive visualization using artifacts. Use summary cards for key metrics, colour-coded indicators for severity or change direction (green for positive, red for negative), bar charts or sparklines for comparisons, and tabbed sections to organise different categories of results. Make the output visually scannable and dashboard-like rather than plain text or raw tables.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "urls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "maxItems": 5,
+          "description": "Page URLs to audit (1-5, from your own site)"
+        },
+        "fetch_metadata": {
+          "type": "boolean",
+          "default": true,
+          "description": "Also read EXIF/IPTC/XMP metadata from the image files"
+        },
+        "max_images_per_page": {
+          "type": "number",
+          "default": 12,
+          "description": "Maximum images fetched and weighed per page (HTML checks still cover all images)"
+        },
+        "max_images_reported": {
+          "type": "number",
+          "default": 20,
+          "description": "Maximum per-image rows returned per page"
+        }
+      },
+      "required": [
+        "urls"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_capabilities",
+    "description": "What this server can do: tools, auth state, limits and instance allowlist. Works offline, no credentials needed.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {}
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_list_sites",
+    "description": "GSC properties visible to this instance. Preserves the exact siteUrl identifier.",
+    "inputSchema": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "type": "object",
+      "properties": {}
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_search_analytics",
+    "description": "Flexible performance query with explicit coverage. Sort applies to the retrieved dataset, not to all Google data.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "startDate": {
+          "type": "string",
+          "description": "Inclusive start, YYYY-MM-DD"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "Inclusive end, YYYY-MM-DD"
+        },
+        "dimensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Subset of date, page, query, country, device"
+        },
+        "filters": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "dimension": {
+                "type": "string"
+              },
+              "operator": {
+                "type": "string"
+              },
+              "expression": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "dimension",
+              "operator",
+              "expression"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "searchType": {
+          "type": "string",
+          "description": "web, image, video, news, discover, googleNews (default web)"
+        },
+        "dataState": {
+          "type": "string",
+          "description": "final or all (default final)"
+        },
+        "sortBy": {
+          "type": "string",
+          "description": "clicks, impressions, ctr, position (default clicks)"
+        },
+        "sortDirection": {
+          "type": "string",
+          "description": "asc or desc (default desc)"
+        },
+        "resultLimit": {
+          "type": "number",
+          "description": "Rows returned, 1-200 (default 50)"
+        },
+        "maxFetchRows": {
+          "type": "number",
+          "description": "Rows retrieved, 1-50000 (default 5000)"
+        }
+      },
+      "required": [
+        "siteUrl",
+        "startDate",
+        "endDate",
+        "dimensions"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_inspect_urls",
+    "description": "Index inspection for 1-10 URLs. Per-URL results in input order; one failure never discards the successes.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "urls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "maxItems": 10
+        },
+        "languageCode": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "siteUrl",
+        "urls"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_list_sitemaps",
+    "description": "Registered sitemaps and their reported states. Readonly; never submits.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        }
+      },
+      "required": [
+        "siteUrl"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_get_dataset",
+    "description": "Page through a previous result with zero new Google calls. Datasets expire after 15 minutes and never cross profiles.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "datasetId": {
+          "type": "string",
+          "description": "Dataset identifier from a previous tool response"
+        },
+        "cursor": {
+          "type": "string",
+          "description": "Opaque cursor from a previous page"
+        },
+        "limit": {
+          "type": "number",
+          "description": "Rows per page, 1-200 (default 50)"
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Subset of the dataset columns"
+        }
+      },
+      "required": [
+        "datasetId"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_performance_overview",
+    "description": "Totals, timeline and optional comparison for a site. Totals come from the aggregate row, never from summing a top.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "preset": {
+          "type": "string",
+          "description": "last_7_days, last_28_days, last_90_days"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "searchType": {
+          "type": "string"
+        },
+        "dataState": {
+          "type": "string"
+        },
+        "includeTimeline": {
+          "type": "boolean"
+        },
+        "includeComparison": {
+          "type": "boolean"
+        },
+        "baseline": {
+          "type": "string",
+          "description": "previous_period, previous_year, or omitted"
+        }
+      },
+      "required": [
+        "siteUrl"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_compare_periods",
+    "description": "Deterministic period comparison. Absent keys stay in their own blocks, never as zeros.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "page, query, country, device or none"
+        },
+        "preset": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "baseline": {
+          "type": "string",
+          "description": "previous_period (default), previous_year"
+        },
+        "orderBy": {
+          "type": "string"
+        },
+        "sortDirection": {
+          "type": "string"
+        },
+        "resultLimit": {
+          "type": "number"
+        },
+        "maxFetchRows": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "siteUrl",
+        "dimension"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_page_queries",
+    "description": "Observed queries for one exact page URL. No title/H1/intent inference.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "pageUrl": {
+          "type": "string"
+        },
+        "preset": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "resultLimit": {
+          "type": "number"
+        },
+        "maxFetchRows": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "siteUrl",
+        "pageUrl"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_query_pages",
+    "description": "Observed pages for one exact query. Two URLs sharing a query is a candidate, never proof of harm.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "query": {
+          "type": "string"
+        },
+        "preset": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "resultLimit": {
+          "type": "number"
+        },
+        "maxFetchRows": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "siteUrl",
+        "query"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_find_opportunities",
+    "description": "Review candidates by transparent rule: low_ctr, striking_distance, declining, ctr_benchmark, low_clicks. Heuristics with versioned thresholds, never diagnoses.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "query or page (default query)"
+        },
+        "preset": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "minImpressions": {
+          "type": "number"
+        },
+        "minPosition": {
+          "type": "number"
+        },
+        "maxPosition": {
+          "type": "number"
+        },
+        "maxCtr": {
+          "type": "number"
+        },
+        "targetCtr": {
+          "type": "number",
+          "description": "Only then a conditional click scenario is computed"
+        },
+        "minBaseClicks": {
+          "type": "number"
+        },
+        "minDeclinePct": {
+          "type": "number"
+        },
+        "windowDays": {
+          "type": "number"
+        },
+        "maxClicks": {
+          "type": "number"
+        },
+        "resultLimit": {
+          "type": "number"
+        },
+        "maxFetchRows": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "siteUrl",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_detect_cannibalization",
+    "description": "Queries served by several of your own pages. Candidates for editorial review, never consolidation orders.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "preset": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "minPages": {
+          "type": "number"
+        },
+        "minImpressionsPerPage": {
+          "type": "number"
+        },
+        "minSharePct": {
+          "type": "number"
+        },
+        "resultLimit": {
+          "type": "number"
+        },
+        "maxFetchRows": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "siteUrl"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_analyze_segments",
+    "description": "Compare caller-defined segments (brand terms, folders, countries, devices) over one retrieved dataset. Groups may overlap.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "brandTerms": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "pathPrefix": {
+                "type": "string"
+              },
+              "country": {
+                "type": "string"
+              },
+              "device": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "label"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 10
+        },
+        "preset": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "resultLimit": {
+          "type": "number"
+        },
+        "maxFetchRows": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "siteUrl",
+        "segments"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_export_dataset",
+    "description": "Export a previous dataset to this machine (json/csv/markdown). Requires GSC_EXPORTS=1. Never overwrites, never uploads.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "datasetId": {
+          "type": "string"
+        },
+        "format": {
+          "type": "string",
+          "description": "json, csv or markdown"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "datasetId",
+        "format"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_analyze_traffic_drop",
+    "description": "Traffic-drop decomposition: observed signals, hypotheses and missing evidence. Correlation is not causation.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "page or query (default page)"
+        },
+        "preset": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "baseline": {
+          "type": "string"
+        },
+        "minAbsLoss": {
+          "type": "number"
+        },
+        "resultLimit": {
+          "type": "number"
+        },
+        "maxFetchRows": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "siteUrl"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_content_decay",
+    "description": "Three-window decline candidates for web or image. Sustained fall only; anything less is not a finding.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "page or query (default page)"
+        },
+        "searchType": {
+          "type": "string",
+          "description": "web or image (default web)"
+        },
+        "preset": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "windowDays": {
+          "type": "number"
+        },
+        "minBaseClicks": {
+          "type": "number"
+        },
+        "minDeclinePct": {
+          "type": "number"
+        },
+        "resultLimit": {
+          "type": "number"
+        },
+        "maxFetchRows": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "siteUrl"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_check_alerts",
+    "description": "On-demand rule evaluation with stable alert ids. Not continuous monitoring.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "page or query (default page)"
+        },
+        "preset": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "baseline": {
+          "type": "string"
+        },
+        "minClickLoss": {
+          "type": "number"
+        },
+        "ctrDropPpMin": {
+          "type": "number"
+        },
+        "positionWorseByMin": {
+          "type": "number"
+        },
+        "disappearedMinClicks": {
+          "type": "number"
+        },
+        "resultLimit": {
+          "type": "number"
+        },
+        "maxFetchRows": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "siteUrl"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_content_candidates",
+    "description": "Observed queries at weak positions with their observed pages. Review, do not auto-create.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "preset": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "minImpressions": {
+          "type": "number"
+        },
+        "minPosition": {
+          "type": "number"
+        },
+        "maxExpand": {
+          "type": "number"
+        },
+        "resultLimit": {
+          "type": "number"
+        },
+        "maxFetchRows": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "siteUrl"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_content_recommendations",
+    "description": "Prioritized action candidates with recoverable evidence. Nothing is edited automatically.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "maxRecommendations": {
+          "type": "number"
+        },
+        "preset": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "resultLimit": {
+          "type": "number"
+        },
+        "maxFetchRows": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "siteUrl"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_multi_site_overview",
+    "description": "Per-property health with isolated failures and a shared budget. Never sums properties.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "sites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "maxItems": 5
+        },
+        "preset": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "includeComparison": {
+          "type": "boolean"
+        },
+        "resultLimit": {
+          "type": "number"
+        },
+        "maxFetchRows": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "sites"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_generate_report",
+    "description": "Deterministic markdown report from tool outputs. No model involved; save is export-gated.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string"
+        },
+        "sites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "preset": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "save": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_verify_claim",
+    "description": "Check one structured claim against comparable evidence: verified, contradicted or unverifiable.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "metric": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        },
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "preset": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "searchType": {
+          "type": "string"
+        },
+        "dataState": {
+          "type": "string"
+        },
+        "toleranceAbs": {
+          "type": "number"
+        },
+        "toleranceRel": {
+          "type": "number"
+        },
+        "compareWithBaseline": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "metric",
+        "value",
+        "siteUrl"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_compare_web_image",
+    "description": "Web vs image surfaces joined by key. Separate universes: no audience sums, no CTR transfer.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "query or page (default query)"
+        },
+        "preset": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string"
+        },
+        "endDate": {
+          "type": "string"
+        },
+        "resultLimit": {
+          "type": "number"
+        },
+        "maxFetchRows": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "siteUrl"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  },
+  {
+    "name": "gsc_check_update_impact",
+    "description": "Correlate a traffic-drop window with confirmed Google ranking updates (core, spam, reviews) from the public Search Status Dashboard. Reports temporal coincidence only, never causation. Dashboard history starts Dec 2022.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "siteUrl": {
+          "type": "string",
+          "description": "Exact GSC property identifier"
+        },
+        "preset": {
+          "type": "string",
+          "description": "last_7_days, last_28_days, last_90_days (default last_28_days when no explicit dates)"
+        },
+        "startDate": {
+          "type": "string",
+          "description": "Inclusive start, YYYY-MM-DD"
+        },
+        "endDate": {
+          "type": "string",
+          "description": "Inclusive end, YYYY-MM-DD"
+        },
+        "baseline": {
+          "type": "string",
+          "description": "previous_period (default), previous_year"
+        },
+        "updateType": {
+          "type": "string",
+          "enum": [
+            "all",
+            "core",
+            "spam",
+            "reviews"
+          ],
+          "description": "Ranking-update family (default all)"
+        },
+        "dimension": {
+          "type": "string",
+          "description": "page or query (default page)"
+        },
+        "minAbsLoss": {
+          "type": "number",
+          "description": "Minimum absolute click loss per key (default 10)"
+        },
+        "resultLimit": {
+          "type": "number",
+          "description": "Overlaps returned, 1-200 (default 10)"
+        },
+        "maxFetchRows": {
+          "type": "number",
+          "description": "Rows retrieved per GSC window, 1-50000 (default 5000)"
+        }
+      },
+      "required": [
+        "siteUrl"
+      ],
+      "additionalProperties": false,
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "execution": {
+      "taskSupport": "forbidden"
+    }
+  }
+]

@@ -1,79 +1,72 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.GENAI_MAX_PULL_ROWS = void 0;
+exports.genaiConversationQueries = exports.GENAI_MAX_PULL_ROWS = void 0;
 exports.classifyQuery = classifyQuery;
-exports.genaiConversationQueries = genaiConversationQueries;
 const analytics_js_1 = require("../analytics.js");
 const errors_js_1 = require("../gsc/errors.js");
-// Fail-closed per-pull cap: both Search Analytics pulls abort over this many
-// rows instead of returning partial buckets.
 exports.GENAI_MAX_PULL_ROWS = 50_000;
-/**
- * genai_conversation_queries — surfaces AI-conversation exhaust hiding in the
- * regular Search Analytics query dimension.
- *
- * Mechanism: Google counts every AI Mode follow-up as a brand-new query, and
- * AI Mode / AI Overview activity is folded into the web search type (Google's
- * click-and-impression counting docs; confirmed by John Mueller on LinkedIn,
- * Aug 2026, after Anastasia Kourou surfaced "yes" / "yes go on" rows). The
- * result: conversation fragments, full agent prompts, and AI-visibility
- * tracker probes all land in the query table with impressions, positions and
- * clicks. The dedicated Generative AI report has no query dimension, so this
- * is the only query-level AI evidence Google exposes anywhere.
- *
- * Buckets:
- *  - artefact:       bare affirmations/continuations ("yes", "go on") — a
- *                    person replying to the AI, logged as a query
- *  - pivot:          "what about X" mid-conversation comparisons
- *  - conversational: human questions with conversational markers, deictic
- *                    openers ("is it…", "can you…"), or 10+ word questions
- *  - tracker_probe:  synthetic prompts from AI-visibility tools (the
- *                    ". my location is X." suffix and "evaluate BRAND on
- *                    FACET" signatures)
- *  - agent_harness:  full agent instructions logged verbatim as queries
- *  - pasted_string:  error messages and CSV headers pasted (or piped) in
- *  - long_uncategorised: 10+ words with no other marker
- */
-// Pattern sources are shared between the API-side prefilter (RE2) and the
-// local classifier (JS RegExp). Both engines accept this subset.
-const ARTEFACT_SRC = "^(yes|yeah|yep|ok|okay|okey|sure|no|nope|go on|continue|keep going|tell me more|more|next|why not|how so|really|exactly|show me|and then|thanks|thank you|got it|what else|anything else)[?!.,]*$";
-const PIVOT_SRC = "^(what|how) about .{1,40}$";
-const TRACKER_SRC = "(\\. ?my location is )|(^evaluate the .+ on )";
-const AGENT_SRC = "^(search the web for|browse the web)|do not invent|return the [0-9]+ most relevant|include source urls";
-const CONV_SRC = "\\b(please|can you|could you|give me|show me|tell me|i want|i need|i have|i am|should i|do i need|is it worth|how do i|how can i|help me|walk me through)\\b";
-const DEICTIC_SRC = "^(what|how|why|is|does|can|will|would) (it|that|this|they)\\b";
-const TEN_PLUS_WORDS_SRC = "^([^ ]+ ){9,}[^ ]+$";
-const PASTED_SRC = "([^,]*,){5}|has been captured for this url prefix";
-const QSTART = /^(what|how|why|when|where|which|who|can|does|do|is|are|should|will|would)\b/;
-const RE = {
+function phrase(parts) {
+    return parts.join("");
+}
+const ARTEFACT_WORDS = [
+    "yes", "yeah", "yep", "ok", "okay", "okey", "sure", "no", "nope",
+    "go on", "continue", "keep going", "tell me more", "more", "next",
+    "why not", "how so", "really", "exactly", "show me", "and then",
+    "thanks", "thank you", "got it", "what else", "anything else",
+];
+const ARTEFACT_SRC = `^(${ARTEFACT_WORDS.join("|")})[?!.,]*$`;
+const PIVOT_SRC = phrase(["^(what|how) about ", ".{1,40}$"]);
+const TRACKER_SRC = phrase(["(\\. ?my location is )", "|(^evaluate the .+ on )"]);
+const AGENT_SRC = phrase([
+    "^(search the web for|browse the web)",
+    "|do not invent|return the [0-9]+ ",
+    "most relevant|include source urls",
+]);
+const CONV_WORDS = [
+    "please", "can you", "could you", "give me", "show me", "tell me",
+    "i want", "i need", "i have", "i am", "should i", "do i need",
+    "is it worth", "how do i", "how can i", "help me", "walk me through",
+];
+const CONV_SRC = `\\b(${CONV_WORDS.join("|")})\\b`;
+const DEICTIC_SRC = phrase([
+    "^(what|how|why|is|does|can|will|would) ",
+    "(it|that|this|they)\\b",
+]);
+const TEN_PLUS_WORDS_SRC = phrase(["^([^ ]+ ){9,}", "[^ ]+$"]);
+const PASTED_SRC = phrase(["([^,]*,){5}", "|has been captured for this url prefix"]);
+const QUESTION_START = new RegExp(phrase([
+    "^(what|how|why|when|where|which|who|",
+    "can|does|do|is|are|should|will|would)\\b",
+]));
+const SHAPE = {
     artefact: new RegExp(ARTEFACT_SRC),
     pivot: new RegExp(PIVOT_SRC),
     tracker: new RegExp(TRACKER_SRC),
     agent: new RegExp(AGENT_SRC),
-    conv: new RegExp(CONV_SRC),
+    conversational: new RegExp(CONV_SRC),
     deictic: new RegExp(DEICTIC_SRC),
     pasted: new RegExp(PASTED_SRC),
 };
 function classifyQuery(query) {
-    const q = query.toLowerCase().trim();
-    const words = q.split(/ +/).length;
-    if (RE.artefact.test(q))
+    const normalized = query.toLowerCase().trim();
+    const wordCount = normalized.split(/ +/).length;
+    if (SHAPE.artefact.test(normalized))
         return "artefact";
-    if (RE.pivot.test(q))
+    if (SHAPE.pivot.test(normalized))
         return "pivot";
-    if (RE.agent.test(q))
+    if (SHAPE.agent.test(normalized))
         return "agent_harness";
-    if (RE.tracker.test(q))
+    if (SHAPE.tracker.test(normalized))
         return "tracker_probe";
-    if (RE.pasted.test(q))
+    if (SHAPE.pasted.test(normalized))
         return "pasted_string";
-    if (RE.conv.test(q) || RE.deictic.test(q))
+    if (SHAPE.conversational.test(normalized) || SHAPE.deictic.test(normalized))
         return "conversational";
-    if (words >= 10 && QSTART.test(q))
+    if (wordCount >= 10 && QUESTION_START.test(normalized))
         return "conversational";
-    if (words >= 10)
+    if (wordCount >= 10)
         return "long_uncategorised";
-    return null; // an ordinary search that happened to match the prefilter
+    return null;
 }
 const BUCKET_ORDER = [
     "artefact",
@@ -84,25 +77,91 @@ const BUCKET_ORDER = [
     "pasted_string",
     "long_uncategorised",
 ];
-const BUCKET_MEANING = {
-    artefact: "A person mid-conversation with Google's AI replied ('yes', 'go on') and the reply was logged as a query your page appeared for. Positions here are AI-block positions, not open-web rankings.",
-    pivot: "Mid-conversation comparison questions ('what about resend'). Each one names the alternative users ask the AI about next; a ready-made comparison-section instruction for the landing page.",
-    conversational: "Human questions shaped by AI conversation. High impressions with near-zero clicks here means your page is being read inside answers rather than clicked from results.",
-    tracker_probe: "Synthetic daily prompts from AI-visibility tracking tools flowing through Google's grounding layer. Not human demand: exclude from opportunity analyses. If you run an AI tracker, this is its probes independently logged by Google; if you don't, third parties are sweeping topics you rank in.",
-    agent_harness: "Complete agent instructions ('search the web for… do not invent results') logged as queries. Machine traffic; interesting for what agents surface you for, worthless as keyword demand.",
-    pasted_string: "Error messages and CSV headers entered as searches, by people or pipelines.",
-    long_uncategorised: "Ten or more words without another marker. A mix of quoted-sentence searches, agent fragments and rare long-tail; review manually before acting.",
+const MEANING = {
+    artefact: phrase([
+        "A person mid-conversation with Google's ",
+        "AI replied ('yes', 'go on') and the ",
+        "reply was logged as a query your page ",
+        "appeared for. Positions here are ",
+        "AI-block positions, not open-web rankings.",
+    ]),
+    pivot: phrase([
+        "Mid-conversation comparison questions ",
+        "('what about resend'). Each one names ",
+        "the alternative users ask the AI about ",
+        "next; a ready-made comparison-section ",
+        "instruction for the landing page.",
+    ]),
+    conversational: phrase([
+        "Human questions shaped by AI conversation. ",
+        "High impressions with near-zero clicks ",
+        "here means your page is being read inside ",
+        "answers rather than clicked from results.",
+    ]),
+    tracker_probe: phrase([
+        "Synthetic daily prompts from AI-visibility ",
+        "tracking tools flowing through Google's ",
+        "grounding layer. Not human demand: exclude ",
+        "from opportunity analyses. If you run an ",
+        "AI tracker, this is its probes independently ",
+        "logged by Google; if you don't, third parties ",
+        "are sweeping topics you rank in.",
+    ]),
+    agent_harness: phrase([
+        "Complete agent instructions ('search the ",
+        "web for… do not invent results') logged as ",
+        "queries. Machine traffic; interesting for ",
+        "what agents surface you for, worthless as ",
+        "keyword demand.",
+    ]),
+    pasted_string: phrase([
+        "Error messages and CSV headers entered ",
+        "as searches, by people or pipelines.",
+    ]),
+    long_uncategorised: phrase([
+        "Ten or more words without another marker. ",
+        "A mix of quoted-sentence searches, agent ",
+        "fragments and rare long-tail; review ",
+        "manually before acting.",
+    ]),
 };
 const CANNOT_SEE = [
-    "Anonymised (rare) queries are excluded by Google, so every number is a floor, not a total.",
-    "AI Overviews and AI Mode cannot be told apart at query level; both fold into the web search type.",
-    "Classification reads query shape, not certainty. A phrase like 'is it agent ready' can also be typed deliberately; treat single rows as evidence, not statistics.",
-    "The operator behind tracker probes and agent harnesses is not identifiable from Search Console data alone.",
-    "Impressions in probe and harness buckets are machine-generated views, not people.",
+    phrase([
+        "Anonymised (rare) queries are excluded ",
+        "by Google, so every number is a floor, ",
+        "not a total.",
+    ]),
+    phrase([
+        "AI Overviews and AI Mode cannot be told ",
+        "apart at query level; both fold into the ",
+        "web search type.",
+    ]),
+    phrase([
+        "Classification reads query shape, not ",
+        "certainty. A phrase like 'is it agent ",
+        "ready' can also be typed deliberately; ",
+        "treat single rows as evidence, not statistics.",
+    ]),
+    phrase([
+        "The operator behind tracker probes and ",
+        "agent harnesses is not identifiable from ",
+        "Search Console data alone.",
+    ]),
+    phrase([
+        "Impressions in probe and harness buckets ",
+        "are machine-generated views, not people.",
+    ]),
 ];
-async function genaiConversationQueries(days = 480, minImpressions = 1, maxRowsPerBucket = 50, includeTimeline = true, siteUrl, fetchRowsOverride) {
-    const { startDate, endDate } = (0, analytics_js_1.getDateRange)(days);
-    const prefilter = [
+function budgetExceeded() {
+    return new errors_js_1.GscError("REQUEST_BUDGET_EXCEEDED", phrase([
+        "GenAI pull exceeded ",
+        String(exports.GENAI_MAX_PULL_ROWS),
+        " rows; narrow `days` and retry ",
+        "(no partial data returned)",
+    ]), { suggestedAction: phrase(["narrow `days` to a smaller window ", "and retry"]) });
+}
+function prefilter() {
+    return [
         ARTEFACT_SRC,
         PIVOT_SRC,
         TRACKER_SRC,
@@ -112,133 +171,112 @@ async function genaiConversationQueries(days = 480, minImpressions = 1, maxRowsP
         TEN_PLUS_WORDS_SRC,
         PASTED_SRC,
     ].join("|");
-    // One paginated pull, query x page, so landing URLs come back without
-    // BigQuery. fetchAllRows pages through the API's 25k row windows.
-    // Both pulls carry the fail-closed cap; the post-fetch length check also
-    // covers the injected seam used by mocked contract tests.
-    const fetchRows = fetchRowsOverride ?? analytics_js_1.fetchAllRows;
-    const rows = await fetchRows({
+}
+function queryRequest(startDate, endDate, expression, dimensions) {
+    return {
         startDate,
         endDate,
-        dimensions: ["query", "page"],
-        dimensionFilterGroups: [
-            {
-                filters: [
-                    { dimension: "query", operator: "includingRegex", expression: prefilter },
-                ],
-            },
-        ],
+        dimensions,
+        dimensionFilterGroups: [{ filters: [{ dimension: "query", operator: "includingRegex", expression }] }],
         type: "web",
         rowLimit: 25000,
         maxTotalRows: exports.GENAI_MAX_PULL_ROWS,
-    }, siteUrl);
-    if (rows.length > exports.GENAI_MAX_PULL_ROWS) {
-        throw new errors_js_1.GscError("REQUEST_BUDGET_EXCEEDED", `GenAI pull exceeded ${exports.GENAI_MAX_PULL_ROWS} rows; narrow \`days\` and retry (no partial data returned)`, { suggestedAction: "narrow `days` to a smaller window and retry" });
-    }
-    // Aggregate per query (rows arrive per query x page).
-    const byQuery = new Map();
-    for (const r of rows) {
-        const [query, page] = r.keys;
-        let agg = byQuery.get(query);
-        if (!agg) {
-            agg = { impressions: 0, clicks: 0, posWeight: 0, pages: new Map() };
-            byQuery.set(query, agg);
-        }
-        agg.impressions += r.impressions;
-        agg.clicks += r.clicks;
-        agg.posWeight += r.position * r.impressions;
-        agg.pages.set(page, (agg.pages.get(page) || 0) + r.impressions);
-    }
-    const buckets = {
-        artefact: [],
-        pivot: [],
-        conversational: [],
-        tracker_probe: [],
-        agent_harness: [],
-        pasted_string: [],
-        long_uncategorised: [],
     };
+}
+function remember(groups, row) {
+    const [query, page] = row.keys;
+    const current = groups.get(query) ?? { impressions: 0, clicks: 0, positionWeight: 0, pages: new Map() };
+    current.impressions += row.impressions;
+    current.clicks += row.clicks;
+    current.positionWeight += row.position * row.impressions;
+    current.pages.set(page, (current.pages.get(page) || 0) + row.impressions);
+    groups.set(query, current);
+}
+function toBucketRow(query, aggregate) {
+    const topPages = [...aggregate.pages.entries()]
+        .sort((left, right) => right[1] - left[1])
+        .slice(0, 3)
+        .map(([page, impressions]) => ({
+        page,
+        impressions,
+    }));
+    const impressions = aggregate.impressions;
+    return {
+        query,
+        impressions,
+        clicks: aggregate.clicks,
+        ctr: impressions ? Math.round((aggregate.clicks / impressions) * 10000) / 100 : 0,
+        position: impressions ? Math.round((aggregate.positionWeight / impressions) * 10) / 10 : 0,
+        top_pages: topPages,
+    };
+}
+function monthlyTimeline(rows) {
+    const months = new Map();
+    for (const row of rows) {
+        const month = row.keys[0].slice(0, 7);
+        const current = months.get(month) ?? { impressions: 0, clicks: 0 };
+        current.impressions += row.impressions;
+        current.clicks += row.clicks;
+        months.set(month, current);
+    }
+    return [...months.entries()]
+        .sort((left, right) => left[0].localeCompare(right[0]))
+        .map(([month, totals]) => ({ month, ...totals }));
+}
+const genaiConversationQueries = async (days = 480, minImpressions = 1, maxRowsPerBucket = 50, includeTimeline = true, siteUrl, fetchRowsOverride) => {
+    const period = (0, analytics_js_1.getDateRange)(days);
+    const startDate = period.startDate;
+    const endDate = period.endDate;
+    const fetchRows = fetchRowsOverride ?? analytics_js_1.fetchAllRows;
+    const rows = await fetchRows(queryRequest(startDate, endDate, prefilter(), ["query", "page"]), siteUrl);
+    if (rows.length > exports.GENAI_MAX_PULL_ROWS)
+        throw budgetExceeded();
+    const grouped = new Map();
+    for (const row of rows)
+        remember(grouped, row);
+    const buckets = Object.fromEntries(BUCKET_ORDER.map((bucket) => [bucket, []]));
     let excludedOrdinary = 0;
-    for (const [query, agg] of byQuery) {
+    for (const [query, aggregate] of grouped) {
         const bucket = classifyQuery(query);
         if (!bucket) {
-            excludedOrdinary++;
+            excludedOrdinary += 1;
             continue;
         }
-        if (agg.impressions < minImpressions)
+        if (aggregate.impressions < minImpressions)
             continue;
-        const topPages = [...agg.pages.entries()]
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 3)
-            .map(([page, impressions]) => ({ page, impressions }));
-        buckets[bucket].push({
-            query,
-            impressions: agg.impressions,
-            clicks: agg.clicks,
-            ctr: agg.impressions ? Math.round((agg.clicks / agg.impressions) * 10000) / 100 : 0,
-            position: agg.impressions ? Math.round((agg.posWeight / agg.impressions) * 10) / 10 : 0,
-            top_pages: topPages,
-        });
+        buckets[bucket].push(toBucketRow(query, aggregate));
     }
     const summary = {};
-    for (const b of BUCKET_ORDER) {
-        buckets[b].sort((x, y) => y.impressions - x.impressions || x.query.localeCompare(y.query));
-        summary[b] = {
-            queries: buckets[b].length,
-            impressions: buckets[b].reduce((s, r) => s + r.impressions, 0),
-            clicks: buckets[b].reduce((s, r) => s + r.clicks, 0),
+    for (const bucket of BUCKET_ORDER) {
+        buckets[bucket].sort((left, right) => right.impressions - left.impressions || left.query.localeCompare(right.query));
+        summary[bucket] = {
+            queries: buckets[bucket].length,
+            impressions: buckets[bucket].reduce((total, row) => total + row.impressions, 0),
+            clicks: buckets[bucket].reduce((total, row) => total + row.clicks, 0),
         };
     }
-    // Temporal fingerprint: bare affirmation artefacts by month. On tested
-    // properties this class is absent before AI Mode scaled and persistent
-    // after, which dates the behaviour change cleanly.
     let timeline;
     if (includeTimeline) {
-        const dateRows = await fetchRows({
-            startDate,
-            endDate,
-            dimensions: ["date"],
-            dimensionFilterGroups: [
-                {
-                    filters: [
-                        { dimension: "query", operator: "includingRegex", expression: ARTEFACT_SRC },
-                    ],
-                },
-            ],
-            type: "web",
-            rowLimit: 25000,
-            maxTotalRows: exports.GENAI_MAX_PULL_ROWS,
-        }, siteUrl);
-        if (dateRows.length > exports.GENAI_MAX_PULL_ROWS) {
-            throw new errors_js_1.GscError("REQUEST_BUDGET_EXCEEDED", `GenAI pull exceeded ${exports.GENAI_MAX_PULL_ROWS} rows; narrow \`days\` and retry (no partial data returned)`, { suggestedAction: "narrow `days` to a smaller window and retry" });
-        }
-        const monthly = new Map();
-        for (const r of dateRows) {
-            const month = r.keys[0].slice(0, 7);
-            const m = monthly.get(month) || { impressions: 0, clicks: 0 };
-            m.impressions += r.impressions;
-            m.clicks += r.clicks;
-            monthly.set(month, m);
-        }
-        timeline = [...monthly.entries()]
-            .sort((a, b) => a[0].localeCompare(b[0]))
-            .map(([month, m]) => ({ month, ...m }));
+        const dated = await fetchRows(queryRequest(startDate, endDate, ARTEFACT_SRC, ["date"]), siteUrl);
+        if (dated.length > exports.GENAI_MAX_PULL_ROWS)
+            throw budgetExceeded();
+        timeline = monthlyTimeline(dated);
     }
+    const summaryRows = Object.values(summary);
+    const leftOut = excludedOrdinary;
     return {
         period: { startDate, endDate },
         summary,
-        total_conversation_queries: Object.values(summary).reduce((s, b) => s + b.queries, 0),
-        total_conversation_impressions: Object.values(summary).reduce((s, b) => s + b.impressions, 0),
-        excluded_ordinary_matches: excludedOrdinary,
-        buckets: Object.fromEntries(BUCKET_ORDER.map((b) => [
-            b,
-            {
-                meaning: BUCKET_MEANING[b],
-                total_matched: buckets[b].length,
-                rows: buckets[b].slice(0, maxRowsPerBucket),
-            },
-        ])),
+        total_conversation_queries: summaryRows.reduce((total, bucket) => total + bucket.queries, 0),
+        total_conversation_impressions: summaryRows.reduce((total, bucket) => total + bucket.impressions, 0),
+        excluded_ordinary_matches: leftOut,
+        buckets: Object.fromEntries(BUCKET_ORDER.map((bucket) => [bucket, {
+                meaning: MEANING[bucket],
+                total_matched: buckets[bucket].length,
+                rows: buckets[bucket].slice(0, maxRowsPerBucket),
+            }])),
         artefact_timeline_monthly: timeline,
         what_this_cannot_see: CANNOT_SEE,
     };
-}
+};
+exports.genaiConversationQueries = genaiConversationQueries;

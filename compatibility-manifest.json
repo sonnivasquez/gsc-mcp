@@ -2,8 +2,8 @@
   "schemaVersion": "1.0",
   "base": {
     "repo": "gsc-mcp tool catalog snapshot",
-    "revision": "426a7c7653b27e595893ed34dc46e329388d08e7",
-    "version": "2.5.1",
+    "package": "@sonnivasquez/gsc-mcp",
+    "version": "1.0.0",
     "capturedAt": "2026-09-21",
     "captureMethod": "tools/list against dist/index.js built from working branch, no credentials",
     "liveToolCount": 29
