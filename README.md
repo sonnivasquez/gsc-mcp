@@ -1,12 +1,77 @@
-# GSC MCP · Google Search Console for AI assistants
+# Google Search Console MCP server
 
-Compare search performance, find SEO opportunities, and check URL indexing status from your AI assistant using your own Google Search Console data.
+[![npm version](https://img.shields.io/npm/v/@sonnivasquez/gsc-mcp)](https://www.npmjs.com/package/@sonnivasquez/gsc-mcp)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/sonnivasquez/gsc-mcp)](https://github.com/sonnivasquez/gsc-mcp)
+
+<!-- TODO: uncomment the MCP Registry badge after this server is listed.
+[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-blue)](https://registry.modelcontextprotocol.io/)
+-->
+
+<!-- TODO: uncomment the Glama score badge after this server is listed on Glama.
+[![Glama score](https://glama.ai/mcp/servers/io.github.sonnivasquez/gsc-mcp/badges/score.svg)](https://glama.ai/mcp/servers/io.github.sonnivasquez/gsc-mcp)
+-->
+
+<!-- TODO: add screenshots/demo.gif and switch the preview below to that file. The PNG stays until the GIF exists. -->
+
+![Google Search Console MCP server](<screenshots/google search console MCP.png>)
+
+A local Google Search Console MCP server to compare search performance, find SEO opportunities, and check URL indexing status from your AI assistant using your own Google Search Console data.
 
 GSC MCP is an open-source MCP server by [Sonni Vasquez](https://github.com/sonnivasquez). It runs locally over stdio with Node.js or Bun and provides 29 tools. Google API requests run from your machine, with read-only Google access by default and access limited to the properties you select.
 
 [Website](https://gscmcp.dev/) · [npm package](https://www.npmjs.com/package/@sonnivasquez/gsc-mcp) · [Quickstart](docs/quickstart.md) · [Guía en español](docs/quickstart.es.md) · [Tool catalog](docs/tools.md)
 
 This is an independent project, not an official Google product.
+
+## Install with npx
+
+The buttons and snippets below start the local stdio server with `npx -y @sonnivasquez/gsc-mcp`. They set `GSC_AUTH_MODE=oauth` and `GSC_ACCESS_MODE=readonly`. They do not sign you in to Google and they do not choose a property. Node.js 22 or newer is required. After the client starts the server, set `GSC_SITE_URLS` to your Search Console property and run `gsc auth login` or `gsc setup`. Quick Connect uses the shared read-only OAuth client shipped in this package, so you do not create a Google Cloud project for that path.
+
+[![Install in Cursor](https://img.shields.io/badge/Install%20in-Cursor-000000)](https://cursor.com/en/install-mcp?name=gsc-mcp&config=eyJjb21tYW5kIjoibnB4IiwiYXJncyI6WyIteSIsIkBzb25uaXZhc3F1ZXovZ3NjLW1jcCJdLCJlbnYiOnsiR1NDX0FVVEhfTU9ERSI6Im9hdXRoIiwiR1NDX0FDQ0VTU19NT0RFIjoicmVhZG9ubHkifX0%3D)
+[![Install in VS Code](https://img.shields.io/badge/Install%20in-VS%20Code-0098FF)](https://insiders.vscode.dev/redirect/mcp/install?name=gsc-mcp&config=%7B%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%22%40sonnivasquez%2Fgsc-mcp%22%5D%2C%22env%22%3A%7B%22GSC_AUTH_MODE%22%3A%22oauth%22%2C%22GSC_ACCESS_MODE%22%3A%22readonly%22%7D%7D)
+
+### Claude Code
+
+Replace `sc-domain:example.com` with your Search Console property id:
+
+```bash
+claude mcp add gsc-mcp -e GSC_AUTH_MODE=oauth -e GSC_ACCESS_MODE=readonly -e GSC_SITE_URLS=sc-domain:example.com -- npx -y @sonnivasquez/gsc-mcp
+```
+
+### JSON config
+
+Same command, for a client that reads `mcpServers`. Replace the example property:
+
+```json
+{
+  "mcpServers": {
+    "gsc-mcp": {
+      "command": "npx",
+      "args": ["-y", "@sonnivasquez/gsc-mcp"],
+      "env": {
+        "GSC_AUTH_MODE": "oauth",
+        "GSC_ACCESS_MODE": "readonly",
+        "GSC_SITE_URLS": "sc-domain:example.com"
+      }
+    }
+  }
+}
+```
+
+## Why this one
+
+Quick Connect is the path that skips creating a Google Cloud OAuth client. Custom OAuth and service accounts in this same server still use credentials you create. Both paths run locally.
+
+| | Quick Connect in this server | Your own Google credentials |
+|---|---|---|
+| Google Cloud project | Not required. This package ships a shared read-only OAuth client. | Custom OAuth needs your client (`GSC_OAUTH_SECRETS_FILE`, or `GSC_OAUTH_CLIENT_ID` plus `GSC_OAUTH_CLIENT_SECRET`). A service account needs `GSC_KEY_FILE`. |
+| Where it runs | Local stdio process. Google API requests run from your machine. | Same local process. |
+| Default access | Read-only. Setup refuses full access for Quick Connect. | Read-only unless `GSC_ACCESS_MODE=full`. That mode enables `gsc_submit_url`, `gsc_submit_batch`, and `gsc_submit_sitemap`. |
+| Tools | 29 `gsc_*` tools registered by the server. | The same 29 tools. |
+| Also registered here | `gsc_genai_conversation_queries`, `gsc_check_update_impact`, and `gsc_image_page_audit`. | The same tools. |
+
+`gsc_genai_conversation_queries` reads AI-conversation exhaust in query data. `gsc_check_update_impact` compares a drop window with confirmed ranking updates and reports temporal coincidence only. `gsc_image_page_audit` fetches your own pages and their image bytes.
 
 ## What you can do
 
@@ -181,3 +246,5 @@ For Bun, build with `bun run build` and run `bun --test test`. The package inclu
 ## License and attribution
 
 [Apache-2.0](LICENSE). See [NOTICE](NOTICE) for base-project attribution. Maintained by [Sonni Vasquez](https://github.com/sonnivasquez).
+
+If this server helps, star the repo: https://github.com/sonnivasquez/gsc-mcp

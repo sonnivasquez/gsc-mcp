@@ -1,0 +1,96 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.sonnivasquez/gsc-mcp",
+  "title": "Google Search Console MCP",
+  "description": "Local, read-only Google Search Console MCP server. Quick Connect needs no Cloud project.",
+  "websiteUrl": "https://gscmcp.dev",
+  "repository": {
+    "url": "https://github.com/sonnivasquez/gsc-mcp",
+    "source": "github",
+    "id": "1415916969"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@sonnivasquez/gsc-mcp",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "GSC_AUTH_MODE",
+          "description": "oauth or service_account. Unset defaults to service_account. Set oauth for Quick Connect or your own OAuth client.",
+          "isRequired": false,
+          "format": "string",
+          "choices": ["oauth", "service_account"]
+        },
+        {
+          "name": "GSC_ACCESS_MODE",
+          "description": "readonly or full. full enables gsc_submit_url, gsc_submit_batch, and gsc_submit_sitemap. When unset, legacy GSC_SCOPES and GSC_ENABLE_WRITE apply and writes stay off unless both allow them. Setup refuses full access for Quick Connect.",
+          "isRequired": false,
+          "format": "string",
+          "choices": ["readonly", "full"]
+        },
+        {
+          "name": "GSC_SITE_URLS",
+          "description": "Property allowlist. JSON string array of exact Search Console property ids, a legacy comma-separated list, or all alone (or JSON [\"all\"]) for every current and future property. Property-scoped tools need an allowlist.",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "GSC_KEY_FILE",
+          "description": "Path to a service account JSON key. Required when GSC_AUTH_MODE is service_account, which is the default mode.",
+          "isRequired": false,
+          "format": "filepath"
+        },
+        {
+          "name": "GSC_DATA_DIR",
+          "description": "Local state directory for OAuth tokens and datasets. Default is ~/.gsc-mcp.",
+          "isRequired": false,
+          "format": "filepath"
+        },
+        {
+          "name": "GSC_EXPORTS",
+          "description": "Set to 1 to allow gsc_export_dataset and saved gsc_generate_report files on this machine. Any other value keeps local export disabled.",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "GSC_OAUTH_SECRETS_FILE",
+          "description": "Optional path to a Desktop OAuth client secrets JSON file. It takes precedence over GSC_OAUTH_CLIENT_ID and GSC_OAUTH_CLIENT_SECRET. Quick Connect does not need it.",
+          "isRequired": false,
+          "format": "filepath"
+        },
+        {
+          "name": "GSC_OAUTH_CLIENT_ID",
+          "description": "Optional OAuth client id. Used with GSC_OAUTH_CLIENT_SECRET when GSC_OAUTH_SECRETS_FILE is unset. Quick Connect does not need it.",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "GSC_OAUTH_CLIENT_SECRET",
+          "description": "Optional OAuth client secret paired with GSC_OAUTH_CLIENT_ID. Quick Connect does not need it.",
+          "isRequired": false,
+          "isSecret": true,
+          "format": "string"
+        },
+        {
+          "name": "GSC_SCOPES",
+          "description": "Legacy scope tier, readonly or full. Ignored when GSC_ACCESS_MODE is set. full alone does not enable writes.",
+          "isRequired": false,
+          "format": "string",
+          "choices": ["readonly", "full"]
+        },
+        {
+          "name": "GSC_ENABLE_WRITE",
+          "description": "Legacy write opt-in. Set to 1 together with GSC_SCOPES=full when GSC_ACCESS_MODE is unset. Ignored when GSC_ACCESS_MODE is set.",
+          "isRequired": false,
+          "format": "string"
+        }
+      ]
+    }
+  ]
+}
