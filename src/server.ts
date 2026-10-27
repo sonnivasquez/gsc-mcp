@@ -105,8 +105,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
   // v2.3 IMAGE SEO TOOLS
   //
   // These tools all pass type=image to the GSC Search Analytics API, which most
-  // third-party tools never expose. Paired with the base project's Image SEO
-  // technical guide (see NOTICE). All 7 reuse the existing fetchAllRows
+  // third-party tools never expose. All 7 reuse the existing fetchAllRows
   // plumbing; the only meaningfully new logic is the join in compare_web_vs_image.
   // ---------------------------------------------------------------------------
 

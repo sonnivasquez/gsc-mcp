@@ -112,7 +112,7 @@ export function SiteFooter() {
             </a>
             .<br />
             gsc-mcp {PKG_VERSION}<br />
-            Apache-2.0 · Base-project attribution in NOTICE.
+            Apache-2.0. Copyright Sonni Vasquez.
           </p>
         </div>
       </div>

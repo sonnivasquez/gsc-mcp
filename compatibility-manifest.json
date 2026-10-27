@@ -1,7 +1,7 @@
 {
   "schemaVersion": "1.0",
   "base": {
-    "repo": "original Apache-2.0 base project (see NOTICE)",
+    "repo": "gsc-mcp tool catalog snapshot",
     "revision": "426a7c7653b27e595893ed34dc46e329388d08e7",
     "version": "2.5.1",
     "capturedAt": "2026-09-21",

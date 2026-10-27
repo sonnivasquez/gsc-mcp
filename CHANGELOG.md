@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Copyright notices credit Sonni Vasquez. Public pages, NOTICE, and the
+  license appendix no longer attribute the project to another author.
 - `Dockerfile` builds the stdio MCP server from this repo on Node 22 so Glama
   can start it with no Google credentials. `.dockerignore` keeps secrets and
   local state out of the build context.
