@@ -32,7 +32,7 @@ Before deployment, review:
 - `wrangler.jsonc`: replace the original account ID, Worker name and custom-domain route with your own deployment settings.
 - `src/lib/site.ts`: update the package, repository, version and website references.
 - `public/install.sh`: adapt the npm package and download URLs if your fork uses another package identity.
-- `public/robots.txt`, `public/sitemap.xml` and `scripts/generate-sitemap.mjs`: use your own canonical domain.
+- `public/robots.txt`, `public/sitemap.xml` and `scripts/generate-sitemap.mjs`: use your own canonical domain. Each URL `lastmod` is the latest `git log -1 --format=%cs` date of the source files that build that page, so generation needs the git history of those files.
 - `src/routes/privacy.tsx` and `terms.tsx`: review the statements and maintainer contact for your fork.
 - Branding, icons and public metadata: preserve required attribution and avoid implying Google endorsement.
 

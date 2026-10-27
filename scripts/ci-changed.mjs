@@ -18,8 +18,6 @@ const SHARED_EXACT = new Set([
   '.impeccable/design.json',
   'web/src/styles/tokens.css',
   'web/scripts/sync-design-tokens.mjs',
-  'README.md',
-  'PRIVACY.md',
   'scripts/ci-changed.mjs',
   'test/ci-changed.test.mjs',
 ]);
@@ -32,6 +30,9 @@ const MCP_ROOT_EXACT = new Set([
   'tsconfig.json',
   'compatibility-manifest.json',
   '.mcpbignore',
+  'README.md',
+  'PRIVACY.md',
+  'server.json',
 ]);
 
 const HEX_SHA = /^[a-f0-9]{40}(?:[a-f0-9]{24})?$/;

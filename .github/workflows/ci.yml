@@ -95,6 +95,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Sitemap lastmod reads git commit dates. A shallow checkout makes
+          # `git log -1 --format=%cs` empty for files last touched earlier.
+          fetch-depth: 0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
@@ -124,8 +128,9 @@ jobs:
             echo "ok dist/client/$asset"
           done
       - name: Generated sitemap is committed
-        # build regenerates sitemap.xml, so a stale committed copy shows up as
-        # a diff here. Sitemap freshness is what keeps lastmod honest.
+        # build regenerates sitemap.xml from git commit dates of each page's
+        # sources. The same checkout must produce the same file. A stale
+        # committed copy shows up as a diff here.
         run: |
           if [ -n "$(git status --porcelain web/public/sitemap.xml)" ]; then
             echo "::error::web/public/sitemap.xml is out of date; run 'cd web && npm run sitemap' and commit it"
