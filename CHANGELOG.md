@@ -4,13 +4,16 @@
 
 - CI routes by changed areas via `scripts/ci-changed.mjs` (`mcp_changed` /
   `web_changed`). Shared inputs (site facts, installer, version metadata,
-  design tokens, workflows, classifier, README/PRIVACY mirrors) run both;
-  other `web/**` runs Web only and MCP areas run Node/Bun/Windows only.
+  design tokens, workflows, classifier) run both; other `web/**` runs Web
+  only and MCP areas run Node/Bun/Windows only. `README.md` and `PRIVACY.md`
+  are package docs the site does not render, so they run MCP only.
 - CI classifier correction: unknown top-level paths run both pipelines (only
   explicit root MCP build files `bun.lock`, `tsconfig.json`,
-  `compatibility-manifest.json` and `.mcpbignore` stay MCP-only), and
-  truncated or mis-scored `git diff --name-status -z` output falls back to
-  both instead of routing on partial data.
+  `compatibility-manifest.json`, `.mcpbignore`, and `server.json` stay
+  MCP-only), and truncated or mis-scored `git diff --name-status -z` output
+  falls back to both instead of routing on partial data.
+- Sitemap `lastmod` is the latest `git log -1 --format=%cs` date of the
+  source files for that URL. The web CI checkout uses `fetch-depth: 0`.
 - Release preflight now requires the actual attempt-scoped jobs: one
   successful `Node` and `Bun` for `ci.yml`, plus both
   `Windows Node 22 and Bun 1.4.2` and `Windows Node 26 and Bun 1.4.2` for
