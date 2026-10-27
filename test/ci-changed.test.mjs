@@ -25,8 +25,14 @@ test('shared design inputs route to both', () => {
 });
 
 test('shared workflow, classifier and site mirror routes to both', () => {
-  for (const file of ['.github/workflows/ci.yml', 'scripts/ci-changed.mjs', 'test/ci-changed.test.mjs', 'README.md', 'PRIVACY.md']) {
+  for (const file of ['.github/workflows/ci.yml', 'scripts/ci-changed.mjs', 'test/ci-changed.test.mjs']) {
     assert.deepEqual(classify([file]), { mcp_changed: true, web_changed: true }, file);
+  }
+});
+
+test('readme and privacy docs route to mcp only', () => {
+  for (const file of ['README.md', 'PRIVACY.md']) {
+    assert.deepEqual(classify([file]), { mcp_changed: true, web_changed: false }, file);
   }
 });
 
@@ -80,7 +86,7 @@ test('unknown root files route to both, not mcp only', () => {
 });
 
 test('known root mcp build files route to mcp only', () => {
-  for (const file of ['bun.lock', 'tsconfig.json', 'compatibility-manifest.json', '.mcpbignore']) {
+  for (const file of ['bun.lock', 'tsconfig.json', 'compatibility-manifest.json', '.mcpbignore', 'server.json']) {
     assert.deepEqual(classify([file]), { mcp_changed: true, web_changed: false }, file);
   }
 });
