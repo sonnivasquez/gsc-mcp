@@ -70,13 +70,5 @@
   "engines": {
     "node": ">=22",
     "bun": ">=1"
-  },
-  "directories": {
-    "doc": "docs",
-    "test": "test"
-  },
-  "types": "./dist/index.d.ts",
-  "bugs": {
-    "url": "https://github.com/sonnivasquez/gsc-mcp/issues"
   }
 }
