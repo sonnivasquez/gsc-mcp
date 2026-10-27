@@ -3,11 +3,22 @@ export interface ImagePageAuditOpts {
     resolveHost?: ResolveHost;
     allowlistOverride?: string[] | null;
 }
+type AltStatus = "missing" | "empty" | "generic" | "filename_as_alt" | "duplicate" | "ok";
+type FilenameStatus = "generic_or_nondescriptive" | "hash_or_id" | "ok";
+type WeightStatus = "ok" | "heavy" | "oversized";
+interface ImageMetadata {
+    camera_exif_present: boolean;
+    gps_present: boolean;
+    iptc_creator: boolean;
+    iptc_copyright: boolean;
+    iptc_caption: boolean;
+    digital_source_type: string | null;
+}
 interface ImageFinding {
     src: string;
     alt: string | null;
-    alt_status: "missing" | "empty" | "generic" | "filename_as_alt" | "duplicate" | "ok";
-    filename_status: "generic_or_nondescriptive" | "hash_or_id" | "ok";
+    alt_status: AltStatus;
+    filename_status: FilenameStatus;
     has_width_height_attrs: boolean;
     loading: string | null;
     fetchpriority: string | null;
@@ -18,38 +29,33 @@ interface ImageFinding {
     intrinsic_width: number | null;
     intrinsic_height: number | null;
     below_indexing_minimum: boolean | null;
-    weight_status: "ok" | "heavy" | "oversized" | null;
+    weight_status: WeightStatus | null;
     png_likely_photo: boolean | null;
-    metadata: {
-        camera_exif_present: boolean;
-        gps_present: boolean;
-        iptc_creator: boolean;
-        iptc_copyright: boolean;
-        iptc_caption: boolean;
-        digital_source_type: string | null;
-    } | null;
+    metadata: ImageMetadata | null;
     issues: string[];
+}
+type Maybe<T> = T | null;
+interface PageChecks {
+    total_img_tags: number;
+    content_images: number;
+    images_fetched: number;
+    lcp_candidate_src: Maybe<string>;
+    lcp_candidate_lazy_loaded: Maybe<boolean>;
+    lcp_candidate_fetchpriority: Maybe<string>;
+    inline_background_images: number;
+    max_image_preview: string | "not_set";
+    image_object_schema_count: number;
+    has_licensable_fields: boolean;
+    has_primary_image_of_page: boolean;
+    images_with_srcset: number;
+    modern_format_sources: boolean;
 }
 interface PageAudit {
     url: string;
     status: "ok" | "fetch_failed";
     http_status: number | null;
     error?: string;
-    page_checks?: {
-        total_img_tags: number;
-        content_images: number;
-        images_fetched: number;
-        lcp_candidate_src: string | null;
-        lcp_candidate_lazy_loaded: boolean | null;
-        lcp_candidate_fetchpriority: string | null;
-        inline_background_images: number;
-        max_image_preview: string | "not_set";
-        image_object_schema_count: number;
-        has_licensable_fields: boolean;
-        has_primary_image_of_page: boolean;
-        images_with_srcset: number;
-        modern_format_sources: boolean;
-    };
+    page_checks?: PageChecks;
     images?: ImageFinding[];
     images_not_reported?: number;
     issue_counts?: Record<string, number>;

@@ -1,4 +1,3 @@
-/** Narrow injected seam for mocked contract tests (no Google). */
 export interface IndexingClientLike {
     urlNotifications: {
         publish: (args: {
@@ -25,8 +24,9 @@ interface SubmitResult {
     error: string | null;
     note: string;
 }
-export declare function submitUrl(url: string, action?: "URL_UPDATED" | "URL_DELETED", clientOverride?: IndexingClientLike): Promise<SubmitResult>;
-export declare function submitBatch(urls: string[], action?: "URL_UPDATED" | "URL_DELETED", clientOverride?: IndexingClientLike): Promise<{
+type IndexAction = "URL_UPDATED" | "URL_DELETED";
+export declare function submitUrl(url: string, action?: IndexAction, clientOverride?: IndexingClientLike): Promise<SubmitResult>;
+export declare function submitBatch(urls: string[], action?: IndexAction, clientOverride?: IndexingClientLike): Promise<{
     results: SubmitResult[];
     summary: {
         total: number;

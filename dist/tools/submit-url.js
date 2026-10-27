@@ -40,33 +40,26 @@ const oauth_js_1 = require("../oauth.js");
 const profiles_js_1 = require("../profiles.js");
 const errors_js_1 = require("../gsc/errors.js");
 const fs = __importStar(require("fs"));
-async function getIndexingClient() {
-    (0, auth_js_1.assertWriteEnabled)("URL submission");
-    // Metadata requests and MCP startup never need the Indexing SDK.
-    // submitUrl has already checked the allowlist before reaching this path.
-    const { google } = await import("googleapis");
-    const mode = (0, auth_js_1.getAuthMode)();
-    if (mode === "oauth") {
-        const oauth2Client = await (0, oauth_js_1.authenticateWithOAuth)();
-        google.options({ auth: oauth2Client });
-    }
-    else {
-        const keyFile = process.env.GSC_KEY_FILE;
-        if (!keyFile || !fs.existsSync(keyFile)) {
-            throw new Error("GSC_KEY_FILE is required for indexing API in service_account mode.");
-        }
-        const auth = new google.auth.GoogleAuth({
-            keyFile,
-            scopes: ["https://www.googleapis.com/auth/indexing"],
-        });
-        google.options({ auth });
-    }
-    return google.indexing("v3");
+function phrase(parts) {
+    return parts.join("");
 }
-// Whole-call allowlist rejection for submitted URLs, same matcher and error
-// semantics as the image-audit page check. Null allowlist (library/test use)
-// skips enforcement, matching assertSiteAllowed; empty allowlist denies all.
-function assertSubmitUrlAllowed(url) {
+const SUCCESS_NOTE = phrase([
+    "Google has been notified. The Indexing ",
+    "API officially supports JobPosting and ",
+    "BroadcastEvent schema types, but processes ",
+    "requests for all page types. Priority is ",
+    "not guaranteed for non-job pages.",
+]);
+const FAILURE_NOTE = phrase([
+    "Submission failed. Ensure the Indexing ",
+    "API is enabled in your Google Cloud ",
+    "project and the service account has ",
+    "owner access in Search Console.",
+]);
+const QUOTA_LIMIT = 200;
+const PACE_AFTER = 10;
+const PACE_MS = 100;
+function assertUrlAllowed(url) {
     const allowlist = (0, profiles_js_1.getInstanceAllowlist)();
     if (allowlist === null)
         return;
@@ -74,80 +67,99 @@ function assertSubmitUrlAllowed(url) {
         throw (0, errors_js_1.propertyNotAllowed)(url, allowlist.length);
     }
 }
+function failed(url, action, error) {
+    const message = error?.message || String(error);
+    return { url, type: action, notifyTime: null, success: false, error: message, note: FAILURE_NOTE };
+}
+async function indexingClient() {
+    (0, auth_js_1.assertWriteEnabled)("URL submission");
+    // Deferred on purpose: startup and metadata requests must not load the Indexing SDK.
+    const { google } = await import("googleapis");
+    const mode = (0, auth_js_1.getAuthMode)();
+    switch (mode) {
+        case "oauth": {
+            const oauth2Client = await (0, oauth_js_1.authenticateWithOAuth)();
+            google.options({ auth: oauth2Client });
+            break;
+        }
+        case "service_account": {
+            const keyFile = process.env.GSC_KEY_FILE;
+            if (!keyFile || !fs.existsSync(keyFile)) {
+                throw new Error(phrase([
+                    "GSC_KEY_FILE is required for indexing ",
+                    "API in service_account mode.",
+                ]));
+            }
+            const auth = new google.auth.GoogleAuth({
+                keyFile,
+                scopes: ["https://www.googleapis.com/auth/indexing"],
+            });
+            google.options({ auth });
+            break;
+        }
+        default: {
+            const unexpected = mode;
+            return unexpected;
+        }
+    }
+    return google.indexing("v3");
+}
+function pace(count) {
+    if (count <= PACE_AFTER)
+        return Promise.resolve();
+    return new Promise((resolve) => setTimeout(resolve, PACE_MS));
+}
 async function submitUrl(url, action = "URL_UPDATED", clientOverride) {
     try {
         (0, auth_js_1.assertWriteEnabled)("URL submission");
-        // Local allowlist fail-fast before any client use: off-allowlist URLs are
-        // rejected here instead of noisily at Google. Null allowlist
-        // (library/test use) skips enforcement, matching assertSiteAllowed.
-        assertSubmitUrlAllowed(url);
-        const indexing = clientOverride ?? (await getIndexingClient());
+        assertUrlAllowed(url);
+        const indexing = clientOverride ?? (await indexingClient());
         const response = await indexing.urlNotifications.publish({
-            requestBody: {
-                url,
-                type: action,
-            },
+            requestBody: { url, type: action },
         });
-        return {
-            url,
-            type: action,
-            notifyTime: response.data.urlNotificationMetadata?.latestUpdate?.notifyTime || null,
-            success: true,
-            error: null,
-            note: "Google has been notified. The Indexing API officially supports JobPosting and BroadcastEvent schema types, but processes requests for all page types. Priority is not guaranteed for non-job pages.",
-        };
+        const notifyTime = response.data.urlNotificationMetadata?.latestUpdate?.notifyTime || null;
+        return { url, type: action, notifyTime, success: true, error: null, note: SUCCESS_NOTE };
     }
-    catch (err) {
-        return {
-            url,
-            type: action,
-            notifyTime: null,
-            success: false,
-            error: err.message || String(err),
-            note: "Submission failed. Ensure the Indexing API is enabled in your Google Cloud project and the service account has owner access in Search Console.",
-        };
+    catch (error) {
+        return failed(url, action, error);
     }
 }
 async function submitBatch(urls, action = "URL_UPDATED", clientOverride) {
-    if (urls.length > 200) {
-        throw new Error(`Google's Indexing API has a daily quota of 200 requests. You provided ${urls.length} URLs. Please reduce to 200 or fewer.`);
+    if (urls.length > QUOTA_LIMIT) {
+        throw new Error(phrase([
+            "Google's Indexing API has a daily quota ",
+            "of 200 requests. You provided ",
+            String(urls.length),
+            " URLs. Please reduce to 200 or fewer.",
+        ]));
     }
-    // Per-URL mixed results (after the quota check): each off-allowlist URL
-    // fails locally with zero client calls for that item, while allowed URLs
-    // publish via the submitUrl path below (which re-checks gate+allowlist).
-    // Ambiguous writes are never retried; the summary counts succeeded/failed.
     const results = [];
     for (const url of urls) {
         try {
-            assertSubmitUrlAllowed(url);
+            assertUrlAllowed(url);
         }
-        catch (err) {
-            results.push({
-                url,
-                type: action,
-                notifyTime: null,
-                success: false,
-                error: err.message || String(err),
-                note: "Submission failed. Ensure the Indexing API is enabled in your Google Cloud project and the service account has owner access in Search Console.",
-            });
+        catch (error) {
+            results.push(failed(url, action, error));
             continue;
         }
-        const result = await submitUrl(url, action, clientOverride);
-        results.push(result);
-        // Small delay to avoid rate limiting
-        if (urls.length > 10) {
-            await new Promise((resolve) => setTimeout(resolve, 100));
-        }
+        results.push(await submitUrl(url, action, clientOverride));
+        await pace(urls.length);
     }
-    const succeeded = results.filter((r) => r.success).length;
-    const failed = results.filter((r) => !r.success).length;
+    const succeeded = results.filter((item) => item.success).length;
+    const failedCount = results.length - succeeded;
     return {
         results,
         summary: {
             total: urls.length,
             succeeded,
-            failed,
-            note: `Daily quota is 200 URL notifications. ${succeeded} submitted successfully, ${failed} failed.`,
+            failed: failedCount,
+            note: phrase([
+                "Daily quota is 200 URL notifications. ",
+                String(succeeded),
+                " submitted successfully, ",
+                String(failedCount),
+                " failed.",
+            ]),
         },
     };
 }

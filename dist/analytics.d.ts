@@ -1,4 +1,4 @@
-import { SearchConsoleClient } from "./auth.js";
+import { type SearchConsoleClient } from "./auth.js";
 export interface SearchAnalyticsRow {
     keys: string[];
     clicks: number;
@@ -29,8 +29,4 @@ export declare function getPriorDateRange(days: number): {
     startDate: string;
     endDate: string;
 };
-/**
- * Fetches all rows from the Search Analytics API with automatic pagination.
- * Uses dataState: 'all' so data matches the GSC dashboard exactly.
- */
 export declare function fetchAllRows(params: QueryParams, siteUrlOverride?: string, clientOverride?: SearchConsoleClient): Promise<SearchAnalyticsRow[]>;
