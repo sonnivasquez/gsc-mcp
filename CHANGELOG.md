@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- `Dockerfile` builds the stdio MCP server from this repo on Node 22 so Glama
+  can start it with no Google credentials. `.dockerignore` keeps secrets and
+  local state out of the build context.
 - CI routes by changed areas via `scripts/ci-changed.mjs` (`mcp_changed` /
   `web_changed`). Shared inputs (site facts, installer, version metadata,
   design tokens, workflows, classifier) run both; other `web/**` runs Web
