@@ -6,33 +6,23 @@ import { execFileSync } from 'node:child_process';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const SHARED_EXACT = new Set([
+// The web job runs only for inputs that change the site build or its checks.
+// Root README.md and PRIVACY.md are package docs. The site does not import
+// them; its copy lives in web/src/lib/site.ts and the route modules.
+const BOTH_EXACT = new Set([
+  // Rendered on the site and asserted by test/release-metadata.test.mjs.
   'web/src/lib/site.ts',
-  'web/public/install.sh',
-  'package.json',
-  'package-lock.json',
-  'src/version.ts',
-  'manifest.json',
-  'CHANGELOG.md',
-  'DESIGN.md',
-  '.impeccable/design.json',
-  'web/src/styles/tokens.css',
-  'web/scripts/sync-design-tokens.mjs',
-  'README.md',
-  'PRIVACY.md',
-  'scripts/ci-changed.mjs',
-  'test/ci-changed.test.mjs',
+  // Defines the MCP jobs and the web job.
+  '.github/workflows/ci.yml',
 ]);
 
-const WORKFLOWS_PREFIX = '.github/workflows/';
-const WEB_PREFIX = 'web/';
-const MCP_PREFIXES = ['src/', 'test/', 'scripts/', 'skills/', 'docs/', 'fixtures/'];
-const MCP_ROOT_EXACT = new Set([
-  'bun.lock',
-  'tsconfig.json',
-  'compatibility-manifest.json',
-  '.mcpbignore',
+const WEB_EXACT = new Set([
+  // web/scripts/sync-design-tokens.mjs compares these to tokens.css.
+  'DESIGN.md',
+  '.impeccable/design.json',
 ]);
+
+const WEB_PREFIX = 'web/';
 
 const HEX_SHA = /^[a-f0-9]{40}(?:[a-f0-9]{24})?$/;
 const ZERO_SHA = /^0+$/;
@@ -47,16 +37,15 @@ export function classify(files) {
   let web = false;
   for (const file of files) {
     if (typeof file !== 'string' || file.length === 0) return { mcp_changed: true, web_changed: true };
-    if (SHARED_EXACT.has(file) || file.startsWith(WORKFLOWS_PREFIX)) {
+    if (BOTH_EXACT.has(file)) {
       mcp = true;
       web = true;
-    } else if (file.startsWith(WEB_PREFIX)) {
+    } else if (WEB_EXACT.has(file) || file.startsWith(WEB_PREFIX)) {
       web = true;
-    } else if (MCP_PREFIXES.some(prefix => file.startsWith(prefix)) || MCP_ROOT_EXACT.has(file)) {
-      mcp = true;
     } else {
+      // MCP trees, other workflows, package docs, and unknown paths.
+      // None of these build the website.
       mcp = true;
-      web = true;
     }
   }
   if (!mcp && !web) return { mcp_changed: true, web_changed: true };

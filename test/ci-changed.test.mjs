@@ -12,26 +12,31 @@ test('mcp files route to mcp only', () => {
   assert.deepEqual(classify(['test/cli.test.mjs', 'scripts/test-mcp.sh', 'skills/google-search-console-mcp/SKILL.md', 'docs/tools.md', 'fixtures/pagination.json', 'tsconfig.json']), { mcp_changed: true, web_changed: false });
 });
 
-test('shared version metadata routes to both', () => {
-  for (const file of ['package.json', 'package-lock.json', 'src/version.ts', 'manifest.json', 'CHANGELOG.md', 'web/src/lib/site.ts', 'web/public/install.sh']) {
-    assert.deepEqual(classify([file]), { mcp_changed: true, web_changed: true }, file);
+test('site facts and the ci workflow route to both', () => {
+  assert.deepEqual(classify(['web/src/lib/site.ts']), { mcp_changed: true, web_changed: true });
+  assert.deepEqual(classify(['.github/workflows/ci.yml']), { mcp_changed: true, web_changed: true });
+});
+
+test('website design inputs route to web only', () => {
+  for (const file of ['DESIGN.md', '.impeccable/design.json', 'web/src/styles/tokens.css', 'web/scripts/sync-design-tokens.mjs', 'web/public/install.sh']) {
+    assert.deepEqual(classify([file]), { mcp_changed: false, web_changed: true }, file);
   }
 });
 
-test('shared design inputs route to both', () => {
-  for (const file of ['DESIGN.md', '.impeccable/design.json', 'web/src/styles/tokens.css', 'web/scripts/sync-design-tokens.mjs']) {
-    assert.deepEqual(classify([file]), { mcp_changed: true, web_changed: true }, file);
+test('package docs and version metadata do not run the web job', () => {
+  for (const file of ['package.json', 'package-lock.json', 'src/version.ts', 'manifest.json', 'CHANGELOG.md', 'README.md', 'PRIVACY.md', 'scripts/ci-changed.mjs', 'test/ci-changed.test.mjs']) {
+    assert.deepEqual(classify([file]), { mcp_changed: true, web_changed: false }, file);
   }
 });
 
-test('shared workflow, classifier and site mirror routes to both', () => {
-  for (const file of ['.github/workflows/ci.yml', 'scripts/ci-changed.mjs', 'test/ci-changed.test.mjs', 'README.md', 'PRIVACY.md']) {
-    assert.deepEqual(classify([file]), { mcp_changed: true, web_changed: true }, file);
+test('workflows other than ci.yml do not run the web job', () => {
+  for (const file of ['.github/workflows/windows-cli-startup.yml', '.github/workflows/release-stage.yml', '.github/workflows/release-finalize.yml']) {
+    assert.deepEqual(classify([file]), { mcp_changed: true, web_changed: false }, file);
   }
 });
 
-test('unknown paths are conservative both', () => {
-  assert.deepEqual(classify(['newdir/file.txt']), { mcp_changed: true, web_changed: true });
+test('unknown paths run mcp only', () => {
+  assert.deepEqual(classify(['newdir/file.txt']), { mcp_changed: true, web_changed: false });
 });
 
 test('mixed and empty inputs are conservative', () => {
@@ -73,10 +78,11 @@ test('first push, missing, zero and unknown events fall back conservative', () =
   assert.equal(describeEvent('pull_request', {}).kind, 'conservative');
 });
 
-test('unknown root files route to both, not mcp only', () => {
-  assert.deepEqual(classify(['new-shared.config.json']), { mcp_changed: true, web_changed: true });
-  assert.deepEqual(classify(['some-unknown-root.json']), { mcp_changed: true, web_changed: true });
-  assert.deepEqual(classify(['Dockerfile']), { mcp_changed: true, web_changed: true });
+test('unknown root files do not run the web job', () => {
+  assert.deepEqual(classify(['new-shared.config.json']), { mcp_changed: true, web_changed: false });
+  assert.deepEqual(classify(['some-unknown-root.json']), { mcp_changed: true, web_changed: false });
+  assert.deepEqual(classify(['Dockerfile']), { mcp_changed: true, web_changed: false });
+  assert.deepEqual(classify(['server.json']), { mcp_changed: true, web_changed: false });
 });
 
 test('known root mcp build files route to mcp only', () => {

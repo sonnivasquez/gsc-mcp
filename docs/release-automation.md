@@ -41,7 +41,7 @@ Artifacts are retained for 30 days. If the verified artifact is unavailable, sto
 
 ## CI and retries
 
-`scripts/ci-changed.mjs` routes MCP and web checks according to the changed paths. Unknown or unusable change information runs both groups. The release preflight requires actual successful Node, Bun and Windows jobs for the relevant attempt, not just a successful workflow containing skipped jobs.
+`scripts/ci-changed.mjs` routes MCP and web checks according to the changed paths. Empty, invalid, or unreadable change information runs both groups. A path runs the web job only when it affects the website (`web/**`, `DESIGN.md`, `.impeccable/design.json`, `web/src/lib/site.ts`, or `.github/workflows/ci.yml`). Other paths, including `README.md` and `PRIVACY.md`, run the MCP jobs only. The release preflight requires actual successful Node, Bun and Windows jobs for the relevant attempt, not just a successful workflow containing skipped jobs.
 
 For a candidate workflow retry, rerun all jobs so the artifact is rebuilt and bound to the new attempt. For an uncertain npm publication, first check the exact version in the registry; a network error does not prove that npm rejected it.
 
