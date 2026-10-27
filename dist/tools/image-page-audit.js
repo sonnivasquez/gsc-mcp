@@ -11,444 +11,487 @@ const exifr_1 = __importDefault(require("exifr"));
 const profiles_js_1 = require("../profiles.js");
 const fetch_guard_js_1 = require("../fetch-guard.js");
 const errors_js_1 = require("../gsc/errors.js");
-/**
- * Fetches pages from the user's own site and audits every image on them
- * against the on-page factors that drive image-search performance: alt text,
- * filenames, dimension attributes, lazy loading on the LCP candidate,
- * responsive markup, file format and weight, intrinsic dimensions against
- * Google's ~250x200 indexing minimum, ImageObject / licensable schema,
- * max-image-preview, and (optionally) the metadata inside the image files
- * themselves (camera EXIF that should be stripped, IPTC editorial fields
- * that should survive, XMP DigitalSourceType on AI-generated images).
- *
- * This is the bridge from "which pages fail" (image_impressions_no_clicks,
- * image_search_quick_wins) to "why they fail". It only ever fetches the
- * URLs it is given; no third-party service is involved.
- */
-const USER_AGENT = `@sonnivasquez/gsc-mcp/${version_js_1.CLI_VERSION} gsc_image_page_audit`;
-const PAGE_TIMEOUT_MS = 15000;
-const IMAGE_TIMEOUT_MS = 12000;
+function phrase(parts) {
+    return parts.join("");
+}
+const USER_AGENT = phrase(["@sonnivasquez/gsc-mcp/", version_js_1.CLI_VERSION, " gsc_image_page_audit"]);
+const PAGE_TIMEOUT_MS = 15_000;
+const IMAGE_TIMEOUT_MS = 12_000;
 const MAX_PAGE_BYTES = 2 * 1024 * 1024;
-const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 20_971_520;
+const PAGE_LIMIT = 5;
 const INDEX_MIN_WIDTH = 250;
 const INDEX_MIN_HEIGHT = 200;
-const INDEX_MIN_AREA = 50000;
+const INDEX_MIN_AREA = 50_000;
 const HEAVY_BYTES = 300 * 1024;
 const OVERSIZED_BYTES = 500 * 1024;
 const PNG_PHOTO_BYTES = 150 * 1024;
 const GENERIC_ALTS = new Set([
-    "image",
-    "img",
-    "photo",
-    "picture",
-    "pic",
-    "icon",
-    "logo",
-    "graphic",
-    "banner",
-    "screenshot",
-    "untitled",
-    "alt",
-    "thumbnail",
+    "image", "img", "photo", "picture", "pic", "icon", "logo", "graphic",
+    "banner", "screenshot", "untitled", "alt", "thumbnail",
 ]);
-const GENERIC_FILENAME = /^(img|image|dsc[fn]?|mvimg|pxl|screen[-_ ]?shot|screenshot|photo|unnamed|untitled|capture|whatsapp[-_ ]image|signal[-_]attachment|hero|thumbnail|default|placeholder|final|new)[\-_ ]?\d*$/i;
-// Stock-agency default filenames (shutterstock_524347192.jpg and friends) are
-// the stock-photo equivalent of camera defaults: an opaque ID that tells
-// Google nothing about the subject. Prefix match, because CMS resizing
-// appends suffixes like -1024x694.
-const STOCK_FILENAME = /^(shutterstock|istock(photo)?|getty(images)?|adobestock|stock-photo|depositphotos|dreamstime|bigstock|123rf|alamy|pexels|unsplash)[-_]/i;
-function basenameNoExt(src) {
+const GENERIC_STEMS = [
+    "img", "image", "dsc[fn]?", "mvimg", "pxl", "screen[-_ ]?shot", "screenshot",
+    "photo", "unnamed", "untitled", "capture", "whatsapp[-_ ]image",
+    "signal[-_]attachment", "hero", "thumbnail", "default", "placeholder", "final", "new",
+];
+const GENERIC_FILENAME = new RegExp(`^(${GENERIC_STEMS.join("|")})[\\-_ ]?\\d*$`, "i");
+const STOCK_STEMS = [
+    "shutterstock", "istock(photo)?", "getty(images)?", "adobestock", "stock-photo",
+    "depositphotos", "dreamstime", "bigstock", "123rf", "alamy", "pexels", "unsplash",
+];
+const STOCK_FILENAME = new RegExp(`^(${STOCK_STEMS.join("|")})[-_]`, "i");
+function stemOf(src) {
     try {
-        const path = new URL(src).pathname;
-        const base = path.split("/").filter(Boolean).pop() ?? "";
-        return decodeURIComponent(base.replace(/\.[a-z0-9]+$/i, ""));
+        const pathname = new URL(src).pathname;
+        const segments = pathname.split("/").filter(Boolean);
+        const leaf = segments.at(-1) ?? "";
+        const withoutExt = leaf.replace(/\.[a-z0-9]+$/i, "");
+        return decodeURIComponent(withoutExt);
     }
     catch {
         return "";
     }
 }
-function classifyFilename(src) {
-    const base = basenameNoExt(src);
-    if (!base)
+function filenameStatus(src) {
+    const stem = stemOf(src);
+    if (!stem)
         return "ok";
-    if (GENERIC_FILENAME.test(base) || STOCK_FILENAME.test(base) || /^\d+$/.test(base)) {
+    if (GENERIC_FILENAME.test(stem) || STOCK_FILENAME.test(stem) || /^\d+$/.test(stem)) {
         return "generic_or_nondescriptive";
     }
-    if (/^[0-9a-f]{16,}$/i.test(base.replace(/-/g, "")))
+    if (/^[0-9a-f]{16,}$/i.test(stem.replace(/-/g, "")))
         return "hash_or_id";
     return "ok";
 }
-function classifyAlt(alt, src, duplicateAlts) {
+function altStatus(alt, src, duplicates) {
     if (alt === null)
         return "missing";
     const trimmed = alt.trim();
     if (trimmed === "")
         return "empty";
     const lower = trimmed.toLowerCase();
-    if (GENERIC_ALTS.has(lower))
+    if (GENERIC_ALTS.has(lower)) {
         return "generic";
-    const base = basenameNoExt(src).toLowerCase().replace(/[-_]+/g, " ").trim();
-    if (base && lower === base)
+    }
+    const stem = stemOf(src).toLowerCase().replace(/[-_]+/g, " ").trim();
+    if (stem && lower === stem)
         return "filename_as_alt";
-    if (duplicateAlts.has(lower))
+    if (duplicates.has(lower))
         return "duplicate";
     return "ok";
 }
-function walkForImageObjects(node, hits) {
+function collectImageObjects(node, hits) {
     if (Array.isArray(node)) {
         for (const item of node)
-            walkForImageObjects(item, hits);
+            collectImageObjects(item, hits);
         return;
     }
-    if (node && typeof node === "object") {
-        const obj = node;
-        const type = obj["@type"];
-        const types = Array.isArray(type) ? type : [type];
-        if (types.includes("ImageObject"))
-            hits.push(obj);
-        for (const value of Object.values(obj))
-            walkForImageObjects(value, hits);
-    }
+    if (!node || typeof node !== "object")
+        return;
+    const record = node;
+    const declared = record["@type"];
+    const types = Array.isArray(declared) ? declared : [declared];
+    if (types.includes("ImageObject"))
+        hits.push(record);
+    for (const value of Object.values(record))
+        collectImageObjects(value, hits);
 }
-function pageHeaders() {
+function requestHeaders() {
     return { "User-Agent": USER_AGENT, Accept: "*/*" };
 }
-async function auditImage(src, fetchMetadata, resolveHost) {
-    const result = { fetched: false };
-    // Images may come from any public host (CDNs stay working); only the
-    // public-host policy applies, never the page allowlist.
+function weightOf(bytes) {
+    if (bytes > OVERSIZED_BYTES)
+        return "oversized";
+    if (bytes > HEAVY_BYTES)
+        return "heavy";
+    return "ok";
+}
+function readMetadata(meta) {
+    const digital = meta.DigitalSourceType;
+    const camera = [meta.Make, meta.Model, meta.ISO].some(Boolean);
+    const gps = [meta.latitude, meta.longitude, meta.GPSLatitude].some(Boolean);
+    const creator = [meta.Creator, meta["By-line"], meta.Byline, meta.creator].some(Boolean);
+    const copyright = [meta.Copyright, meta.CopyrightNotice, meta.rights].some(Boolean);
+    const caption = [meta.Caption, meta["Caption-Abstract"], meta.description].some(Boolean);
+    const source = typeof digital === "string" ? digital.split("/").pop() ?? null : null;
+    return {
+        camera_exif_present: camera,
+        gps_present: gps,
+        iptc_creator: creator,
+        iptc_copyright: copyright,
+        iptc_caption: caption,
+        digital_source_type: source,
+    };
+}
+async function inspectImage(src, fetchMetadata, resolveHost) {
+    const measured = { fetched: false };
     const { response } = await (0, fetch_guard_js_1.guardedFetch)(src, {
         timeoutMs: IMAGE_TIMEOUT_MS,
-        headers: pageHeaders(),
+        headers: requestHeaders(),
         resolveHost,
     });
     if (!response.ok)
-        return result;
+        return measured;
     let buffer;
     try {
         buffer = await (0, fetch_guard_js_1.readBoundedBody)(response, { maxBytes: MAX_IMAGE_BYTES, timeoutMs: IMAGE_TIMEOUT_MS });
     }
     catch {
-        return result;
+        return measured;
     }
     if (buffer.length === 0)
-        return result;
-    result.fetched = true;
-    result.bytes = buffer.length;
-    const contentType = response.headers.get("content-type") ?? "";
-    result.format = contentType.split(";")[0].trim() || null;
+        return measured;
+    measured.fetched = true;
+    measured.bytes = buffer.length;
+    const header = response.headers.get("content-type");
+    const contentType = header ?? "";
+    measured.format = contentType.split(";")[0].trim() || null;
     try {
         const dims = (0, image_size_1.imageSize)(buffer);
-        result.intrinsic_width = dims.width ?? null;
-        result.intrinsic_height = dims.height ?? null;
+        measured.intrinsic_width = dims.width ?? null;
+        measured.intrinsic_height = dims.height ?? null;
         if (dims.width && dims.height) {
-            result.below_indexing_minimum =
-                dims.width * dims.height < INDEX_MIN_AREA ||
-                    dims.width < INDEX_MIN_WIDTH ||
-                    dims.height < INDEX_MIN_HEIGHT;
+            const area = dims.width * dims.height;
+            measured.below_indexing_minimum = area < INDEX_MIN_AREA || dims.width < INDEX_MIN_WIDTH || dims.height < INDEX_MIN_HEIGHT;
         }
     }
     catch {
-        result.intrinsic_width = null;
-        result.intrinsic_height = null;
+        measured.intrinsic_width = null;
+        measured.intrinsic_height = null;
     }
-    result.weight_status =
-        buffer.length > OVERSIZED_BYTES
-            ? "oversized"
-            : buffer.length > HEAVY_BYTES
-                ? "heavy"
-                : "ok";
-    result.png_likely_photo =
-        result.format === "image/png" && buffer.length > PNG_PHOTO_BYTES;
-    if (fetchMetadata) {
+    measured.weight_status = weightOf(buffer.length);
+    measured.png_likely_photo = measured.format === "image/png" && buffer.length > PNG_PHOTO_BYTES;
+    if (!fetchMetadata)
+        return measured;
+    try {
+        const meta = await exifr_1.default.parse(buffer, { tiff: true, exif: true, gps: true, iptc: true, xmp: true });
+        measured.metadata = meta ? readMetadata(meta) : null;
+    }
+    catch {
+        measured.metadata = null;
+    }
+    return measured;
+}
+function pushIssue(issues, when, label) {
+    if (when)
+        issues.push(label);
+}
+function findingIssues(finding) {
+    const issues = [];
+    pushIssue(issues, finding.alt_status === "missing", "alt attribute missing");
+    pushIssue(issues, finding.alt_status === "generic", "generic alt text");
+    pushIssue(issues, finding.alt_status === "filename_as_alt", "alt text is just the filename");
+    pushIssue(issues, finding.alt_status === "duplicate", "alt text duplicated on this page");
+    pushIssue(issues, finding.filename_status !== "ok", "non-descriptive filename");
+    pushIssue(issues, !finding.has_width_height_attrs, phrase([
+        "no width/height attributes ",
+        "(layout shift)",
+    ]));
+    pushIssue(issues, Boolean(finding.below_indexing_minimum), phrase([
+        "below Google's ~250x200 ",
+        "indexing minimum",
+    ]));
+    pushIssue(issues, finding.weight_status === "oversized", "over 500KB");
+    pushIssue(issues, Boolean(finding.png_likely_photo), phrase([
+        "photo shipped as PNG ",
+        "(use WebP/AVIF)",
+    ]));
+    pushIssue(issues, Boolean(finding.metadata?.gps_present), phrase([
+        "GPS coordinates in EXIF ",
+        "(privacy)",
+    ]));
+    return issues;
+}
+function plainError(error) {
+    if (error instanceof Error)
+        return error.message;
+    return String(error);
+}
+function nonDataSrc(value) {
+    if (!value || value.startsWith("data:"))
+        return null;
+    return value;
+}
+function absoluteUrl(raw, pageUrl) {
+    try {
+        return new URL(raw, pageUrl).href;
+    }
+    catch {
+        return null;
+    }
+}
+function chosenSrc(el) {
+    const directSrc = nonDataSrc(el.getAttribute("src") ?? undefined);
+    const lazySrc = el.getAttribute("data-src")
+        ?? el.getAttribute("data-lazy-src")
+        ?? el.getAttribute("data-original");
+    const srcset = el.getAttribute("srcset") ?? "";
+    const fromSet = srcset.split(/[\s,]+/)[0] ?? "";
+    const src = directSrc ?? lazySrc ?? fromSet;
+    if (!src || src.startsWith("data:"))
+        return null;
+    const jsLazy = directSrc === null && lazySrc !== null;
+    return { src, jsLazy };
+}
+function iconLike(candidate) {
+    const width = Number(candidate.el.getAttribute("width") ?? "0");
+    const height = Number(candidate.el.getAttribute("height") ?? "0");
+    if ((width && width < 100) || (height && height < 100))
+        return true;
+    return /logo|icon|avatar|favicon|badge|emoji/i.test(candidate.src);
+}
+function duplicateAlts(content) {
+    const counts = new Map();
+    for (const candidate of content) {
+        const alt = candidate.el.getAttribute("alt");
+        if (!alt || !alt.trim())
+            continue;
+        const key = alt.trim().toLowerCase();
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return new Set([...counts.entries()].filter(([, count]) => count > 1).map(([key]) => key));
+}
+function blankFinding(candidate, duplicates) {
+    const alt = candidate.el.hasAttribute("alt") ? (candidate.el.getAttribute("alt") ?? "") : null;
+    return {
+        src: candidate.src,
+        alt,
+        alt_status: altStatus(alt, candidate.src, duplicates),
+        filename_status: filenameStatus(candidate.src),
+        has_width_height_attrs: candidate.el.hasAttribute("width") && candidate.el.hasAttribute("height"),
+        loading: candidate.el.getAttribute("loading") ?? (candidate.jsLazy ? "lazy" : null),
+        fetchpriority: candidate.el.getAttribute("fetchpriority") ?? null,
+        has_srcset: candidate.el.hasAttribute("srcset") || candidate.el.hasAttribute("data-srcset"),
+        fetched: false,
+        format: null,
+        bytes: null,
+        intrinsic_width: null,
+        intrinsic_height: null,
+        below_indexing_minimum: null,
+        weight_status: null,
+        png_likely_photo: null,
+        metadata: null,
+        issues: [],
+    };
+}
+function schemaFacts(root) {
+    const objects = [];
+    let primary = false;
+    for (const block of root.querySelectorAll('script[type="application/ld+json"]')) {
         try {
-            const meta = await exifr_1.default.parse(buffer, {
-                tiff: true,
-                exif: true,
-                gps: true,
-                iptc: true,
-                xmp: true,
-            });
-            if (meta) {
-                result.metadata = {
-                    camera_exif_present: Boolean(meta.Make || meta.Model || meta.ISO),
-                    gps_present: Boolean(meta.latitude || meta.longitude || meta.GPSLatitude),
-                    iptc_creator: Boolean(meta.Creator || meta["By-line"] || meta.Byline || meta.creator),
-                    iptc_copyright: Boolean(meta.Copyright || meta.CopyrightNotice || meta.rights),
-                    iptc_caption: Boolean(meta.Caption || meta["Caption-Abstract"] || meta.description),
-                    digital_source_type: typeof meta.DigitalSourceType === "string"
-                        ? meta.DigitalSourceType.split("/").pop() ?? null
-                        : null,
-                };
-            }
-            else {
-                result.metadata = null;
-            }
+            const rawJson = block.textContent;
+            const json = JSON.parse(rawJson);
+            collectImageObjects(json, objects);
+            if (JSON.stringify(json).includes("primaryImageOfPage"))
+                primary = true;
         }
         catch {
-            result.metadata = null;
+            // Malformed JSON-LD is ignored here.
         }
     }
-    return result;
+    return { objects, primary };
 }
-function imageIssues(finding) {
-    const issues = [];
-    if (finding.alt_status === "missing")
-        issues.push("alt attribute missing");
-    if (finding.alt_status === "generic")
-        issues.push("generic alt text");
-    if (finding.alt_status === "filename_as_alt")
-        issues.push("alt text is just the filename");
-    if (finding.alt_status === "duplicate")
-        issues.push("alt text duplicated on this page");
-    if (finding.filename_status !== "ok")
-        issues.push("non-descriptive filename");
-    if (!finding.has_width_height_attrs)
-        issues.push("no width/height attributes (layout shift)");
-    if (finding.below_indexing_minimum)
-        issues.push("below Google's ~250x200 indexing minimum");
-    if (finding.weight_status === "oversized")
-        issues.push("over 500KB");
-    if (finding.png_likely_photo)
-        issues.push("photo shipped as PNG (use WebP/AVIF)");
-    if (finding.metadata?.gps_present)
-        issues.push("GPS coordinates in EXIF (privacy)");
-    return issues;
+function topFixes(issueCounts, lcpLazy, imageObjectCount, previewSet) {
+    const fixes = [];
+    if (lcpLazy) {
+        fixes.push(phrase([
+            "Remove loading=\"lazy\" from the LCP ",
+            "image and add fetchpriority=\"high\"",
+        ]));
+    }
+    const altBroken = (issueCounts["alt attribute missing"] ?? 0)
+        + (issueCounts["generic alt text"] ?? 0)
+        + (issueCounts["alt text is just the filename"] ?? 0);
+    if (altBroken > 0) {
+        fixes.push(phrase([
+            "Rewrite alt text on ",
+            String(altBroken),
+            " image(s) to describe what the image shows",
+        ]));
+    }
+    const tooSmall = issueCounts["below Google's ~250x200 indexing minimum"] ?? 0;
+    if (tooSmall) {
+        fixes.push(phrase([
+            "Re-export ",
+            String(tooSmall),
+            " image(s) above 250x200; below that Google skips them",
+        ]));
+    }
+    const heavy = (issueCounts["over 500KB"] ?? 0) + (issueCounts["photo shipped as PNG (use WebP/AVIF)"] ?? 0);
+    if (heavy > 0)
+        fixes.push("Convert heavy PNG/oversized images to WebP or AVIF");
+    const unnamed = issueCounts["non-descriptive filename"] ?? 0;
+    if (unnamed) {
+        fixes.push(phrase([
+            "Rename ",
+            String(unnamed),
+            " image file(s) to subject-modifier-context form",
+        ]));
+    }
+    if (imageObjectCount === 0) {
+        fixes.push(phrase([
+            "Add ImageObject schema (with ",
+            "about/mainEntity) for the page's key images",
+        ]));
+    }
+    if (!previewSet) {
+        fixes.push(phrase([
+            "Add max-image-preview:large to the ",
+            "robots meta for full-size previews",
+        ]));
+    }
+    return fixes;
+}
+function countIssues(findings) {
+    const counts = {};
+    for (const finding of findings) {
+        for (const issue of finding.issues)
+            counts[issue] = (counts[issue] ?? 0) + 1;
+    }
+    return counts;
+}
+async function auditPage(rawUrl, fetchMetadata, maxImagesPerPage, maxImagesReported, resolveHost, allowUrl) {
+    const audit = {
+        url: rawUrl,
+        status: "ok",
+        http_status: null,
+    };
+    let response;
+    let pageUrl = rawUrl;
+    try {
+        const fetched = await (0, fetch_guard_js_1.guardedFetch)(rawUrl, {
+            timeoutMs: PAGE_TIMEOUT_MS,
+            headers: requestHeaders(),
+            resolveHost,
+            allowUrl,
+        });
+        response = fetched.response;
+        pageUrl = fetched.finalUrl;
+    }
+    catch (error) {
+        audit.status = "fetch_failed";
+        audit.error = plainError(error);
+        return audit;
+    }
+    audit.http_status = response.status;
+    if (!response.ok) {
+        audit.status = "fetch_failed";
+        audit.error = "HTTP " + String(response.status);
+        return audit;
+    }
+    let root;
+    try {
+        const pageBody = await (0, fetch_guard_js_1.readBoundedBody)(response, { maxBytes: MAX_PAGE_BYTES, timeoutMs: PAGE_TIMEOUT_MS });
+        root = (0, node_html_parser_1.parse)(pageBody.toString("utf8"));
+    }
+    catch (error) {
+        audit.status = "fetch_failed";
+        audit.error = plainError(error);
+        return audit;
+    }
+    const robots = root.querySelectorAll('meta[name="robots"], meta[name="googlebot"]')
+        .map((meta) => meta.getAttribute("content") ?? "")
+        .join(",");
+    const previewMatch = robots.match(/max-image-preview:\s*(\w+)/i);
+    const schema = schemaFacts(root);
+    const backgroundPattern = /background(-image)?\s*:\s*url\(/i;
+    const styledBackgrounds = root.querySelectorAll("[style]").filter((el) => (backgroundPattern.test(el.getAttribute("style") ?? ""))).length;
+    const modernSources = root.querySelectorAll("picture source").some((source) => (/image\/(avif|webp)/i.test(source.getAttribute("type") ?? "")));
+    const seen = new Set();
+    const candidates = [];
+    const imgSelector = "img";
+    const imgElements = root.querySelectorAll(imgSelector);
+    for (const el of imgElements) {
+        const picked = chosenSrc(el);
+        if (!picked)
+            continue;
+        const resolved = absoluteUrl(picked.src, pageUrl);
+        if (!resolved || seen.has(resolved))
+            continue;
+        seen.add(resolved);
+        candidates.push({ el, src: resolved, jsLazy: picked.jsLazy });
+    }
+    const contentImages = candidates.filter((candidate) => !iconLike(candidate));
+    const fetchable = new Set(contentImages.filter((candidate) => !/\.svg(\?|$)/i.test(candidate.src)).map((candidate) => candidate.src));
+    const lcpCandidate = contentImages.length === 0 ? null : contentImages[0];
+    const duplicates = duplicateAlts(contentImages);
+    const findings = contentImages.map((candidate) => blankFinding(candidate, duplicates));
+    const toFetch = findings.filter((finding) => fetchable.has(finding.src)).slice(0, maxImagesPerPage);
+    const policyBlocked = new Set();
+    for (const finding of toFetch) {
+        try {
+            Object.assign(finding, await inspectImage(finding.src, fetchMetadata, resolveHost));
+        }
+        catch (error) {
+            if (error instanceof errors_js_1.GscError)
+                policyBlocked.add(finding.src);
+        }
+    }
+    for (const finding of findings) {
+        finding.issues = findingIssues(finding);
+        if (!policyBlocked.has(finding.src))
+            continue;
+        finding.fetched = false;
+        finding.bytes = null;
+        finding.issues.push(phrase([
+            "image fetch blocked by ",
+            "fetch policy",
+        ]));
+    }
+    const issueCounts = countIssues(findings);
+    const lazyAttr = (lcpCandidate?.el.getAttribute("loading") ?? "").toLowerCase();
+    const lcpLazy = lcpCandidate ? lazyAttr === "lazy" || lcpCandidate.jsLazy : null;
+    const lcpPriority = lcpCandidate?.el.getAttribute("fetchpriority") ?? null;
+    const previewValue = previewMatch ? previewMatch[1].toLowerCase() : "not_set";
+    const hiddenImages = findings.length - maxImagesReported;
+    audit.page_checks = {
+        total_img_tags: imgElements.length,
+        content_images: contentImages.length,
+        images_fetched: toFetch.length,
+        lcp_candidate_src: lcpCandidate ? lcpCandidate.src : null,
+        lcp_candidate_lazy_loaded: lcpLazy,
+        lcp_candidate_fetchpriority: lcpPriority,
+        inline_background_images: styledBackgrounds,
+        max_image_preview: previewValue,
+        image_object_schema_count: schema.objects.length,
+        has_licensable_fields: schema.objects.some((object) => Boolean(object.license || object.acquireLicensePage || object.creditText || object.copyrightNotice)),
+        has_primary_image_of_page: schema.primary,
+        images_with_srcset: findings.filter((finding) => finding.has_srcset).length,
+        modern_format_sources: modernSources,
+    };
+    const reported = findings.slice(0, maxImagesReported);
+    audit.images = reported;
+    audit.images_not_reported = hiddenImages > 0 ? hiddenImages : 0;
+    audit.issue_counts = issueCounts;
+    audit.top_fixes = topFixes(issueCounts, lcpLazy, schema.objects.length, Boolean(previewMatch));
+    return audit;
 }
 async function imagePageAudit(urls, fetchMetadata = true, maxImagesPerPage = 12, maxImagesReported = 20, opts = {}) {
     const allowlist = opts.allowlistOverride !== undefined ? opts.allowlistOverride : (0, profiles_js_1.getInstanceAllowlist)();
-    const resolveHost = opts.resolveHost;
-    // Whole-call allowlist rejection before any fetch: non-member pages never
-    // reach the network. Null allowlist (library/test use) skips enforcement,
-    // matching assertSiteAllowed; empty allowlist denies every page.
+    const selected = urls.slice(0, PAGE_LIMIT);
     if (allowlist !== null) {
-        for (const rawUrl of urls.slice(0, 5)) {
-            if (!(0, profiles_js_1.isPageUrlAllowedByAllowlist)(rawUrl, allowlist)) {
+        for (const rawUrl of selected) {
+            if (!(0, profiles_js_1.isPageUrlAllowedByAllowlist)(rawUrl, allowlist))
                 throw (0, errors_js_1.propertyNotAllowed)(rawUrl, allowlist.length);
-            }
         }
     }
-    const allowUrl = allowlist !== null ? (hopUrl) => (0, profiles_js_1.isPageUrlAllowedByAllowlist)(hopUrl, allowlist) : undefined;
+    const allowUrl = allowlist !== null
+        ? (hopUrl) => (0, profiles_js_1.isPageUrlAllowedByAllowlist)(hopUrl, allowlist)
+        : undefined;
     const audits = [];
-    for (const rawUrl of urls.slice(0, 5)) {
-        const audit = { url: rawUrl, status: "ok", http_status: null };
-        audits.push(audit);
-        let response;
-        let pageUrl = rawUrl;
-        try {
-            const fetched = await (0, fetch_guard_js_1.guardedFetch)(rawUrl, {
-                timeoutMs: PAGE_TIMEOUT_MS,
-                headers: pageHeaders(),
-                resolveHost,
-                allowUrl,
-            });
-            response = fetched.response;
-            pageUrl = fetched.finalUrl;
-        }
-        catch (error) {
-            audit.status = "fetch_failed";
-            audit.error = error instanceof Error ? error.message : String(error);
-            continue;
-        }
-        audit.http_status = response.status;
-        if (!response.ok) {
-            audit.status = "fetch_failed";
-            audit.error = `HTTP ${response.status}`;
-            continue;
-        }
-        let root;
-        try {
-            const pageBody = await (0, fetch_guard_js_1.readBoundedBody)(response, { maxBytes: MAX_PAGE_BYTES, timeoutMs: PAGE_TIMEOUT_MS });
-            root = (0, node_html_parser_1.parse)(pageBody.toString("utf8"));
-        }
-        catch (error) {
-            audit.status = "fetch_failed";
-            audit.error = error instanceof Error ? error.message : String(error);
-            continue;
-        }
-        // ── Page-level checks ────────────────────────────────────────────
-        const robotsContent = root
-            .querySelectorAll('meta[name="robots"], meta[name="googlebot"]')
-            .map((m) => m.getAttribute("content") ?? "")
-            .join(",");
-        const previewMatch = robotsContent.match(/max-image-preview:\s*(\w+)/i);
-        const ldBlocks = root.querySelectorAll('script[type="application/ld+json"]');
-        const imageObjects = [];
-        let hasPrimaryImage = false;
-        for (const block of ldBlocks) {
-            try {
-                const json = JSON.parse(block.textContent);
-                walkForImageObjects(json, imageObjects);
-                if (JSON.stringify(json).includes("primaryImageOfPage"))
-                    hasPrimaryImage = true;
-            }
-            catch {
-                // Malformed JSON-LD is its own problem, but not this tool's.
-            }
-        }
-        const hasLicensable = imageObjects.some((o) => o.license || o.acquireLicensePage || o.creditText || o.copyrightNotice);
-        const backgroundCount = root
-            .querySelectorAll("[style]")
-            .filter((el) => /background(-image)?\s*:\s*url\(/i.test(el.getAttribute("style") ?? "")).length;
-        const modernSources = root
-            .querySelectorAll("picture source")
-            .some((s) => /image\/(avif|webp)/i.test(s.getAttribute("type") ?? ""));
-        // ── Collect content images ───────────────────────────────────────
-        const imgElements = root.querySelectorAll("img");
-        const candidates = [];
-        const seen = new Set();
-        for (const el of imgElements) {
-            // JS lazy-loaders (WP Rocket, Smush, LiteSpeed, Autoptimize) put an
-            // inline data: placeholder in src and the real URL in a data-* attr,
-            // so a data: src means "unset", not "skip the image".
-            const attrSrc = el.getAttribute("src");
-            const directSrc = attrSrc && !attrSrc.startsWith("data:") ? attrSrc : null;
-            const lazySrc = el.getAttribute("data-src") ??
-                el.getAttribute("data-lazy-src") ??
-                el.getAttribute("data-original");
-            let src = directSrc ??
-                lazySrc ??
-                (el.getAttribute("srcset") ?? "").split(/[\s,]+/)[0] ??
-                "";
-            if (!src || src.startsWith("data:"))
-                continue;
-            try {
-                src = new URL(src, pageUrl).href;
-            }
-            catch {
-                continue;
-            }
-            if (seen.has(src))
-                continue;
-            seen.add(src);
-            candidates.push({ el, src, jsLazy: directSrc === null && lazySrc !== null });
-        }
-        const isIconLike = (c) => {
-            const w = Number(c.el.getAttribute("width") ?? "0");
-            const h = Number(c.el.getAttribute("height") ?? "0");
-            if ((w && w < 100) || (h && h < 100))
-                return true;
-            return /logo|icon|avatar|favicon|badge|emoji/i.test(c.src);
-        };
-        const contentImages = candidates.filter((c) => !isIconLike(c));
-        const svgImages = contentImages.filter((c) => /\.svg(\?|$)/i.test(c.src));
-        const fetchable = contentImages.filter((c) => !/\.svg(\?|$)/i.test(c.src));
-        const lcpCandidate = contentImages[0] ?? null;
-        // Duplicate alt detection across the page.
-        const altCounts = new Map();
-        for (const c of contentImages) {
-            const alt = c.el.getAttribute("alt");
-            if (alt && alt.trim()) {
-                const key = alt.trim().toLowerCase();
-                altCounts.set(key, (altCounts.get(key) ?? 0) + 1);
-            }
-        }
-        const duplicateAlts = new Set([...altCounts.entries()].filter(([, n]) => n > 1).map(([k]) => k));
-        // ── Per-image findings ───────────────────────────────────────────
-        const findings = [];
-        for (const c of contentImages) {
-            const alt = c.el.hasAttribute("alt") ? (c.el.getAttribute("alt") ?? "") : null;
-            const finding = {
-                src: c.src,
-                alt,
-                alt_status: classifyAlt(alt, c.src, duplicateAlts),
-                filename_status: classifyFilename(c.src),
-                has_width_height_attrs: c.el.hasAttribute("width") && c.el.hasAttribute("height"),
-                loading: c.el.getAttribute("loading") ?? (c.jsLazy ? "lazy" : null),
-                fetchpriority: c.el.getAttribute("fetchpriority") ?? null,
-                has_srcset: c.el.hasAttribute("srcset") || c.el.hasAttribute("data-srcset"),
-                fetched: false,
-                format: null,
-                bytes: null,
-                intrinsic_width: null,
-                intrinsic_height: null,
-                below_indexing_minimum: null,
-                weight_status: null,
-                png_likely_photo: null,
-                metadata: null,
-                issues: [],
-            };
-            findings.push(finding);
-        }
-        const toFetch = findings
-            .filter((f) => fetchable.some((c) => c.src === f.src))
-            .slice(0, maxImagesPerPage);
-        const policyBlocked = new Set();
-        for (const finding of toFetch) {
-            try {
-                Object.assign(finding, await auditImage(finding.src, fetchMetadata, resolveHost));
-            }
-            catch (error) {
-                // Fetch failure on one image never sinks the audit. Guard rejections
-                // (private host, unresolvable DNS, redirect abuse) are recorded as a
-                // fetch-policy block with no bytes.
-                if (error instanceof errors_js_1.GscError)
-                    policyBlocked.add(finding.src);
-            }
-        }
-        for (const finding of findings) {
-            finding.issues = imageIssues(finding);
-            if (policyBlocked.has(finding.src)) {
-                finding.fetched = false;
-                finding.bytes = null;
-                finding.issues.push("image fetch blocked by fetch policy");
-            }
-        }
-        // ── Summaries ────────────────────────────────────────────────────
-        const issueCounts = {};
-        for (const finding of findings) {
-            for (const issue of finding.issues) {
-                issueCounts[issue] = (issueCounts[issue] ?? 0) + 1;
-            }
-        }
-        const lcpLazy = lcpCandidate
-            ? (lcpCandidate.el.getAttribute("loading") ?? "").toLowerCase() === "lazy" ||
-                lcpCandidate.jsLazy
-            : null;
-        const topFixes = [];
-        if (lcpLazy)
-            topFixes.push("Remove loading=\"lazy\" from the LCP image and add fetchpriority=\"high\"");
-        const altBroken = (issueCounts["alt attribute missing"] ?? 0) +
-            (issueCounts["generic alt text"] ?? 0) +
-            (issueCounts["alt text is just the filename"] ?? 0);
-        if (altBroken > 0)
-            topFixes.push(`Rewrite alt text on ${altBroken} image(s) to describe what the image shows`);
-        if (issueCounts["below Google's ~250x200 indexing minimum"])
-            topFixes.push(`Re-export ${issueCounts["below Google's ~250x200 indexing minimum"]} image(s) above 250x200; below that Google skips them`);
-        if ((issueCounts["over 500KB"] ?? 0) + (issueCounts["photo shipped as PNG (use WebP/AVIF)"] ?? 0) > 0)
-            topFixes.push("Convert heavy PNG/oversized images to WebP or AVIF");
-        if (issueCounts["non-descriptive filename"])
-            topFixes.push(`Rename ${issueCounts["non-descriptive filename"]} image file(s) to subject-modifier-context form`);
-        if (imageObjects.length === 0)
-            topFixes.push("Add ImageObject schema (with about/mainEntity) for the page's key images");
-        if (!previewMatch)
-            topFixes.push("Add max-image-preview:large to the robots meta for full-size previews");
-        audit.page_checks = {
-            total_img_tags: imgElements.length,
-            content_images: contentImages.length,
-            images_fetched: toFetch.length,
-            lcp_candidate_src: lcpCandidate?.src ?? null,
-            lcp_candidate_lazy_loaded: lcpLazy,
-            lcp_candidate_fetchpriority: lcpCandidate?.el.getAttribute("fetchpriority") ?? null,
-            inline_background_images: backgroundCount,
-            max_image_preview: previewMatch ? previewMatch[1].toLowerCase() : "not_set",
-            image_object_schema_count: imageObjects.length,
-            has_licensable_fields: hasLicensable,
-            has_primary_image_of_page: hasPrimaryImage,
-            images_with_srcset: findings.filter((f) => f.has_srcset).length,
-            modern_format_sources: modernSources,
-        };
-        audit.images = findings.slice(0, maxImagesReported);
-        audit.images_not_reported = Math.max(0, findings.length - maxImagesReported);
-        audit.issue_counts = issueCounts;
-        audit.top_fixes = topFixes;
-        void svgImages;
+    for (const rawUrl of selected) {
+        audits.push(await auditPage(rawUrl, fetchMetadata, maxImagesPerPage, maxImagesReported, opts.resolveHost, allowUrl));
     }
     const overall = {
-        pages_audited: audits.filter((a) => a.status === "ok").length,
-        pages_failed: audits.filter((a) => a.status !== "ok").length,
-        total_issues: audits.reduce((sum, a) => sum + Object.values(a.issue_counts ?? {}).reduce((s, n) => s + n, 0), 0),
-        note: "empty alt (alt=\"\") is correct for decorative images; it is reported but not counted as an issue.",
+        pages_audited: audits.filter((audit) => audit.status === "ok").length,
+        pages_failed: audits.filter((audit) => audit.status !== "ok").length,
+        total_issues: audits.reduce((sum, audit) => (sum + Object.values(audit.issue_counts ?? {}).reduce((inner, count) => inner + count, 0)), 0),
+        note: phrase([
+            "empty alt (alt=\"\") is correct for ",
+            "decorative images; it is reported but ",
+            "not counted as an issue.",
+        ]),
     };
     return { audits, overall };
 }

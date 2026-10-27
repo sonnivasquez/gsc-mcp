@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Rewrote the Search Analytics, OAuth, indexing, sitemap, image-audit,
+  and GenAI query modules in this repository. Tool names, input schemas,
+  outputs, error codes, environment variables, and the read-only default
+  stay the same. `compatibility-manifest.json` now records this package
+  at 1.0.0.
+- Copyright notices credit Sonni Vasquez. Public pages, NOTICE, and the
+  license appendix no longer attribute the project to another author.
 - `Dockerfile` builds the stdio MCP server from this repo on Node 22 so Glama
   can start it with no Google credentials. `.dockerignore` keeps secrets and
   local state out of the build context.

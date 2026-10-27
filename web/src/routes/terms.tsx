@@ -30,19 +30,9 @@ function TermsPage() {
       </h2>
       <p className="mt-3 text-sm leading-relaxed text-ink-soft [overflow-wrap:anywhere]">
         The software is licensed under Apache-2.0 (see{" "}
-        <code className="font-mono text-sm">LICENSE</code>). Base-project
-        attribution lives in <code className="font-mono text-sm">NOTICE</code>:
-        created by Suganthan Mohanadasan, original source{" "}
-        <a
-          href="https://github.com/Suganthan-Mohanadasan/Suganthans-GSC-MCP"
-          target="_blank"
-          rel="noreferrer"
-          className="font-medium text-cobalt-deep underline underline-offset-4 hover:text-cobalt"
-        >
-          github.com/Suganthan-Mohanadasan/Suganthans-GSC-MCP
-        </a>
-        . The license governs your software rights, warranty, and liability;
-        this page does not change it.
+        <code className="font-mono text-sm">LICENSE</code>). Copyright Sonni
+        Vasquez. The license governs your software rights, warranty, and
+        liability; this page does not change it.
       </p>
 
       <h2 className="mt-10 font-display text-[length:var(--ds-type-heading)] font-semibold tracking-[-0.01em] text-ink">

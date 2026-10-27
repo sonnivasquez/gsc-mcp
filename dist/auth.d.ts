@@ -4,10 +4,7 @@ export type SearchConsoleClient = searchconsole_v1.Searchconsole;
 export declare function assertWriteEnabled(tool: string): void;
 export declare function getAuthMode(): AuthMode;
 export declare function getConfig(): {
-    keyFile: string;
-    siteUrls: string[];
-} | {
-    keyFile: undefined;
+    keyFile: string | undefined;
     siteUrls: string[];
 };
 export declare function resolveSiteUrl(siteUrlOverride?: string): string;

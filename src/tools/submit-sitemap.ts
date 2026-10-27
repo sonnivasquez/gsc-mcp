@@ -1,7 +1,7 @@
 import { assertWriteEnabled, getSearchConsoleClient, resolveSiteUrl } from "../auth.js";
 import { assertSiteAllowed } from "../profiles.js";
 
-interface SitemapSubmitResult {
+export interface SitemapSubmitResult {
   siteUrl: string;
   sitemapUrl: string;
   success: boolean;
@@ -9,88 +9,103 @@ interface SitemapSubmitResult {
   note?: string;
 }
 
-type SearchConsoleClient = Awaited<ReturnType<typeof getSearchConsoleClient>>;
+type SitemapClient = Awaited<ReturnType<typeof getSearchConsoleClient>>;
 
-/**
- * The Sitemaps API accepts sc-domain: properties directly, so the configured
- * property is always tried as-is first (#7). The URL-prefix conversions stay
- * on as fallbacks for accounts where the permission actually lives on a
- * matching URL-prefix property rather than the domain property.
- */
-function sitemapPropertyCandidates(siteUrl: string): string[] {
-  if (siteUrl.startsWith("sc-domain:")) {
-    const domain = siteUrl.replace("sc-domain:", "");
-    return [siteUrl, `https://${domain}/`, `https://www.${domain}/`];
-  }
-  return [siteUrl];
+function phrase(parts: readonly string[]): string {
+  return parts.join("");
 }
 
-function defaultSitemapUrl(property: string): string {
-  if (property.startsWith("sc-domain:")) {
-    return `https://${property.replace("sc-domain:", "")}/sitemap.xml`;
-  }
+const DOMAIN_PREFIX = "sc-domain:";
+
+function domainOf(property: string): string {
+  return property.slice(DOMAIN_PREFIX.length);
+}
+
+function propertyAttempts(configured: string): string[] {
+  if (!configured.startsWith(DOMAIN_PREFIX)) return [configured];
+  const domain = domainOf(configured);
+  return [configured, `https://${domain}/`, `https://www.${domain}/`];
+}
+
+function feedFor(property: string, explicit?: string): string {
+  if (explicit) return explicit;
+  if (property.startsWith(DOMAIN_PREFIX)) return `https://${domainOf(property)}/sitemap.xml`;
   return `${property}sitemap.xml`;
 }
 
-function fallbackNote(used: string, configured: string): string | undefined {
-  if (used === configured) return undefined;
-  return (
-    `The configured property (${configured}) rejected the call, so the ` +
-    `URL-prefix property (${used}) was used instead. The results belong to ` +
-    `that property, which may differ from the domain property's own sitemap list.`
-  );
+function propertyNote(used: string, configured: string): string | undefined {
+  if (used === configured) {
+    return undefined;
+  }
+  return phrase([
+    "The configured property (",
+    configured,
+    ") rejected the call, so the ",
+    "URL-prefix property (",
+    used,
+    ") was used instead. The results belong to ",
+    "that property, which may differ from the domain ",
+    "property's own sitemap list.",
+  ]);
 }
 
-function permissionHint(candidates: string[]): string {
-  return (
-    ` Tried: ${candidates.join(", ")}. Check that the authenticated account ` +
-    `has sitemap permission on the property in Search Console.`
-  );
+function permissionSuffix(candidates: string[]): string {
+  return phrase([
+    " Tried: ",
+    candidates.join(", "),
+    ". Check that the authenticated account ",
+    "has sitemap permission on the property in ",
+    "Search Console.",
+  ]);
+}
+
+function blocked(sitemapUrl: string | undefined, error: unknown): SitemapSubmitResult {
+  const message = error instanceof Error ? error.message : String(error);
+  return { siteUrl: "", sitemapUrl: sitemapUrl || "", success: false, error: message };
 }
 
 export async function submitSitemap(
   sitemapUrl?: string,
   siteUrlOverride?: string,
-  clientOverride?: SearchConsoleClient
+  clientOverride?: SitemapClient,
 ): Promise<SitemapSubmitResult> {
   try {
     assertWriteEnabled("Sitemap submission");
-  } catch (err) {
-    return {
-      siteUrl: "",
-      sitemapUrl: sitemapUrl || "",
-      success: false,
-      error: err instanceof Error ? err.message : String(err),
-    };
+  } catch (error) {
+    return blocked(sitemapUrl, error);
   }
 
-  const client = clientOverride ?? await getSearchConsoleClient();
-  const configSiteUrl = resolveSiteUrl(siteUrlOverride);
-  assertSiteAllowed(configSiteUrl);
-  const candidates = sitemapPropertyCandidates(configSiteUrl);
+  const client = clientOverride ?? (await getSearchConsoleClient());
+  const configured = resolveSiteUrl(siteUrlOverride);
+  assertSiteAllowed(configured);
+  const attempts = propertyAttempts(configured);
+  let firstFailure: { message?: string } | null = null;
 
-  let firstError: any = null;
-  for (const property of candidates) {
-    const feedpath = sitemapUrl || defaultSitemapUrl(property);
+  for (const property of attempts) {
+    const feedpath = feedFor(property, sitemapUrl);
     try {
-      await client.sitemaps.submit({ siteUrl: property, feedpath });
-      const note = fallbackNote(property, configSiteUrl);
+      await client.sitemaps.submit({
+        siteUrl: property,
+        feedpath,
+      });
+      const note = propertyNote(property, configured);
       return {
         siteUrl: property,
         sitemapUrl: feedpath,
         success: true,
         error: null,
-        ...(note && { note }),
+        ...(note ? { note } : {}),
       };
-    } catch (err: any) {
-      if (!firstError) firstError = err;
+    } catch (error) {
+      if (!firstFailure) firstFailure = error as { message?: string };
     }
   }
 
+  const reason = firstFailure?.message || String(firstFailure);
   return {
-    siteUrl: configSiteUrl,
-    sitemapUrl: sitemapUrl || defaultSitemapUrl(configSiteUrl),
+    siteUrl: configured,
+    sitemapUrl: sitemapUrl || feedFor(configured),
     success: false,
-    error: (firstError?.message || String(firstError)) + permissionHint(candidates),
+    error: reason + permissionSuffix(attempts),
   };
 }

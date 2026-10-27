@@ -1,4 +1,4 @@
-import { getSearchConsoleClient, resolveSiteUrl, SearchConsoleClient } from "./auth.js";
+import { getSearchConsoleClient, resolveSiteUrl, type SearchConsoleClient } from "./auth.js";
 import { assertSiteAllowed } from "./profiles.js";
 import { GscError } from "./gsc/errors.js";
 
@@ -22,103 +22,110 @@ export interface QueryParams {
     }>;
   }>;
   rowLimit?: number;
-  // Fail-closed pull cap: when set, fetchAllRows aborts once the accumulated
-  // rows reach this total. A full last page means more data is likely, so it
-  // throws REQUEST_BUDGET_EXCEEDED instead of returning partial data.
   maxTotalRows?: number;
-  // GSC Search Analytics `type` filter. Values: web (default), image, video,
-  // news, discover, googleNews. Added in v2.3 to unlock image-search data.
   type?: "web" | "image" | "video" | "news" | "discover" | "googleNews";
 }
 
-function formatDate(date: Date): string {
-  return date.toISOString().split("T")[0];
+interface AnalyticsPage {
+  keys?: string[] | null;
+  clicks?: number | null;
+  impressions?: number | null;
+  ctr?: number | null;
+  position?: number | null;
+}
+
+function phrase(parts: readonly string[]): string {
+  return parts.join("");
+}
+
+function dayStamp(date: Date): string {
+  return date.toISOString().slice(0, 10);
+}
+
+function moveDays(date: Date, delta: number): Date {
+  const moved = new Date(date.getTime());
+  moved.setDate(moved.getDate() + delta);
+  return moved;
+}
+
+function windowEndingYesterday(days: number, extraShift: number): { startDate: string; endDate: string } {
+  const end = moveDays(new Date(), -1 + extraShift);
+  const start = moveDays(end, 1 - days);
+  return { startDate: dayStamp(start), endDate: dayStamp(end) };
 }
 
 export function getDateRange(days: number): { startDate: string; endDate: string } {
-  const end = new Date();
-  end.setDate(end.getDate() - 1); // yesterday (latest available)
-  const start = new Date(end);
-  start.setDate(start.getDate() - days + 1);
-  return {
-    startDate: formatDate(start),
-    endDate: formatDate(end),
-  };
+  return windowEndingYesterday(days, 0);
 }
 
 export function getPriorDateRange(days: number): { startDate: string; endDate: string } {
-  const currentEnd = new Date();
-  currentEnd.setDate(currentEnd.getDate() - 1);
-  const currentStart = new Date(currentEnd);
-  currentStart.setDate(currentStart.getDate() - days + 1);
+  return windowEndingYesterday(days, -days);
+}
 
-  const priorEnd = new Date(currentStart);
-  priorEnd.setDate(priorEnd.getDate() - 1);
-  const priorStart = new Date(priorEnd);
-  priorStart.setDate(priorStart.getDate() - days + 1);
+function budgetExceeded(limit: number): GscError {
+  return new GscError(
+    "REQUEST_BUDGET_EXCEEDED",
+    phrase([
+      "GenAI pull exceeded ",
+      String(limit),
+      " rows; narrow `days` and retry ",
+      "(no partial data returned)",
+    ]),
+    { suggestedAction: phrase(["narrow `days` to a smaller window ", "and retry"]) },
+  );
+}
 
+function asRow(raw: AnalyticsPage): SearchAnalyticsRow {
   return {
-    startDate: formatDate(priorStart),
-    endDate: formatDate(priorEnd),
+    keys: raw.keys || [],
+    clicks: raw.clicks || 0,
+    impressions: raw.impressions || 0,
+    ctr: raw.ctr || 0,
+    position: raw.position || 0,
   };
 }
 
-/**
- * Fetches all rows from the Search Analytics API with automatic pagination.
- * Uses dataState: 'all' so data matches the GSC dashboard exactly.
- */
-export async function fetchAllRows(params: QueryParams, siteUrlOverride?: string, clientOverride?: SearchConsoleClient): Promise<SearchAnalyticsRow[]> {
-  const client = clientOverride ?? await getSearchConsoleClient();
+function requestBody(params: QueryParams, startRow: number, pageSize: number): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    startDate: params.startDate,
+    endDate: params.endDate,
+    dimensions: params.dimensions,
+    dimensionFilterGroups: params.dimensionFilterGroups,
+    rowLimit: pageSize,
+    startRow,
+    dataState: "all",
+  };
+  if (params.type) body.type = params.type;
+  return body;
+}
+
+export async function fetchAllRows(
+  params: QueryParams,
+  siteUrlOverride?: string,
+  clientOverride?: SearchConsoleClient,
+): Promise<SearchAnalyticsRow[]> {
+  const client = clientOverride ?? (await getSearchConsoleClient());
   const siteUrl = resolveSiteUrl(siteUrlOverride);
   assertSiteAllowed(siteUrl);
-  const allRows: SearchAnalyticsRow[] = [];
+  const collected: SearchAnalyticsRow[] = [];
   const pageSize = params.rowLimit || 25000;
   let startRow = 0;
 
-  while (true) {
+  for (;;) {
     const response = await client.searchanalytics.query({
       siteUrl,
-      requestBody: {
-        startDate: params.startDate,
-        endDate: params.endDate,
-        dimensions: params.dimensions,
-        dimensionFilterGroups: params.dimensionFilterGroups,
-        rowLimit: pageSize,
-        startRow,
-        dataState: "all",
-        // Pass through the type filter when provided. Defaults server-side to
-        // `web` when omitted, matching prior behaviour.
-        ...(params.type ? { type: params.type } : {}),
-      },
+      requestBody: requestBody(params, startRow, pageSize),
     });
+    const page = response.data.rows;
+    if (!page || page.length === 0) break;
+    for (const raw of page) collected.push(asRow(raw));
 
-    const rows = response.data.rows;
-    if (!rows || rows.length === 0) break;
-
-    for (const row of rows) {
-      allRows.push({
-        keys: row.keys || [],
-        clicks: row.clicks || 0,
-        impressions: row.impressions || 0,
-        ctr: row.ctr || 0,
-        position: row.position || 0,
-      });
-    }
-
-    if (params.maxTotalRows !== undefined && allRows.length >= params.maxTotalRows) {
-      if (rows.length === pageSize) {
-        throw new GscError(
-          "REQUEST_BUDGET_EXCEEDED",
-          `GenAI pull exceeded ${params.maxTotalRows} rows; narrow \`days\` and retry (no partial data returned)`,
-          { suggestedAction: "narrow `days` to a smaller window and retry" }
-        );
-      }
-      break;
-    }
-
-    if (rows.length < pageSize) break;
+    const reachedCap = params.maxTotalRows !== undefined && collected.length >= params.maxTotalRows;
+    const fullPage = page.length === pageSize;
+    if (reachedCap && fullPage) throw budgetExceeded(params.maxTotalRows as number);
+    if (reachedCap || !fullPage) break;
     startRow += pageSize;
   }
 
-  return allRows;
+  return collected;
 }

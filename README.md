@@ -245,6 +245,6 @@ For Bun, build with `bun run build` and run `bun --test test`. The package inclu
 
 ## License and attribution
 
-[Apache-2.0](LICENSE). See [NOTICE](NOTICE) for base-project attribution. Maintained by [Sonni Vasquez](https://github.com/sonnivasquez).
+Apache-2.0. Copyright Sonni Vasquez.
 
 If this server helps, star the repo: https://github.com/sonnivasquez/gsc-mcp

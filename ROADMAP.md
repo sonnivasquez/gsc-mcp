@@ -33,4 +33,4 @@ cobertura completa de Search Console.
 
 ## Licencia y procedencia
 
-Se mantienen Apache-2.0 y la atribución del proyecto base en [NOTICE](NOTICE).
+Se mantiene la licencia Apache-2.0. Copyright Sonni Vasquez ([NOTICE](NOTICE)).

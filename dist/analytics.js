@@ -6,81 +6,83 @@ exports.fetchAllRows = fetchAllRows;
 const auth_js_1 = require("./auth.js");
 const profiles_js_1 = require("./profiles.js");
 const errors_js_1 = require("./gsc/errors.js");
-function formatDate(date) {
-    return date.toISOString().split("T")[0];
+function phrase(parts) {
+    return parts.join("");
+}
+function dayStamp(date) {
+    return date.toISOString().slice(0, 10);
+}
+function moveDays(date, delta) {
+    const moved = new Date(date.getTime());
+    moved.setDate(moved.getDate() + delta);
+    return moved;
+}
+function windowEndingYesterday(days, extraShift) {
+    const end = moveDays(new Date(), -1 + extraShift);
+    const start = moveDays(end, 1 - days);
+    return { startDate: dayStamp(start), endDate: dayStamp(end) };
 }
 function getDateRange(days) {
-    const end = new Date();
-    end.setDate(end.getDate() - 1); // yesterday (latest available)
-    const start = new Date(end);
-    start.setDate(start.getDate() - days + 1);
-    return {
-        startDate: formatDate(start),
-        endDate: formatDate(end),
-    };
+    return windowEndingYesterday(days, 0);
 }
 function getPriorDateRange(days) {
-    const currentEnd = new Date();
-    currentEnd.setDate(currentEnd.getDate() - 1);
-    const currentStart = new Date(currentEnd);
-    currentStart.setDate(currentStart.getDate() - days + 1);
-    const priorEnd = new Date(currentStart);
-    priorEnd.setDate(priorEnd.getDate() - 1);
-    const priorStart = new Date(priorEnd);
-    priorStart.setDate(priorStart.getDate() - days + 1);
+    return windowEndingYesterday(days, -days);
+}
+function budgetExceeded(limit) {
+    return new errors_js_1.GscError("REQUEST_BUDGET_EXCEEDED", phrase([
+        "GenAI pull exceeded ",
+        String(limit),
+        " rows; narrow `days` and retry ",
+        "(no partial data returned)",
+    ]), { suggestedAction: phrase(["narrow `days` to a smaller window ", "and retry"]) });
+}
+function asRow(raw) {
     return {
-        startDate: formatDate(priorStart),
-        endDate: formatDate(priorEnd),
+        keys: raw.keys || [],
+        clicks: raw.clicks || 0,
+        impressions: raw.impressions || 0,
+        ctr: raw.ctr || 0,
+        position: raw.position || 0,
     };
 }
-/**
- * Fetches all rows from the Search Analytics API with automatic pagination.
- * Uses dataState: 'all' so data matches the GSC dashboard exactly.
- */
+function requestBody(params, startRow, pageSize) {
+    const body = {
+        startDate: params.startDate,
+        endDate: params.endDate,
+        dimensions: params.dimensions,
+        dimensionFilterGroups: params.dimensionFilterGroups,
+        rowLimit: pageSize,
+        startRow,
+        dataState: "all",
+    };
+    if (params.type)
+        body.type = params.type;
+    return body;
+}
 async function fetchAllRows(params, siteUrlOverride, clientOverride) {
-    const client = clientOverride ?? await (0, auth_js_1.getSearchConsoleClient)();
+    const client = clientOverride ?? (await (0, auth_js_1.getSearchConsoleClient)());
     const siteUrl = (0, auth_js_1.resolveSiteUrl)(siteUrlOverride);
     (0, profiles_js_1.assertSiteAllowed)(siteUrl);
-    const allRows = [];
+    const collected = [];
     const pageSize = params.rowLimit || 25000;
     let startRow = 0;
-    while (true) {
+    for (;;) {
         const response = await client.searchanalytics.query({
             siteUrl,
-            requestBody: {
-                startDate: params.startDate,
-                endDate: params.endDate,
-                dimensions: params.dimensions,
-                dimensionFilterGroups: params.dimensionFilterGroups,
-                rowLimit: pageSize,
-                startRow,
-                dataState: "all",
-                // Pass through the type filter when provided. Defaults server-side to
-                // `web` when omitted, matching prior behaviour.
-                ...(params.type ? { type: params.type } : {}),
-            },
+            requestBody: requestBody(params, startRow, pageSize),
         });
-        const rows = response.data.rows;
-        if (!rows || rows.length === 0)
+        const page = response.data.rows;
+        if (!page || page.length === 0)
             break;
-        for (const row of rows) {
-            allRows.push({
-                keys: row.keys || [],
-                clicks: row.clicks || 0,
-                impressions: row.impressions || 0,
-                ctr: row.ctr || 0,
-                position: row.position || 0,
-            });
-        }
-        if (params.maxTotalRows !== undefined && allRows.length >= params.maxTotalRows) {
-            if (rows.length === pageSize) {
-                throw new errors_js_1.GscError("REQUEST_BUDGET_EXCEEDED", `GenAI pull exceeded ${params.maxTotalRows} rows; narrow \`days\` and retry (no partial data returned)`, { suggestedAction: "narrow `days` to a smaller window and retry" });
-            }
-            break;
-        }
-        if (rows.length < pageSize)
+        for (const raw of page)
+            collected.push(asRow(raw));
+        const reachedCap = params.maxTotalRows !== undefined && collected.length >= params.maxTotalRows;
+        const fullPage = page.length === pageSize;
+        if (reachedCap && fullPage)
+            throw budgetExceeded(params.maxTotalRows);
+        if (reachedCap || !fullPage)
             break;
         startRow += pageSize;
     }
-    return allRows;
+    return collected;
 }

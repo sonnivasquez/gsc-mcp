@@ -1,22 +1,10 @@
 /**
- * Embedded OAuth client for one-command setup.
- *
- * These are the credentials of a public Google OAuth "Desktop app" client owned
- * by the project maintainer. Shipping a desktop client ID and secret in an open
- * source package is standard practice (rclone and gcloud both do it): Google's
- * installed-app flow explicitly treats desktop client secrets as
- * non-confidential, because a binary on the user's machine can never keep a
- * secret. The client identifies the APP to Google's consent screen. It grants
- * no access by itself: every user still signs in with their own Google account
- * and their tokens are stored only on their own machine (~/.gsc-mcp/).
- *
- * Users who prefer their own client can set GSC_OAUTH_CLIENT_ID and
- * GSC_OAUTH_CLIENT_SECRET, or GSC_OAUTH_SECRETS_FILE, which always take
- * precedence (see getOAuthConfig in oauth.ts).
- *
- * Both constants stay empty until the public client passes Google's OAuth
- * verification for the Search Console scopes. While they are empty, setup
- * requires a bring-your-own client and says so.
+ * Quick Connect uses this desktop OAuth client. A desktop client secret ships
+ * with the app because the installed-app flow treats it as non-confidential:
+ * it only names the app on the consent screen. Access still requires the
+ * user's own Google sign-in, and tokens stay on the user's machine.
+ * GSC_OAUTH_CLIENT_ID plus GSC_OAUTH_CLIENT_SECRET, or
+ * GSC_OAUTH_SECRETS_FILE, replace these values when set.
  */
 export declare const EMBEDDED_CLIENT_ID = "101991762166-8i1530uhjukg3tp8hgjvj11tfoat6a69.apps.googleusercontent.com";
 export declare const EMBEDDED_CLIENT_SECRET = "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";
