@@ -229,7 +229,13 @@ export async function serve(opts: ServeOpts): Promise<void> {
       siteUrl: described("Exact GSC property identifier"),
       startDate: described("Inclusive start, YYYY-MM-DD"),
       endDate: described("Inclusive end, YYYY-MM-DD"),
-      dimensions: z.array(z.string()).describe("Subset of date, page, query, country, device"),
+      dimensions: z.array(z.string()).describe(
+        phrase([
+          "date, page, query, country, device. ",
+          "searchAppearance must be the only ",
+          "dimension",
+        ]),
+      ),
       filters: z.array(z.object({
         dimension: z.string(),
         operator: z.string(),
@@ -237,6 +243,14 @@ export async function serve(opts: ServeOpts): Promise<void> {
       })).optional(),
       searchType: z.string().optional().describe(
         phrase(["web, image, video, news, discover, ", "googleNews (default web)"]),
+      ),
+      aggregationType: z.string().optional().describe(
+        phrase([
+          "auto, byPage, byProperty, or ",
+          "byNewsShowcasePanel. byProperty ",
+          "is rejected for discover and ",
+          "googleNews",
+        ]),
       ),
       dataState: z.string().optional().describe("final or all (default final)"),
       sortBy: z.string().optional().describe(

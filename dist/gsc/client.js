@@ -4,6 +4,7 @@ exports.FetchGscDataSource = void 0;
 const zod_1 = require("zod");
 const profiles_js_1 = require("../profiles.js");
 const budget_js_1 = require("./budget.js");
+const analytics_rules_js_1 = require("./analytics-rules.js");
 const errors_js_1 = require("./errors.js");
 const WEBMASTERS = "https://www.googleapis.com/webmasters/v3/sites";
 const INSPECTION = "https://searchconsole.googleapis.com/v1/urlInspection/index:inspect";
@@ -136,29 +137,39 @@ class FetchGscDataSource {
         const rows = [];
         let startRow = 0;
         let pagesFetched = 0;
+        (0, analytics_rules_js_1.assertSearchAnalyticsRules)({
+            dimensions: q.dimensions,
+            filters: q.filters,
+            searchType: q.searchType,
+            aggregationType: q.aggregationType,
+        });
         for (;;) {
+            const payload = {
+                startDate: q.startDate,
+                endDate: q.endDate,
+                dimensions: q.dimensions,
+                // Google deprecated searchType. Tool inputs still use that name.
+                type: q.searchType ?? "web",
+                dataState: q.dataState ?? "final",
+                rowLimit: pageSize,
+                startRow,
+            };
+            if (q.filters?.length) {
+                payload.dimensionFilterGroups = [
+                    {
+                        filters: q.filters.map((f) => ({
+                            dimension: f.dimension,
+                            operator: f.operator,
+                            expression: f.expression,
+                        })),
+                    },
+                ];
+            }
+            if (q.aggregationType)
+                payload.aggregationType = q.aggregationType;
             const body = await this.call(`${WEBMASTERS}/${encodeURIComponent(siteUrl)}/searchAnalytics/query`, {
                 method: "POST",
-                body: JSON.stringify({
-                    startDate: q.startDate,
-                    endDate: q.endDate,
-                    dimensions: q.dimensions,
-                    dimensionFilterGroups: q.filters?.length
-                        ? [
-                            {
-                                filters: q.filters.map((f) => ({
-                                    dimension: f.dimension,
-                                    operator: f.operator,
-                                    expression: f.expression,
-                                })),
-                            },
-                        ]
-                        : undefined,
-                    searchType: q.searchType ?? "web",
-                    dataState: q.dataState ?? "final",
-                    rowLimit: pageSize,
-                    startRow,
-                }),
+                body: JSON.stringify(payload),
             }, "searchAnalytics.query");
             const page = parseOrThrow(SearchAnalyticsResponse, body, "searchAnalytics.query").rows;
             pagesFetched++;

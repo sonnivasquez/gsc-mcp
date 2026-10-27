@@ -1,5 +1,6 @@
 import { getSearchConsoleClient, resolveSiteUrl, type SearchConsoleClient } from "./auth.js";
 import { assertSiteAllowed } from "./profiles.js";
+import { assertSearchAnalyticsRules } from "./gsc/analytics-rules.js";
 import { GscError } from "./gsc/errors.js";
 
 export interface SearchAnalyticsRow {
@@ -24,6 +25,7 @@ export interface QueryParams {
   rowLimit?: number;
   maxTotalRows?: number;
   type?: "web" | "image" | "video" | "news" | "discover" | "googleNews";
+  aggregationType?: string;
 }
 
 interface AnalyticsPage {
@@ -86,6 +88,13 @@ function asRow(raw: AnalyticsPage): SearchAnalyticsRow {
 }
 
 function requestBody(params: QueryParams, startRow: number, pageSize: number): Record<string, unknown> {
+  const filters = (params.dimensionFilterGroups ?? []).flatMap((group) => group.filters);
+  assertSearchAnalyticsRules({
+    dimensions: params.dimensions,
+    filters,
+    type: params.type,
+    aggregationType: params.aggregationType,
+  });
   const body: Record<string, unknown> = {
     startDate: params.startDate,
     endDate: params.endDate,
@@ -96,6 +105,7 @@ function requestBody(params: QueryParams, startRow: number, pageSize: number): R
     dataState: "all",
   };
   if (params.type) body.type = params.type;
+  if (params.aggregationType) body.aggregationType = params.aggregationType;
   return body;
 }
 

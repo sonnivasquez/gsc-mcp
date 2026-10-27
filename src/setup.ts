@@ -1055,7 +1055,7 @@ export async function runSetup(argv: string[], deps: RunSetupDeps = {}): Promise
               startDate: win.startDate,
               endDate: win.endDate,
               dimensions: [...SAMPLE_QUERY_DIMENSIONS],
-              searchType: "web",
+              type: "web",
               dataState: "final",
               rowLimit: SAMPLE_QUERY_ROW_LIMIT,
             },

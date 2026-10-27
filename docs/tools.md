@@ -40,7 +40,7 @@ Deltas: `deltaX = actual − base`; `%` solo con base positiva
 |---|---|
 | `gsc_capabilities` | Tools, auth, límites, allowlist. Sin red ni credenciales. |
 | `gsc_list_sites` | Propiedades visibles para esta instancia (filtra por allowlist). |
-| `gsc_search_analytics` | Query flexible: dimensiones `date,page,query,country,device`; tipos `web,image,video,news,discover,googleNews`; `dataState` `final` (defecto) o `all`. Ordena el dataset recuperado (`sortAppliedTo`). Devuelve `datasetId`. |
+| `gsc_search_analytics` | Query flexible: dimensiones `date,page,query,country,device`; `searchAppearance` solo (luego filtro `equals`). La entrada sigue llamándose `searchType` (`web,image,video,news,discover,googleNews`) y la petición a Google usa `type`. `aggregationType=byProperty` no aplica a `discover` ni `googleNews`. `dataState` `final` (defecto) o `all`. Ordena el dataset recuperado (`sortAppliedTo`). Devuelve `datasetId`. |
 | `gsc_performance_overview` | Totales de la fila agregada + serie `date` + comparación opcional. Nunca suma tops. |
 | `gsc_compare_periods` | Join completo por clave: `compared`, `not_observed_in_current`, `not_observed_in_baseline`. Ausencia ≠ cero. |
 | `gsc_page_queries` | Queries observadas para una URL exacta (filtro `page equals`). |

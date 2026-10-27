@@ -16,6 +16,8 @@ export interface AnalyticsQuery {
     dataState?: DataState;
     rowLimit?: number;
     maxFetchRows?: number;
+    /** Sent as Google's aggregationType. Tool callers may omit it. */
+    aggregationType?: string;
 }
 export interface AnalyticsRow {
     keys: string[];

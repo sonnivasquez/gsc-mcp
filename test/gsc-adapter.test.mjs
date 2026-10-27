@@ -52,7 +52,8 @@ test("query paginates with auth header, encoded site and final defaults", async 
   assert.ok(calls[0].url.includes("sc-domain%3Aexample.com"));
   assert.equal(calls[0].auth, "Bearer tok");
   assert.equal(calls[0].body.dataState, "final");
-  assert.equal(calls[0].body.searchType, "web");
+  assert.equal(calls[0].body.type, "web");
+  assert.equal(Object.hasOwn(calls[0].body, "searchType"), false);
   assert.deepEqual(calls.map((c) => c.body.startRow), [0, 2, 4]);
 });
 

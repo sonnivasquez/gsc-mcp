@@ -11,6 +11,7 @@ import { FetchGscDataSource } from "./client.js";
 import type { AnalyticsQuery, AnalyticsRow } from "./client.js";
 import { fail, ok } from "./envelope.js";
 import type { Coverage, Provenance, ToolEnvelope } from "./envelope.js";
+import { assertSearchAnalyticsRules } from "./analytics-rules.js";
 import { GscError } from "./errors.js";
 import { datasets } from "./datasets.js";
 import type { DatasetStore } from "./datasets.js";
@@ -89,7 +90,7 @@ function source(deps: ToolDeps = {}): { ds: FetchGscDataSource; budget: RequestB
   return { ds, budget, allowlist };
 }
 
-export const SUPPORTED_DIMENSIONS = ["date", "page", "query", "country", "device"];
+export const SUPPORTED_DIMENSIONS = ["date", "page", "query", "country", "device", "searchAppearance"];
 export const SUPPORTED_SEARCH_TYPES = ["web", "image", "video", "news", "discover", "googleNews"];
 
 export function gscCapabilities(deps: ToolDeps = {}): ToolEnvelope<Record<string, unknown>> {
@@ -182,6 +183,7 @@ export interface SearchAnalyticsInput {
   filters?: Array<{ dimension: string; operator: string; expression: string }>;
   searchType?: string;
   dataState?: string;
+  aggregationType?: string;
   sortBy?: string;
   sortDirection?: string;
   resultLimit?: number;
@@ -253,6 +255,15 @@ function validatedQuery(input: SearchAnalyticsInput): { query: AnalyticsQuery; s
       throw new GscError("INVALID_ARGUMENT", "filters need string dimension, operator and expression");
     }
   }
+  const aggregationType = input.aggregationType === undefined || input.aggregationType === ""
+    ? undefined
+    : input.aggregationType;
+  assertSearchAnalyticsRules({
+    dimensions: input.dimensions,
+    filters: input.filters,
+    searchType,
+    aggregationType,
+  });
   return {
     query: {
       startDate,
@@ -261,6 +272,7 @@ function validatedQuery(input: SearchAnalyticsInput): { query: AnalyticsQuery; s
       filters: input.filters,
       searchType: searchType as AnalyticsQuery["searchType"],
       dataState: dataState as AnalyticsQuery["dataState"],
+      aggregationType,
       maxFetchRows,
     },
     sortBy,

@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { AuthProvider } from "../auth-provider.js";
 import { isAllowAllAllowlist } from "../profiles.js";
 import { RequestBudget } from "./budget.js";
+import { assertSearchAnalyticsRules } from "./analytics-rules.js";
 import { GscError, propertyNotAllowed, throwForResponse, throwForTransport } from "./errors.js";
 
 export type SearchType = "web" | "image" | "video" | "news" | "discover" | "googleNews";
@@ -22,6 +23,8 @@ export interface AnalyticsQuery {
   dataState?: DataState;
   rowLimit?: number;
   maxFetchRows?: number;
+  /** Sent as Google's aggregationType. Tool callers may omit it. */
+  aggregationType?: string;
 }
 
 export interface AnalyticsRow {
@@ -200,31 +203,40 @@ export class FetchGscDataSource {
     const rows: AnalyticsRow[] = [];
     let startRow = 0;
     let pagesFetched = 0;
+    assertSearchAnalyticsRules({
+      dimensions: q.dimensions,
+      filters: q.filters,
+      searchType: q.searchType,
+      aggregationType: q.aggregationType,
+    });
     for (;;) {
+      const payload: Record<string, unknown> = {
+        startDate: q.startDate,
+        endDate: q.endDate,
+        dimensions: q.dimensions,
+        // Google deprecated searchType. Tool inputs still use that name.
+        type: q.searchType ?? "web",
+        dataState: q.dataState ?? "final",
+        rowLimit: pageSize,
+        startRow,
+      };
+      if (q.filters?.length) {
+        payload.dimensionFilterGroups = [
+          {
+            filters: q.filters.map((f) => ({
+              dimension: f.dimension,
+              operator: f.operator,
+              expression: f.expression,
+            })),
+          },
+        ];
+      }
+      if (q.aggregationType) payload.aggregationType = q.aggregationType;
       const body = await this.call(
         `${WEBMASTERS}/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
         {
           method: "POST",
-          body: JSON.stringify({
-            startDate: q.startDate,
-            endDate: q.endDate,
-            dimensions: q.dimensions,
-            dimensionFilterGroups: q.filters?.length
-              ? [
-                  {
-                    filters: q.filters.map((f) => ({
-                      dimension: f.dimension,
-                      operator: f.operator,
-                      expression: f.expression,
-                    })),
-                  },
-                ]
-              : undefined,
-            searchType: q.searchType ?? "web",
-            dataState: q.dataState ?? "final",
-            rowLimit: pageSize,
-            startRow,
-          }),
+          body: JSON.stringify(payload),
         },
         "searchAnalytics.query"
       );

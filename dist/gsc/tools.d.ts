@@ -72,6 +72,7 @@ export interface SearchAnalyticsInput {
     }>;
     searchType?: string;
     dataState?: string;
+    aggregationType?: string;
     sortBy?: string;
     sortDirection?: string;
     resultLimit?: number;

@@ -8,9 +8,7 @@
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-blue)](https://registry.modelcontextprotocol.io/)
 -->
 
-<!-- TODO: uncomment the Glama score badge after this server is listed on Glama.
-[![Glama score](https://glama.ai/mcp/servers/io.github.sonnivasquez/gsc-mcp/badges/score.svg)](https://glama.ai/mcp/servers/io.github.sonnivasquez/gsc-mcp)
--->
+[![Glama score](https://glama.ai/mcp/servers/sonnivasquez/gsc-mcp/badges/score.svg)](https://glama.ai/mcp/servers/sonnivasquez/gsc-mcp)
 
 <!-- TODO: add screenshots/demo.gif and switch the preview below to that file. The PNG stays until the GIF exists. -->
 

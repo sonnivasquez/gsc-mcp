@@ -990,7 +990,7 @@ async function runSetup(argv, deps = {}) {
                             startDate: win.startDate,
                             endDate: win.endDate,
                             dimensions: [...finish_js_1.SAMPLE_QUERY_DIMENSIONS],
-                            searchType: "web",
+                            type: "web",
                             dataState: "final",
                             rowLimit: finish_js_1.SAMPLE_QUERY_ROW_LIMIT,
                         },

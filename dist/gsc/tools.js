@@ -34,6 +34,7 @@ const profiles_js_1 = require("../profiles.js");
 const budget_js_1 = require("./budget.js");
 const client_js_1 = require("./client.js");
 const envelope_js_1 = require("./envelope.js");
+const analytics_rules_js_1 = require("./analytics-rules.js");
 const errors_js_1 = require("./errors.js");
 const datasets_js_1 = require("./datasets.js");
 const periods_js_1 = require("./periods.js");
@@ -53,7 +54,7 @@ function source(deps = {}) {
     });
     return { ds, budget, allowlist };
 }
-exports.SUPPORTED_DIMENSIONS = ["date", "page", "query", "country", "device"];
+exports.SUPPORTED_DIMENSIONS = ["date", "page", "query", "country", "device", "searchAppearance"];
 exports.SUPPORTED_SEARCH_TYPES = ["web", "image", "video", "news", "discover", "googleNews"];
 function gscCapabilities(deps = {}) {
     const allowlist = deps.allowlist !== undefined ? deps.allowlist : (0, profiles_js_1.getInstanceAllowlist)();
@@ -192,6 +193,15 @@ function validatedQuery(input) {
             throw new errors_js_1.GscError("INVALID_ARGUMENT", "filters need string dimension, operator and expression");
         }
     }
+    const aggregationType = input.aggregationType === undefined || input.aggregationType === ""
+        ? undefined
+        : input.aggregationType;
+    (0, analytics_rules_js_1.assertSearchAnalyticsRules)({
+        dimensions: input.dimensions,
+        filters: input.filters,
+        searchType,
+        aggregationType,
+    });
     return {
         query: {
             startDate,
@@ -200,6 +210,7 @@ function validatedQuery(input) {
             filters: input.filters,
             searchType: searchType,
             dataState: dataState,
+            aggregationType,
             maxFetchRows,
         },
         sortBy,

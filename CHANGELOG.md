@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased / 1.0.1
+
+- `gsc_image_page_audit` points at `gsc_find_opportunities` and
+  `gsc_search_analytics`. Tool descriptions are checked so a `gsc_*` name or
+  a retired legacy name has to be one of the 29 registered tools.
+- Search Analytics requests send `type`. Inputs named `searchType` still
+  work and are mapped to that field.
+- Invalid dimension combinations are rejected before the Google call:
+  Discover rejects `query` and `device`; `news` and `googleNews` reject
+  `query`; `searchAppearance` must be grouped alone and filtered with
+  `equals`; `aggregationType=byProperty` is rejected for Discover and
+  Google News.
+- The README shows the live Glama score badge for this listing.
+
 ## Unreleased
 
 - Rewrote the Search Analytics, OAuth, indexing, sitemap, image-audit,
