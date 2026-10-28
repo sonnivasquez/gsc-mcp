@@ -14,7 +14,7 @@ const provider = {
 function router(routes) {
   return async (url, init) => {
     const body = JSON.parse(init.body);
-    const key = `${(body.dimensions ?? []).join(",")}|${body.startDate}|${body.searchType ?? "web"}`;
+    const key = `${(body.dimensions ?? []).join(",")}|${body.startDate}|${body.type ?? "web"}`;
     const hit = routes[key] ?? routes[(body.dimensions ?? []).join(",")];
     if (!hit) throw new Error(`unexpected query ${key}`);
     return new Response(JSON.stringify({ rows: hit }), { status: 200 });

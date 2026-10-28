@@ -76,7 +76,7 @@ export class DatasetStore {
       rows,
       createdAt,
       expiresAt: new Date(now + TTL_MS).toISOString(),
-      byteSize: JSON.stringify(rows).length,
+      byteSize: Buffer.byteLength(JSON.stringify(rows), "utf8"),
     };
     this.sets.set(ds.id, ds);
     this.evictOldestWhileOver();
@@ -118,12 +118,17 @@ export class DatasetStore {
       }
     }
     const slice = ds.rows.slice(offset, offset + limit);
-    const projected = slice.map((row) => {
+    let projected = slice.map((row) => {
       const out: Record<string, number | string | null> = {};
       for (const c of columns) out[c] = row[c] ?? null;
       return out;
     });
-    const next = offset + limit;
+    let bytes = 0;
+    projected = projected.filter((row, index) => {
+      bytes += Buffer.byteLength(JSON.stringify(row), "utf8");
+      return index === 0 || bytes <= 40000;
+    });
+    const next = offset + projected.length;
     return {
       datasetId,
       rows: projected,

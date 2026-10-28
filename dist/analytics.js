@@ -6,6 +6,7 @@ exports.fetchAllRows = fetchAllRows;
 const auth_js_1 = require("./auth.js");
 const profiles_js_1 = require("./profiles.js");
 const errors_js_1 = require("./gsc/errors.js");
+const analytics_rules_js_1 = require("./gsc/analytics-rules.js");
 function phrase(parts) {
     return parts.join("");
 }
@@ -57,9 +58,12 @@ function requestBody(params, startRow, pageSize) {
     };
     if (params.type)
         body.type = params.type;
+    if (params.aggregationType)
+        body.aggregationType = params.aggregationType;
     return body;
 }
 async function fetchAllRows(params, siteUrlOverride, clientOverride) {
+    (0, analytics_rules_js_1.assertSearchAnalyticsRules)({ dimensions: params.dimensions, filters: (params.dimensionFilterGroups ?? []).flatMap(group => group.filters), type: params.type, aggregationType: params.aggregationType });
     const client = clientOverride ?? (await (0, auth_js_1.getSearchConsoleClient)());
     const siteUrl = (0, auth_js_1.resolveSiteUrl)(siteUrlOverride);
     (0, profiles_js_1.assertSiteAllowed)(siteUrl);

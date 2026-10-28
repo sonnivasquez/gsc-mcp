@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowRight, Lock, MonitorDown, ScanSearch, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { CANONICAL_TOOLS } from "@/lib/tools";
 
 interface FlowNode {
   icon: ReactNode;
@@ -23,7 +24,7 @@ const NODES: readonly FlowNode[] = [
   {
     icon: <MonitorDown aria-hidden="true" className="size-4" />,
     name: "Local MCP server",
-    detail: "29 gsc_* tools over stdio · read-only by default",
+    detail: `${CANONICAL_TOOLS.length} gsc_* tools over stdio · read-only by default`,
   },
   {
     icon: <ArrowRight aria-hidden="true" className="size-4" />,

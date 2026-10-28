@@ -34,3 +34,14 @@ cobertura completa de Search Console.
 ## Licencia y procedencia
 
 Se mantiene la licencia Apache-2.0. Copyright Sonni Vasquez ([NOTICE](NOTICE)).
+
+## Implementación local pendiente de release
+
+- Cinco auditorías bajo demanda: página, indexación, enlaces internos, cambios y migraciones.
+- Lotes explícitos y sesiones temporales; ningún servicio permanente.
+- Historial local con GSC_HISTORY=1 y guardado solicitado por el usuario.
+- Datos horarios, apariencia en resultados y evidencia temporal de canibalización.
+- Catálogo ampliado de 34 herramientas; se preservan las 29 anteriores.
+
+La publicación de esta ampliación es un paso separado; la versión 1.0.0
+publicada no incorpora automáticamente cambios de este checkout.

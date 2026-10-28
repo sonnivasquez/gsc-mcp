@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Fix capped audit termination, resumable sitemap byte budgets, isolated sitemap children, effective-URL graph deduplication and persistent partial status.
+- Respect cancellation before history effects; stream large saved snapshots through bounded scoped cursors.
+- Parse robots directives by token and crawler scope; bound temporal MCP previews with fully recoverable evidence.
+
+- Add five bounded, on-demand website/indexing/link/change/migration audits.
+- Add independently gated local history (GSC_HISTORY=1), resumable in-memory audit batches and recoverable evidence previews.
+- Support hourly and search-appearance analytics, provider aggregation and incomplete-data metadata; use the provider type parameter.
+- Add opt-in temporal cannibalization evidence and correct capability gates.
+- No scheduler, daemon or notification service.
+- Centralize Search Analytics request rules and expose optional aggregation; distinguish the News search tab from Google News and map the public searchType input to Google's type field in both clients and setup.
+- Replace retired image-tool references, validate all registered tool mappings, and show the live Glama score badge.
+- Align the website, agent skill, registry environment variables and installed-release checks with the complete 34-tool catalog.
+
 - Rewrote the Search Analytics, OAuth, indexing, sitemap, image-audit,
   and GenAI query modules in this repository. Tool names, input schemas,
   outputs, error codes, environment variables, and the read-only default

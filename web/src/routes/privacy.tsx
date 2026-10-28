@@ -78,6 +78,11 @@ function PrivacyPage() {
               </td>
               <td className="px-4 py-3">The local process</td>
             </tr>
+            <tr>
+              <td className="px-4 py-3">Optional change history</td>
+              <td className="px-4 py-3">Local data directory, when explicitly enabled and saved</td>
+              <td className="px-4 py-3">Your machine; returned records are also visible to your client and its AI provider</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -174,8 +179,8 @@ function PrivacyPage() {
           properties.
         </li>
         <li>
-          Image audits additionally fetch pages from your own site for
-          on-page checks. Those fetches go to your site, not to Google.
+          Image and on-demand website audits fetch authorized site resources
+          for checks. Those fetches go to the site, not to Google.
         </li>
         <li>
           No advertising use. Optional export files stay on your machine and

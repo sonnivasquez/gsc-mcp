@@ -48,13 +48,19 @@
         },
         {
           "name": "GSC_DATA_DIR",
-          "description": "Local state directory for OAuth tokens and datasets. Default is ~/.gsc-mcp.",
+          "description": "Local state directory for OAuth tokens, datasets and opt-in audit history. Default is ~/.gsc-mcp.",
           "isRequired": false,
           "format": "filepath"
         },
         {
           "name": "GSC_EXPORTS",
           "description": "Set to 1 to allow gsc_export_dataset and saved gsc_generate_report files on this machine. Any other value keeps local export disabled.",
+          "isRequired": false,
+          "format": "string"
+        },
+        {
+          "name": "GSC_HISTORY",
+          "description": "Set to 1 for explicit local gsc_change_impact history actions. Independent of exports; no scheduler or notifications.",
           "isRequired": false,
           "format": "string"
         },

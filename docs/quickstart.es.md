@@ -82,7 +82,7 @@ gsc auth status
 gsc auth status --online
 ```
 
-Si tu cliente no muestra las herramientas MCP al terminar la configuración, reinícialo. El servidor ofrece **29 herramientas** para rendimiento de Search Console, comparaciones, indexación, sitemaps e informes. Consulta el [catálogo de herramientas](tools.md).
+Si tu cliente no muestra las herramientas MCP al terminar la configuración, reinícialo. El servidor ofrece **34 herramientas** para rendimiento de Search Console, comparaciones, indexación, sitemaps e informes. Consulta el [catálogo de herramientas](tools.md).
 
 ## Actualiza o desinstala
 

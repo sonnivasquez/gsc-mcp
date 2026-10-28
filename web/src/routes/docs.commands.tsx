@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CmdBlock, H2, Lead, Note, TopicLinks } from "@/components/doc";
 import { pageHead } from "@/lib/site";
+import { CANONICAL_TOOLS } from "@/lib/tools";
 
 export const Route = createFileRoute("/docs/commands")({
   head: () =>
@@ -102,6 +103,62 @@ function CommandsPage() {
         datasets. Exported datasets expire after 15 minutes.
       </p>
 
+      <H2 id="tools">MCP tools</H2>
+      <p className="mt-3 text-base leading-relaxed text-ink-soft">
+        The server offers {CANONICAL_TOOLS.length} tools. Read tools query Google; fetch tools also
+        request authorized site resources. Local tools operate on local data. Write tools require full access and an explicit request.
+      </p>
+      <div tabIndex={0} role="region" aria-label="MCP tools: scrollable table" className="mt-3 overflow-x-auto rounded-[var(--ds-radius-lg)] border border-line bg-card">
+        <table className="w-full text-left text-base">
+          <thead><tr className="border-b border-line">
+            <th scope="col" className="px-4 py-3 font-semibold text-ink">Tool</th>
+            <th scope="col" className="px-4 py-3 font-semibold text-ink">Kind</th>
+            <th scope="col" className="px-4 py-3 font-semibold text-ink">Purpose</th>
+          </tr></thead>
+          <tbody className="divide-y divide-line text-ink-soft">
+            {CANONICAL_TOOLS.map((tool) => <tr key={tool.name}>
+              <th scope="row" className="px-4 py-3 text-left font-mono text-sm font-normal text-ink">{tool.name}</th>
+              <td className="px-4 py-3">{tool.kind}</td>
+              <td className="px-4 py-3">{tool.description}</td>
+            </tr>)}
+          </tbody>
+        </table>
+      </div>
+
+      <H2 id="audits">On-demand audits</H2>
+      <p className="mt-3 text-base leading-relaxed text-ink-soft">
+        The five audit tools run only when called: page evidence, sampled indexing, internal links,
+        change impact, and migration mappings. They do not modify Google or your site. Crawls use
+        received HTTP HTML; JavaScript-rendered content and links remain unknown. Automatic traversal
+        respects robots.txt and is bounded by time, request, and resource limits.
+      </p>
+      <p className="mt-3 text-base leading-relaxed text-ink-soft">
+        Continue unfinished work by passing the returned <code className="font-mono text-sm text-ink">nextCursor</code> as
+        the same tool's <code className="font-mono text-sm text-ink">cursor</code> input;
+        no work continues after the response. Completed work can still have incomplete coverage or
+        individual failures. Full evidence is available through <code className="font-mono text-sm text-ink">gsc_get_dataset</code>.
+        Sessions are in memory and expire after 15 minutes of inactivity or on restart.
+        Large saved history snapshots use their own chunk cursor as described in the tool result.
+      </p>
+      <p className="mt-3 text-base leading-relaxed text-ink-soft">
+        <code className="font-mono text-sm text-ink">gsc_change_impact</code> can analyze a transient change without
+        saving it. Explicit local change records and snapshots require <code className="font-mono text-sm text-ink">GSC_HISTORY=1</code>;
+        saving a snapshot is separately requested. Changes in traffic are observations, not proof of causation.
+        There is no scheduler or background monitoring.
+      </p>
+
+      <H2 id="analytics">Analytics dimensions</H2>
+      <p className="mt-3 text-base leading-relaxed text-ink-soft">
+        <code className="font-mono text-sm text-ink">gsc_search_analytics</code> supports hourly data:
+        the <code className="font-mono text-sm text-ink">hour</code> dimension and <code className="font-mono text-sm text-ink">hourly_all</code> data state
+        must be used together. Hours retain their offsets; incomplete date or hour metadata identifies provisional data.
+        Query <code className="font-mono text-sm text-ink">searchAppearance</code> alone, then filter a returned value
+        in a second query to break it down by page, query, or another dimension.
+        The public input <code className="font-mono text-sm text-ink">searchType</code> maps to Google's type field.
+        Optional aggregation must match the report: property aggregation excludes page grouping or filtering,
+        Discover, and Google News. The News search tab supports query data; Google News does not.
+      </p>
+
       <H2 id="doctor">Diagnose the installation</H2>
       <CmdBlock
         title="Run local or online checks"
@@ -157,6 +214,7 @@ function CommandsPage() {
               ["GSC_SITE_URLS", "JSON array of exact property IDs, or all by explicit opt-in"],
               ["GSC_AUTH_MODE", "oauth or service_account; defaults to service_account"],
               ["GSC_DATA_DIR", "Local data directory; defaults to ~/.gsc-mcp"],
+              ["GSC_HISTORY", "Set to 1 to enable explicit local change records and saved measurements"],
               ["GSC_OAUTH_SECRETS_FILE", "Path to your Desktop OAuth JSON file"],
               ["GSC_OAUTH_CLIENT_ID", "OAuth client ID fallback when no secrets file is set"],
               ["GSC_OAUTH_CLIENT_SECRET", "OAuth client secret fallback when no secrets file is set"],

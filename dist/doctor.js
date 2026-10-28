@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.REGISTRY_VERSION_CACHE_TTL_MS = exports.REGISTRY_VERSION_CACHE_FILE = exports.ALLOW_ALL_DISPLAY = exports.ALLOWLIST_ERROR_DETAIL = exports.DOCTOR_USAGE = exports.CLI_VERSION = void 0;
 exports.runDoctor = runDoctor;
 exports.runDoctorOnline = runDoctorOnline;
+const catalog_js_1 = require("./gsc/catalog.js");
 const fs = __importStar(require("node:fs"));
 const path = __importStar(require("node:path"));
 const profiles_js_1 = require("./profiles.js");
@@ -252,13 +253,13 @@ async function runDoctorOnline(deps = {}) {
     const base = runDoctor();
     const checks = [...base.checks];
     if (deps.toolCount !== undefined) {
-        const okTools = deps.toolCount === 29;
+        const okTools = deps.toolCount === catalog_js_1.CANONICAL_TOOLS.length;
         checks.push({
             id: "tools",
             ok: okTools,
             detail: okTools
                 ? `${deps.toolCount} gsc_* tools (canonical catalog)`
-                : `expected 29 gsc_* tools, found ${deps.toolCount}; release evidence needs reconciliation`,
+                : `expected ${catalog_js_1.CANONICAL_TOOLS.length} gsc_* tools, found ${deps.toolCount}; release evidence needs reconciliation`,
         });
     }
     const provider = deps.provider ?? (0, auth_provider_js_1.getAuthProvider)();

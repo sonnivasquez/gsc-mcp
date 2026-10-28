@@ -20,7 +20,7 @@ export interface Coverage {
 }
 
 export interface Provenance {
-  source: "google_search_console" | "local_cache" | "local_dataset" | "local_status";
+  source: "google_search_console" | "local_cache" | "local_dataset" | "local_status" | "website_fetch" | "local_history";
   fetchedAt: string | null;
   servedAt: string;
   siteUrl?: string;
@@ -85,6 +85,7 @@ export function ok<T>(data: T, provenance: Omit<Provenance, "servedAt">, opts: O
       oauthAttempts: 0,
       cacheHit: false,
       datasetId: opts.datasetId,
+      datasetExpiresAt: opts.datasetExpiresAt,
       warnings,
     },
   };

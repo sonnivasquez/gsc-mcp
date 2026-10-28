@@ -12,13 +12,14 @@ import type { AnalyticsQuery, AnalyticsRow } from "./client.js";
 import { fail, ok } from "./envelope.js";
 import type { Coverage, Provenance, ToolEnvelope } from "./envelope.js";
 import { GscError } from "./errors.js";
+import { assertSearchAnalyticsRules } from "./analytics-rules.js";
 import { datasets } from "./datasets.js";
 import type { DatasetStore } from "./datasets.js";
 import { resolvePeriods, shiftDays } from "./periods.js";
 import type { DateRange, ResolvedPeriods } from "./periods.js";
 import { declining, OPPORTUNITY_RULE_VERSION, findOpportunities } from "./opportunities.js";
 import type { OpportunityResult } from "./opportunities.js";
-import { detectCannibalization, CANNIBALIZATION_RULE_VERSION } from "./cannibalization.js";
+import { detectCannibalization, temporalEvidence, CANNIBALIZATION_RULE_VERSION } from "./cannibalization.js";
 import { analyzeSegments, SEGMENTS_RULE_VERSION } from "./segments.js";
 import { exportDataset } from "./export.js";
 import { dataDir } from "../profiles.js";
@@ -57,6 +58,7 @@ export interface CannibalizationData {
   candidates: CannibalizationCandidate[];
   candidatesTotal: number;
   ruleVersion: string;
+  evidencePreview?: { storedCandidates: number; encoding: string; instructions: string };
 }
 export interface AlertsData {
   alerts: Alert[];
@@ -89,7 +91,7 @@ function source(deps: ToolDeps = {}): { ds: FetchGscDataSource; budget: RequestB
   return { ds, budget, allowlist };
 }
 
-export const SUPPORTED_DIMENSIONS = ["date", "page", "query", "country", "device"];
+export const SUPPORTED_DIMENSIONS = ["date", "page", "query", "country", "device", "hour", "searchAppearance"];
 export const SUPPORTED_SEARCH_TYPES = ["web", "image", "video", "news", "discover", "googleNews"];
 
 export function gscCapabilities(deps: ToolDeps = {}): ToolEnvelope<Record<string, unknown>> {
@@ -128,11 +130,11 @@ export function gscCapabilities(deps: ToolDeps = {}): ToolEnvelope<Record<string
       },
       supportedDimensions: SUPPORTED_DIMENSIONS,
       supportedSearchTypes: SUPPORTED_SEARCH_TYPES,
-      dataStates: ["final", "all"],
+      dataStates: ["final", "all", "hourly_all"],
+      historyEnabled: process.env.GSC_HISTORY === "1",
+      auditLimits: { deadlineMs: 60000, idleTtlMs: 900000, sessionsMax: 100, memoryBytesMax: 67108864, inspectUrlsMax: 10, crawlPagesDefault: 100, crawlPagesMax: 500 },
       disabledCapabilities: [
         ...(writesDisabled ? ["gsc_submit_url", "gsc_submit_batch", "gsc_submit_sitemap"] : []),
-        "gsc_image_page_audit",
-        "gsc_genai_conversation_queries",
       ],
     },
     { source: "local_status", fetchedAt: null },
@@ -182,6 +184,7 @@ export interface SearchAnalyticsInput {
   filters?: Array<{ dimension: string; operator: string; expression: string }>;
   searchType?: string;
   dataState?: string;
+  aggregationType?: string;
   sortBy?: string;
   sortDirection?: string;
   resultLimit?: number;
@@ -229,9 +232,10 @@ function validatedQuery(input: SearchAnalyticsInput): { query: AnalyticsQuery; s
     throw new GscError("INVALID_ARGUMENT", `searchType "${searchType}" is not supported`);
   }
   const dataState = input.dataState ?? "final";
-  if (dataState !== "final" && dataState !== "all") {
-    throw new GscError("INVALID_ARGUMENT", 'dataState must be "final" or "all"');
-  }
+  if (!["final", "all", "hourly_all"].includes(dataState)) throw new GscError("INVALID_ARGUMENT", "invalid dataState");
+  if (dataState === "hourly_all" && !input.dimensions.includes("hour")) throw new GscError("INVALID_ARGUMENT", "hourly_all requires the hour dimension");
+  if (input.dimensions.includes("hour") && dataState !== "hourly_all") throw new GscError("INVALID_ARGUMENT", "hour requires hourly_all");
+  if (new Set(input.dimensions).size !== input.dimensions.length) throw new GscError("INVALID_ARGUMENT", "duplicate dimensions");
   const sortBy = (input.sortBy ?? "clicks") as SortField;
   if (!["clicks", "impressions", "ctr", "position"].includes(sortBy)) {
     throw new GscError("INVALID_ARGUMENT", "sortBy must be clicks, impressions, ctr or position");
@@ -253,6 +257,7 @@ function validatedQuery(input: SearchAnalyticsInput): { query: AnalyticsQuery; s
       throw new GscError("INVALID_ARGUMENT", "filters need string dimension, operator and expression");
     }
   }
+  assertSearchAnalyticsRules({ dimensions: input.dimensions, filters: input.filters, searchType, aggregationType: input.aggregationType });
   return {
     query: {
       startDate,
@@ -261,6 +266,7 @@ function validatedQuery(input: SearchAnalyticsInput): { query: AnalyticsQuery; s
       filters: input.filters,
       searchType: searchType as AnalyticsQuery["searchType"],
       dataState: dataState as AnalyticsQuery["dataState"],
+      aggregationType: input.aggregationType || undefined,
       maxFetchRows,
     },
     sortBy,
@@ -320,7 +326,7 @@ export async function gscSearchAnalytics(input: SearchAnalyticsInput, deps: Tool
       details: sourceDetails,
     };
     return ok(
-      { rows: returned, responseAggregationType: "by_row", dimensions: query.dimensions },
+      { rows: returned, responseAggregationType: "by_row", upstreamAggregationType: result.upstreamAggregationType, metadata: result.metadata, dimensions: query.dimensions },
       {
         source: "google_search_console",
         fetchedAt,
@@ -333,7 +339,7 @@ export async function gscSearchAnalytics(input: SearchAnalyticsInput, deps: Tool
         coverage,
         attempts: budget.attemptsUsed,
         ...registerDataset(deps, query.dimensions, sorted),
-        warnings: [sourceWarning],
+        warnings: [sourceWarning, ...(result.metadata ? [{ code: "PROVISIONAL_DATA", message: "Data at or after the incomplete date/hour may change; timestamps retain provider offsets.", details: result.metadata }] : [])],
         shrink: (data) => {
           if (data.rows.length <= 1) return null;
           const smaller = data.rows.slice(0, Math.ceil(data.rows.length / 2));
@@ -910,6 +916,9 @@ export async function gscFindOpportunities(input: OpportunitiesInput, deps: Tool
 // --- T12 gsc_detect_cannibalization ---
 
 export interface CannibalizationInput extends PeriodInput, SearchCommon {
+  includeTimeline?: boolean;
+  timelineQueryLimit?: number;
+  minDailyImpressions?: number;
   minPages?: number;
   minImpressionsPerPage?: number;
   minSharePct?: number;
@@ -928,9 +937,62 @@ export async function gscDetectCannibalization(input: CannibalizationInput, deps
       minImpressionsPerPage: input.minImpressionsPerPage,
       minSharePct: input.minSharePct,
     });
+    const temporalWarnings: Array<{ code: string; message: string }> = [];
+    if (input.includeTimeline) {
+      const cap = input.timelineQueryLimit ?? 5, minDaily = input.minDailyImpressions ?? 10;
+      if (!Number.isInteger(cap) || cap < 1 || cap > 10 || !Number.isInteger(minDaily) || minDaily < 1) throw new GscError("INVALID_ARGUMENT", "timelineQueryLimit must be 1..10 and minDailyImpressions a positive integer");
+      const { ds } = source({ ...deps, budget: win.budget });
+      for (const candidate of all.slice(0, limit)) { candidate.temporalAnalysisStatus = "pending"; candidate.temporalPendingReason = "query_limit"; }
+      for (const candidate of all.slice(0, Math.min(cap, limit))) {
+        try {
+          const result = await ds.queryAnalytics(input.siteUrl, { ...win.periods.current, dimensions: ["date", "page"], filters: [...(input.filters ?? []), { dimension: "query", operator: "equals", expression: candidate.query }], searchType: (input.searchType ?? "web") as AnalyticsQuery["searchType"], dataState: (input.dataState ?? "final") as AnalyticsQuery["dataState"], maxFetchRows: input.maxFetchRows });
+          candidate.temporalPendingReason = undefined;
+          candidate.temporal = temporalEvidence(result.rows, minDaily);
+          candidate.temporalAnalysisStatus = candidate.temporal.status;
+          candidate.temporalCoverage = { fetchedRows: result.rows.length, truncated: result.truncated };
+          if (result.truncated) temporalWarnings.push({ code: "PARTIAL", message: "Temporal rows truncated; evidence covers retrieved rows only" });
+        } catch (err) {
+          if (err instanceof GscError && err.code === "REQUEST_BUDGET_EXCEEDED") {
+            for (const remaining of all.slice(0, Math.min(cap, limit))) if (remaining.temporalAnalysisStatus === "pending") remaining.temporalPendingReason = "request_budget";
+            temporalWarnings.push({ code: "PARTIAL", message: "Temporal budget exhausted; remaining candidates pending" }); break; }
+          candidate.temporalAnalysisStatus = "error"; candidate.temporalError = err instanceof Error ? err.message : String(err);
+          temporalWarnings.push({ code: "PARTIAL", message: "A temporal query failed; aggregate candidates preserved" });
+        }
+      }
+      temporalWarnings.push({ code: "TEMPORAL_NOTE", message: "Same-day coexistence is not the same SERP or proof of harm; missing dates are not zeros" });
+      // Base64 keeps each stored fragment safe even after JSON escaping by the MCP SDK.
+      // Each candidate is independently reconstructable; indices refer to the full sorted list.
+      const rows = all.flatMap((candidate, index) => {
+        const encoded = Buffer.from(JSON.stringify(candidate), "utf8").toString("base64");
+        const parts = Math.max(1, Math.ceil(encoded.length / 8000));
+        return Array.from({ length: parts }, (_, part) => ({ index, part, parts, evidenceBase64: encoded.slice(part * 8000, (part + 1) * 8000) }));
+      });
+      const stored = (deps.store ?? datasets).create(deps.profileAlias ?? getInstanceAlias() ?? "default(env)", ["index", "part", "parts", "evidenceBase64"], rows);
+      const data: CannibalizationData = { candidates: all.slice(0, limit), candidatesTotal: all.length, ruleVersion: CANNIBALIZATION_RULE_VERSION, evidencePreview: { storedCandidates: all.length, encoding: "base64 UTF-8 JSON", instructions: "Use gsc_get_dataset; group rows by index, concatenate evidenceBase64 by part, base64-decode and JSON.parse each candidate." } };
+      const stoppedBecause: string[] = [];
+      if (all.length > limit) stoppedBecause.push("resultLimit");
+      if (all.some((candidate) => candidate.temporalPendingReason === "query_limit")) stoppedBecause.push("timeline_query_limit");
+      if (all.some((candidate) => candidate.temporalPendingReason === "request_budget")) stoppedBecause.push("request_budget");
+      const coverage: Coverage = { sourceGuarantee: "top_rows_not_exhaustive", apiPaginationComplete: null, fetchedRows: all.length, returnedRows: data.candidates.length, truncatedByProduct: stoppedBecause.length > 0, stoppedBecause };
+      const envelope = ok(data, { source: "google_search_console", fetchedAt, siteUrl: input.siteUrl }, { attempts: win.budget.attemptsUsed, warnings: [{ code: "HEURISTIC", message: "candidates for editorial review, never an order to consolidate; temporal overlap unknown without a timeline" }, ...temporalWarnings], datasetId: stored.id, datasetExpiresAt: stored.expiresAt, coverage });
+      // Measure the actual SDK text wrapper, including pretty printing and escaping.
+      const bytes = () => Buffer.byteLength(JSON.stringify({ content: [{ type: "text", text: JSON.stringify(envelope, null, 2) }] }), "utf8");
+      if (bytes() > 48 * 1024) {
+        envelope.meta.warnings = envelope.meta.warnings.filter((w) => w.code !== "SIZE_TRIMMED");
+        envelope.meta.warnings.push({ code: "PREVIEW_TRIMMED", message: "Candidate preview shortened; complete retrieved candidate evidence is in the dataset." });
+        coverage.stoppedBecause.push("response_bytes");
+        coverage.truncatedByProduct = true;
+        while (data.candidates.length && bytes() > 48 * 1024) {
+          data.candidates.pop();
+          coverage.returnedRows = data.candidates.length;
+        }
+        if (bytes() > 48 * 1024) throw new GscError("INVALID_ARGUMENT", "response metadata exceeds the size limit; narrow the request");
+      }
+      return envelope;
+    }
     return ok({ candidates: all.slice(0, limit), candidatesTotal: all.length, ruleVersion: CANNIBALIZATION_RULE_VERSION }, { source: "google_search_console", fetchedAt, siteUrl: input.siteUrl }, {
       attempts: win.budget.attemptsUsed,
-      warnings: [{ code: "HEURISTIC", message: "candidates for editorial review, never an order to consolidate; temporal overlap unknown without a timeline" }],
+      warnings: [{ code: "HEURISTIC", message: "candidates for editorial review, never an order to consolidate; temporal overlap unknown without a timeline" }, ...temporalWarnings],
     });
   } catch (err) {
     return fail(err);

@@ -49,8 +49,10 @@ const DOC_CHROME = [
 ];
 
 const TABS = ["web/src/components/ui/tabs.tsx"];
+const TOOL_CATALOG = ["src/gsc/catalog.ts", "web/src/lib/tools.ts"];
 
 const HOME = [
+  ...TOOL_CATALOG,
   "web/src/routes/index.tsx",
   "web/src/lib/install-prompt.ts",
   "web/src/lib/structured-data.ts",
@@ -82,7 +84,7 @@ const ROUTES = [
   { path: "/docs", changefreq: "monthly", priority: "0.9", sources: [...SHELL, ...DOC_CHROME, ...DOCS_INDEX] },
   { path: "/docs/credentials", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, "web/src/routes/docs.credentials.tsx"] },
   { path: "/docs/clients", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, ...TABS, "web/src/routes/docs.clients.tsx"] },
-  { path: "/docs/commands", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, "web/src/routes/docs.commands.tsx"] },
+  { path: "/docs/commands", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, ...TOOL_CATALOG, "web/src/routes/docs.commands.tsx"] },
   { path: "/docs/troubleshooting", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, "web/src/routes/docs.troubleshooting.tsx"] },
   { path: "/docs/uninstall", changefreq: "monthly", priority: "0.6", sources: [...SHELL, ...DOC_CHROME, ...TABS, "web/src/routes/docs.uninstall.tsx"] },
   { path: "/privacy", changefreq: "yearly", priority: "0.3", sources: [...SHELL, "web/src/routes/privacy.tsx"] },

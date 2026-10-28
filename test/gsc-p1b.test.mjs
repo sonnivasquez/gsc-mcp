@@ -18,7 +18,7 @@ const deps = (fetchImpl, store) => ({ provider, fetchImpl, store, profileAlias: 
 function router(routes) {
   return async (url, init) => {
     const body = JSON.parse(init.body);
-    const key = `${(body.dimensions ?? []).join(",")}|${body.startDate}|${body.searchType ?? "web"}`;
+    const key = `${(body.dimensions ?? []).join(",")}|${body.startDate}|${body.type ?? "web"}`;
     const hit = routes[key] ?? routes[(body.dimensions ?? []).join(",")];
     if (!hit) throw new Error(`unexpected query ${key}`);
     if (hit.status) return new Response(JSON.stringify(hit.body ?? {}), { status: hit.status });
@@ -306,7 +306,7 @@ test("T19 characterizes category queries, expansions, and evidence", async () =>
     assert.equal(calls.filter(({ body }) => body.dimensions.join() === "query,page").length, pairCount);
     assert.equal(budget.attemptsUsed, calls.length);
     assert.equal(env.meta.googleDataAttempts, calls.length);
-    assert.ok(calls.every(({ url, body }) => url.includes(encodeURIComponent(SITE)) && body.startDate === input.startDate && body.endDate === input.endDate && body.searchType === "web" && body.dataState === "final"));
+    assert.ok(calls.every(({ url, body }) => url.includes(encodeURIComponent(SITE)) && body.startDate === input.startDate && body.endDate === input.endDate && body.type === "web" && body.dataState === "final"));
     assert.ok(calls.filter(({ body }) => body.dimensions.join() === "page").every(({ body }) =>
       body.dimensionFilterGroups[0].filters[0].dimension === "query" &&
       body.dimensionFilterGroups[0].filters[0].operator === "equals" &&
@@ -344,7 +344,7 @@ test("T19 keeps query reuse within one invocation and its effective request", as
   assert.equal(queries.length, 2);
   assert.notDeepEqual(queries[0], queries[1]);
   assert.equal(queries[1].body.startDate, "2026-09-01");
-  assert.equal(queries[1].body.searchType, "image");
+  assert.equal(queries[1].body.type, "image");
   assert.deepEqual(queries[1].body.dimensionFilterGroups[0].filters, [{ dimension: "country", operator: "equals", expression: "per" }]);
 });
 
@@ -429,7 +429,7 @@ test("T21 characterizes report window calls and section subsets", async () => {
   const fetchImpl = async (url, init) => {
     const body = JSON.parse(init.body);
     calls.push({ url, body });
-    const key = `${body.dimensions.join(",")}|${body.startDate}|${body.searchType}`;
+    const key = `${body.dimensions.join(",")}|${body.startDate}|${body.type}`;
     assert.ok(rows[key], `unexpected request ${key}`);
     return new Response(JSON.stringify({ rows: rows[key] }), { status: 200 });
   };
@@ -453,8 +453,8 @@ test("T21 characterizes report window calls and section subsets", async () => {
   assert.equal(calls.filter(({ body }) => body.dimensions.join() === "page" && body.startDate === "2026-08-01").length, 1);
   assert.equal(calls.filter(({ body }) => body.dimensions.join() === "page" && body.startDate === "2026-07-04").length, 1);
   assert.equal(calls.filter(({ body }) => body.dimensions.length === 0).length, 1);
-  assert.equal(calls.filter(({ body }) => body.dimensions.join() === "query" && body.searchType === "web").length, 1);
-  assert.equal(calls.filter(({ body }) => body.dimensions.join() === "query" && body.searchType === "image").length, 1);
+  assert.equal(calls.filter(({ body }) => body.dimensions.join() === "query" && body.type === "web").length, 1);
+  assert.equal(calls.filter(({ body }) => body.dimensions.join() === "query" && body.type === "image").length, 1);
   assert.ok(calls.every(({ url, body }) => url.includes(encodeURIComponent(SITE)) && body.dataState === "final"));
 
   for (const [sections, expectedCalls] of [["movers", 2], ["alerts", 2], ["limitations", 0]]) {

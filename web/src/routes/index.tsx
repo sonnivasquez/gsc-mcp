@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CLIENTS, MAINTAINER, QUICK_SETUP_COMMAND, TOKEN_DIR, pageHead, type Runtime } from "@/lib/site";
 import { homeStructuredData, toJsonLd } from "@/lib/structured-data";
+import { CANONICAL_TOOLS } from "@/lib/tools";
 
 export const Route = createFileRoute("/")({
   head: () => {
@@ -185,7 +186,7 @@ function HomePage() {
             <Button asChild size="lg" variant="secondary" className="home-secondary h-auto max-w-full min-h-11 py-2 text-center leading-snug whitespace-normal"><a href="#use-cases"><BookOpen aria-hidden="true" />Explore use cases</a></Button>
           </div>
           <ul className="home-product-facts">
-            <li><ShieldCheck aria-hidden="true" />29 tools</li>
+            <li><ShieldCheck aria-hidden="true" />{CANONICAL_TOOLS.length} tools</li>
             <li><Lock aria-hidden="true" />Read-only by default</li>
             <li><Server aria-hidden="true" />Runs locally</li>
             <li><Eye aria-hidden="true" />Provider-visible results</li>

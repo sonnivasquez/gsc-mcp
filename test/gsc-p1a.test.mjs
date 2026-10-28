@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mkdtempSync, readFileSync, existsSync } from "node:fs";
+import { mkdtempSync, readFileSync, existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join, sep } from "node:path";
 
@@ -409,6 +409,9 @@ test("export refuses when disabled and blocks traversal", async () => {
 });
 
 test("T14 exports a stored dataset end to end", async () => {
+  const previousDataDir = process.env.GSC_DATA_DIR;
+  const isolatedDataDir = mkdtempSync(join(tmpdir(), "gsc-export-e2e-"));
+  process.env.GSC_DATA_DIR = isolatedDataDir;
   process.env.GSC_EXPORTS = "1";
   try {
     const store = new DatasetStore();
@@ -421,5 +424,7 @@ test("T14 exports a stored dataset end to end", async () => {
     assert.equal(gated.error.code, "DATASET_NOT_FOUND");
   } finally {
     delete process.env.GSC_EXPORTS;
+    if (previousDataDir === undefined) delete process.env.GSC_DATA_DIR; else process.env.GSC_DATA_DIR = previousDataDir;
+    rmSync(isolatedDataDir, { recursive: true, force: true });
   }
 });

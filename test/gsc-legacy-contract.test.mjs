@@ -40,10 +40,10 @@ const EXPECTED_29 = [
   "gsc_check_update_impact",
 ];
 
-test("legacy contract catalog holds exactly the 29 public names", () => {
-  assert.equal(CANONICAL_TOOLS.length, 29);
+test("legacy contract catalog preserves the original 29 names within the 34-tool catalog", () => {
+  assert.equal(CANONICAL_TOOLS.length, 34);
   assert.deepEqual(
-    CANONICAL_TOOLS.map((t) => t.name),
+    CANONICAL_TOOLS.slice(5).map((t) => t.name),
     EXPECTED_29
   );
   const kinds = new Map(CANONICAL_TOOLS.map((t) => [t.name, t.kind]));

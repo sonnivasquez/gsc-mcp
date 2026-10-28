@@ -1,11 +1,13 @@
 import { z } from "zod";
+import { withAbort } from "../fetch-guard.js";
 import type { AuthProvider } from "../auth-provider.js";
 import { isAllowAllAllowlist } from "../profiles.js";
 import { RequestBudget } from "./budget.js";
+import { assertSearchAnalyticsRules } from "./analytics-rules.js";
 import { GscError, propertyNotAllowed, throwForResponse, throwForTransport } from "./errors.js";
 
 export type SearchType = "web" | "image" | "video" | "news" | "discover" | "googleNews";
-export type DataState = "final" | "all";
+export type DataState = "final" | "all" | "hourly_all";
 
 export interface AnalyticsFilter {
   dimension: string;
@@ -22,6 +24,7 @@ export interface AnalyticsQuery {
   dataState?: DataState;
   rowLimit?: number;
   maxFetchRows?: number;
+  aggregationType?: string;
 }
 
 export interface AnalyticsRow {
@@ -36,6 +39,8 @@ export interface QueryResult {
   rows: AnalyticsRow[];
   pagesFetched: number;
   truncated: boolean;
+  upstreamAggregationType?: string;
+  metadata?: { first_incomplete_date?: string; first_incomplete_hour?: string };
 }
 
 export interface SiteEntry {
@@ -67,6 +72,8 @@ const AnalyticsRowSchema = z.object({
 
 const SearchAnalyticsResponse = z.object({
   rows: z.array(AnalyticsRowSchema).default([]),
+  responseAggregationType: z.string().optional(),
+  metadata: z.object({ first_incomplete_date: z.string().optional(), first_incomplete_hour: z.string().optional() }).optional(),
 });
 
 const SitesResponse = z.object({
@@ -121,6 +128,8 @@ export interface DataSourceOpts {
   // null = unenforced (tests). serve passes the instance allowlist.
   allowlist?: string[] | null;
   timeoutMs?: number;
+  deadline?: number;
+  signal?: AbortSignal;
 }
 // Fetch-based Search Console reader. Readonly by construction: only
 // GET/POST-query endpoints exist here, and the scope tier comes from the
@@ -130,6 +139,8 @@ export class FetchGscDataSource {
   private readonly fetchImpl: typeof fetch;
   private readonly allowlist: string[] | null;
   private readonly timeoutMs: number | undefined;
+  private readonly deadline?: number;
+  private readonly signal?: AbortSignal;
 
   constructor(
     private readonly provider: AuthProvider,
@@ -139,6 +150,8 @@ export class FetchGscDataSource {
     this.fetchImpl = opts.fetchImpl ?? fetch;
     this.allowlist = opts.allowlist ?? null;
     this.timeoutMs = opts.timeoutMs;
+    this.deadline = opts.deadline;
+    this.signal = opts.signal;
   }
 
   private checkSite(siteUrl: string): void {
@@ -163,9 +176,12 @@ export class FetchGscDataSource {
   }
 
   private async call(path: string, init: RequestInit, op: string): Promise<unknown> {
+    if (this.deadline !== undefined && Date.now() >= this.deadline) throw new GscError("REQUEST_BUDGET_EXCEEDED", "call deadline reached");
     let token: string;
     try {
-      token = await this.provider.getAccessToken();
+      token = this.signal
+        ? await withAbort(this.provider.getAccessToken(), this.signal)
+        : await this.provider.getAccessToken();
     } catch (err) {
       authFailure(err);
       throw new GscError("AUTH_REQUIRED", "unreachable");
@@ -185,7 +201,11 @@ export class FetchGscDataSource {
         throw new GscError("UPSTREAM_SCHEMA_CHANGED", `${op} returned no JSON body`);
       }
       return body;
-    }, { timeoutMs: this.timeoutMs });
+    }, {
+      timeoutMs: this.deadline === undefined ? this.timeoutMs : Math.min(this.timeoutMs ?? 15000, Math.max(1, this.deadline - Date.now())),
+      deadlineMs: this.deadline === undefined ? undefined : Math.max(0, this.deadline - Date.now()),
+      signal: this.signal,
+    });
   }
 
   async listSites(): Promise<SiteEntry[]> {
@@ -195,11 +215,14 @@ export class FetchGscDataSource {
 
   async queryAnalytics(siteUrl: string, q: AnalyticsQuery): Promise<QueryResult> {
     this.checkSite(siteUrl);
+    assertSearchAnalyticsRules(q);
     const pageSize = Math.min(q.rowLimit ?? MAX_PAGE, MAX_PAGE);
     const maxFetch = q.maxFetchRows ?? 5_000;
     const rows: AnalyticsRow[] = [];
     let startRow = 0;
     let pagesFetched = 0;
+    let upstreamAggregationType: string | undefined;
+    let metadata: QueryResult["metadata"];
     for (;;) {
       const body = await this.call(
         `${WEBMASTERS}/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
@@ -220,7 +243,8 @@ export class FetchGscDataSource {
                   },
                 ]
               : undefined,
-            searchType: q.searchType ?? "web",
+            type: q.searchType ?? "web",
+            ...(q.aggregationType ? { aggregationType: q.aggregationType } : {}),
             dataState: q.dataState ?? "final",
             rowLimit: pageSize,
             startRow,
@@ -228,13 +252,22 @@ export class FetchGscDataSource {
         },
         "searchAnalytics.query"
       );
-      const page = parseOrThrow(SearchAnalyticsResponse, body, "searchAnalytics.query").rows;
+      const parsed = parseOrThrow(SearchAnalyticsResponse, body, "searchAnalytics.query");
+      const page = parsed.rows;
+      upstreamAggregationType = parsed.responseAggregationType ?? upstreamAggregationType;
+      if (parsed.metadata) {
+        metadata ??= {};
+        for (const key of ["first_incomplete_date", "first_incomplete_hour"] as const) {
+          const value = parsed.metadata[key];
+          if (value && (!metadata[key] || (key === "first_incomplete_hour" ? Date.parse(value) < Date.parse(metadata[key]!) : value < metadata[key]!))) metadata[key] = value;
+        }
+      }
       pagesFetched++;
       const room = maxFetch - rows.length;
-      if (room <= 0) return { rows, pagesFetched, truncated: true };
+      if (room <= 0) return { rows, pagesFetched, truncated: true, upstreamAggregationType, metadata };
       rows.push(...page.slice(0, room));
-      if (page.length < pageSize) return { rows, pagesFetched, truncated: false };
-      if (rows.length >= maxFetch) return { rows, pagesFetched, truncated: true };
+      if (page.length < pageSize) return { rows, pagesFetched, truncated: false, upstreamAggregationType, metadata };
+      if (rows.length >= maxFetch) return { rows, pagesFetched, truncated: true, upstreamAggregationType, metadata };
       startRow += pageSize;
     }
   }

@@ -122,12 +122,27 @@ export async function assertPublicUrl(url: string, resolveHost: ResolveHost = de
   }
 }
 
+// Bound even non-cancellable DNS/auth providers; a late completion never starts a fetch.
+export async function withAbort<T>(work: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return work;
+  return new Promise<T>((resolve, reject) => {
+    const stopped = () => { signal.removeEventListener("abort", stopped); reject(new GscError("CANCELLED", "operation aborted")); };
+    signal.addEventListener("abort", stopped, { once: true });
+    work.then((value) => { signal.removeEventListener("abort", stopped); resolve(value); }, (err) => { signal.removeEventListener("abort", stopped); reject(err); });
+    if (signal.aborted) stopped();
+  });
+}
+
 export interface GuardedFetchOpts {
   timeoutMs?: number;
   headers?: Record<string, string>;
   resolveHost?: ResolveHost;
   maxRedirects?: number;
   allowUrl?: (url: string) => boolean;
+  fetchImpl?: typeof fetch;
+  signal?: AbortSignal;
+  onRedirect?: (from: string, to: string, status: number) => void;
+  beforeRequest?: (url: string) => Promise<void>;
 }
 
 export interface GuardedFetchResult {
@@ -146,7 +161,8 @@ export async function guardedFetch(url: string, opts: GuardedFetchOpts = {}): Pr
   let current = url;
 
   for (let hop = 0; hop <= maxRedirects; hop++) {
-    await assertPublicUrl(current, resolveHost);
+    if (opts.signal) await withAbort(assertPublicUrl(current, resolveHost), opts.signal);
+    else await assertPublicUrl(current, resolveHost);
     if (opts.allowUrl && !opts.allowUrl(current)) {
       throw new GscError(
         "PROPERTY_NOT_ALLOWED",
@@ -154,15 +170,16 @@ export async function guardedFetch(url: string, opts: GuardedFetchOpts = {}): Pr
         { suggestedAction: "serve with a profile that includes the property, or add it to GSC_SITE_URLS" }
       );
     }
+    await opts.beforeRequest?.(current);
     const controller = new AbortController();
     const timer =
       timeoutMs !== undefined ? setTimeout(() => controller.abort(), timeoutMs) : undefined;
     let response: Response;
     try {
-      response = await globalThis.fetch(current, {
+      response = await (opts.fetchImpl ?? globalThis.fetch)(current, {
         headers,
         redirect: "manual",
-        signal: controller.signal,
+        signal: opts.signal ? AbortSignal.any([controller.signal, opts.signal]) : controller.signal,
       });
     } finally {
       if (timer !== undefined) clearTimeout(timer);
@@ -174,7 +191,10 @@ export async function guardedFetch(url: string, opts: GuardedFetchOpts = {}): Pr
           suggestedAction: "pass a URL that resolves within 5 redirects",
         });
       }
-      current = new URL(location, current).href;
+      const target = new URL(location, current).href;
+      opts.onRedirect?.(current, target, response.status);
+      await response.body?.cancel();
+      current = target;
       continue;
     }
     return { response, finalUrl: current };
