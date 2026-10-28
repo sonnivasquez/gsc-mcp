@@ -49,6 +49,10 @@ const DOC_SECTIONS: Record<string, readonly SectionLink[]> = {
     { id: "help", label: "Help and version" },
     { id: "next", label: "Next" },
   ],
+  "/docs/tools": [{ id: "catalog", label: "Tool catalog" }, { id: "next", label: "Detailed guides" }],
+  "/docs/audits": [{ id: "page", label: "Page audit" }, { id: "indexing", label: "Indexing audit" }, { id: "links", label: "Internal links" }, { id: "change", label: "Change impact" }, { id: "migration", label: "Migration audit" }, { id: "limits", label: "Limits and coverage" }, { id: "continuation", label: "Continuation and evidence" }, { id: "next", label: "Related guides" }],
+  "/docs/history": [{ id: "enable", label: "Enable history" }, { id: "record", label: "Record" }, { id: "analyze", label: "Analyze" }, { id: "list-delete", label: "List and delete" }, { id: "snapshots", label: "Read snapshots" }, { id: "storage", label: "Storage and privacy" }, { id: "next", label: "Related guides" }],
+  "/docs/analytics": [{ id: "hourly", label: "Hourly data" }, { id: "appearance", label: "Search appearance" }, { id: "report-rules", label: "Report rules" }, { id: "timeline", label: "Cannibalization timeline" }, { id: "evidence", label: "Coverage and evidence" }, { id: "next", label: "Related guides" }],
   "/docs/troubleshooting": [
     { id: "no-tools", label: "Client shows no tools" },
     { id: "sign-in", label: "Sign-in fails" },

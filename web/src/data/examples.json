@@ -1,0 +1,167 @@
+{
+  "page": {
+    "name": "gsc_page_audit",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "urls": [
+        "https://example.com/article"
+      ],
+      "preset": "last_28_days"
+    }
+  },
+  "indexing": {
+    "name": "gsc_indexing_audit",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "sitemapUrls": [
+        "https://example.com/sitemap.xml"
+      ],
+      "selection": "recent_lastmod",
+      "inspectLimit": 5
+    }
+  },
+  "links": {
+    "name": "gsc_internal_link_audit",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "startUrls": [
+        "https://example.com/"
+      ],
+      "maxPages": 100,
+      "batchSize": 20
+    }
+  },
+  "migration": {
+    "name": "gsc_migration_audit",
+    "arguments": {
+      "sourceSiteUrl": "https://old.example.com/",
+      "targetSiteUrl": "https://example.com/",
+      "migrationDate": "2026-01-15",
+      "mappings": [
+        {
+          "oldUrl": "https://old.example.com/article",
+          "newUrl": "https://example.com/article"
+        }
+      ]
+    }
+  },
+  "record": {
+    "name": "gsc_change_impact",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "action": "record",
+      "change": {
+        "date": "2026-01-15",
+        "label": "Update article",
+        "urls": [
+          "https://example.com/article"
+        ]
+      },
+      "idempotencyKey": "example-article-update"
+    }
+  },
+  "analyze": {
+    "name": "gsc_change_impact",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "action": "analyze",
+      "change": {
+        "date": "2026-01-15",
+        "urls": [
+          "https://example.com/article"
+        ]
+      }
+    }
+  },
+  "list": {
+    "name": "gsc_change_impact",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "action": "list"
+    }
+  },
+  "delete": {
+    "name": "gsc_change_impact",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "action": "delete",
+      "changeId": "replace-with-saved-change-id"
+    }
+  },
+  "hourly": {
+    "name": "gsc_search_analytics",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "startDate": "2026-01-01",
+      "endDate": "2026-01-07",
+      "dimensions": [
+        "hour"
+      ],
+      "dataState": "hourly_all"
+    }
+  },
+  "appearance": {
+    "name": "gsc_search_analytics",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "startDate": "2026-01-01",
+      "endDate": "2026-01-28",
+      "dimensions": [
+        "searchAppearance"
+      ]
+    }
+  },
+  "appearanceDetail": {
+    "name": "gsc_search_analytics",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "startDate": "2026-01-01",
+      "endDate": "2026-01-28",
+      "dimensions": [
+        "page"
+      ],
+      "filters": [
+        {
+          "dimension": "searchAppearance",
+          "operator": "equals",
+          "expression": "replace-with-returned-appearance"
+        }
+      ]
+    }
+  },
+  "timeline": {
+    "name": "gsc_detect_cannibalization",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "startDate": "2026-01-01",
+      "endDate": "2026-01-28",
+      "includeTimeline": true,
+      "timelineQueryLimit": 5,
+      "minDailyImpressions": 10
+    }
+  },
+  "continueIndex": {
+    "name": "gsc_indexing_audit",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "cursor": "replace-with-data-nextCursor"
+    }
+  },
+  "saveSnapshot": {
+    "name": "gsc_change_impact",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "action": "analyze",
+      "changeId": "replace-with-saved-change-id",
+      "saveSnapshot": true
+    }
+  },
+  "listSnapshots": {
+    "name": "gsc_change_impact",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "action": "list",
+      "changeId": "replace-with-saved-change-id"
+    }
+  }
+}

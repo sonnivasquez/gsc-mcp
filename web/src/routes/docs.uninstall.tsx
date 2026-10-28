@@ -84,7 +84,7 @@ function UninstallPage() {
 
       <H2 id="local-data">Optional: remove local credentials and data</H2>
       <p className="mt-3 text-base leading-relaxed text-ink-soft">
-        If you want to remove saved OAuth tokens, profiles, OAuth client files, and service-account keys,
+        If you want to remove saved change history, OAuth tokens, profiles, OAuth client files, and service-account keys,
         delete the data directory after you uninstall. This action is permanent.
       </p>
       <Note tone="warn" label="Deletes local files">

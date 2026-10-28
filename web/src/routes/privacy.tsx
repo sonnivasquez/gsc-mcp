@@ -80,7 +80,7 @@ function PrivacyPage() {
             </tr>
             <tr>
               <td className="px-4 py-3">Optional change history</td>
-              <td className="px-4 py-3">Local data directory, when explicitly enabled and saved</td>
+              <td className="px-4 py-3">GSC_DATA_DIR/history or ~/.gsc-mcp/history, when explicitly enabled and saved</td>
               <td className="px-4 py-3">Your machine; returned records are also visible to your client and its AI provider</td>
             </tr>
           </tbody>

@@ -224,7 +224,7 @@ function HomePage() {
       <section id="tools" aria-labelledby="tools-heading" className="home-container home-tools">
         <div className="home-tools-heading home-section-heading">
           <div><p className="home-section-label">Tools</p><h2 id="tools-heading">Your Google Search Console MCP toolkit.</h2><p>Four ways to put your Search Console data to work.</p></div>
-          <Link to="/docs/commands" className="home-text-link">Explore all tools<ArrowRight aria-hidden="true" className="size-4" /></Link>
+          <Link to="/docs/tools" className="home-text-link">Explore all tools<ArrowRight aria-hidden="true" className="size-4" /></Link>
         </div>
         <div className="home-tool-grid">
           {TOOL_GROUPS.map((group) => (
