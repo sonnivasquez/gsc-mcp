@@ -94,7 +94,7 @@ el cliente; 1.0.0 no incluye estas cinco auditorías.
 
 ## Actualiza o desinstala
 
-Las actualizaciones nunca rompen una instalación que funciona. Si un cambio grande requiere migración, la herramienta la hace sola con respaldo de tu configuración; nunca te pedirá pasos manuales.
+El actualizador conserva tus tokens de Google, perfiles y configuraciones de clientes. Revisa las notas de la versión por si necesita pasos específicos y reinicia tu cliente MCP después de actualizar.
 
 La vía asistida comprueba el registro, reinstala y verifica:
 

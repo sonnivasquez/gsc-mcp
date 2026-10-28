@@ -92,7 +92,7 @@ restarting the client; 1.0.0 does not include these five audits.
 
 ## Update or uninstall
 
-Updates never break a working install. If a major change requires migration, the tool performs it automatically with a backup of your configuration; it never asks you for manual steps.
+The updater preserves your Google tokens, profiles, and client configurations. Check release notes for any version-specific steps, and restart your MCP client after updating.
 
 The assisted path checks the registry, reinstalls, and verifies:
 

@@ -4,7 +4,7 @@ description: "Trigger: Google Search Console, GSC, search analytics, SEO audit. 
 license: Apache-2.0
 metadata:
   author: "sonnivasquez"
-  version: "1.0"
+  version: "1.1.0"
 ---
 
 ## Activation Contract
