@@ -369,7 +369,11 @@ test('all five audit tools complete through the actual MCP SDK protocol', async 
   } finally { await client.close(); await server.close(); if (saved === undefined) delete process.env.GSC_HISTORY; else process.env.GSC_HISTORY = saved; await rm(root, { recursive: true, force: true }); }
 });
 
-test('global deadline also bounds unresolved DNS and OAuth providers', { timeout: 2000 }, async () => {
+test('global deadline also bounds unresolved DNS and OAuth providers', { timeout: 2000 }, async (t) => {
+  // AbortSignal.timeout intentionally does not keep Node's event loop alive.
+  // These fake providers have no I/O handles, unlike a live stdio MCP server.
+  const keepAlive = setInterval(() => {}, 1000);
+  t.after(() => clearInterval(keepAlive));
   const dns = transport(); dns.deps.resolveHost = () => new Promise(() => {});
   const first = await gscPageAudit({ siteUrl: SITE, urls: [`${SITE}a`] }, { ...dns.deps, deadlineMs: 20 });
   assert.equal(first.status, 'partial'); assert.equal(dns.calls.length, 0);
