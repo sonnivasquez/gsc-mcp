@@ -80,7 +80,7 @@ gsc auth status
 gsc auth status --online
 ```
 
-If your client does not show the MCP tools after setup, restart that client. The server provides **29 tools** for Search Console performance, comparisons, indexing, sitemaps, and reports. See the [tool catalog](tools.md).
+If your client does not show the MCP tools after setup, restart that client. The server provides **34 tools** for Search Console performance, comparisons, indexing, sitemaps, and reports. See the [tool catalog](tools.md).
 
 ## Update or uninstall
 

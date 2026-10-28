@@ -286,5 +286,19 @@
       "image_content_decay"
     ],
     "note": "Capabilities of retired names live on in canonical tools (see capabilities[].target). No alias profile is published in 0.1.0."
+  },
+  "current": {
+    "status": "release_candidate",
+    "version": "1.1.0",
+    "liveToolCount": 34,
+    "baselinePreserved": true,
+    "addedTools": [
+      "gsc_page_audit",
+      "gsc_indexing_audit",
+      "gsc_internal_link_audit",
+      "gsc_change_impact",
+      "gsc_migration_audit"
+    ],
+    "contractFixture": "fixtures/mcp-tool-list-current.json"
   }
 }

@@ -2,8 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FetchGscDataSource = void 0;
 const zod_1 = require("zod");
+const fetch_guard_js_1 = require("../fetch-guard.js");
 const profiles_js_1 = require("../profiles.js");
 const budget_js_1 = require("./budget.js");
+const analytics_rules_js_1 = require("./analytics-rules.js");
 const errors_js_1 = require("./errors.js");
 const WEBMASTERS = "https://www.googleapis.com/webmasters/v3/sites";
 const INSPECTION = "https://searchconsole.googleapis.com/v1/urlInspection/index:inspect";
@@ -19,6 +21,8 @@ const AnalyticsRowSchema = zod_1.z.object({
 });
 const SearchAnalyticsResponse = zod_1.z.object({
     rows: zod_1.z.array(AnalyticsRowSchema).default([]),
+    responseAggregationType: zod_1.z.string().optional(),
+    metadata: zod_1.z.object({ first_incomplete_date: zod_1.z.string().optional(), first_incomplete_hour: zod_1.z.string().optional() }).optional(),
 });
 const SitesResponse = zod_1.z.object({
     siteEntry: zod_1.z
@@ -69,12 +73,16 @@ class FetchGscDataSource {
     fetchImpl;
     allowlist;
     timeoutMs;
+    deadline;
+    signal;
     constructor(provider, opts = {}) {
         this.provider = provider;
         this.budget = opts.budget ?? new budget_js_1.RequestBudget();
         this.fetchImpl = opts.fetchImpl ?? fetch;
         this.allowlist = opts.allowlist ?? null;
         this.timeoutMs = opts.timeoutMs;
+        this.deadline = opts.deadline;
+        this.signal = opts.signal;
     }
     checkSite(siteUrl) {
         if (this.allowlist === null)
@@ -99,9 +107,13 @@ class FetchGscDataSource {
         }
     }
     async call(path, init, op) {
+        if (this.deadline !== undefined && Date.now() >= this.deadline)
+            throw new errors_js_1.GscError("REQUEST_BUDGET_EXCEEDED", "call deadline reached");
         let token;
         try {
-            token = await this.provider.getAccessToken();
+            token = this.signal
+                ? await (0, fetch_guard_js_1.withAbort)(this.provider.getAccessToken(), this.signal)
+                : await this.provider.getAccessToken();
         }
         catch (err) {
             authFailure(err);
@@ -123,7 +135,11 @@ class FetchGscDataSource {
                 throw new errors_js_1.GscError("UPSTREAM_SCHEMA_CHANGED", `${op} returned no JSON body`);
             }
             return body;
-        }, { timeoutMs: this.timeoutMs });
+        }, {
+            timeoutMs: this.deadline === undefined ? this.timeoutMs : Math.min(this.timeoutMs ?? 15000, Math.max(1, this.deadline - Date.now())),
+            deadlineMs: this.deadline === undefined ? undefined : Math.max(0, this.deadline - Date.now()),
+            signal: this.signal,
+        });
     }
     async listSites() {
         const parsed = parseOrThrow(SitesResponse, await this.call(WEBMASTERS, { method: "GET" }, "sites.list"), "sites.list");
@@ -131,11 +147,14 @@ class FetchGscDataSource {
     }
     async queryAnalytics(siteUrl, q) {
         this.checkSite(siteUrl);
+        (0, analytics_rules_js_1.assertSearchAnalyticsRules)(q);
         const pageSize = Math.min(q.rowLimit ?? MAX_PAGE, MAX_PAGE);
         const maxFetch = q.maxFetchRows ?? 5_000;
         const rows = [];
         let startRow = 0;
         let pagesFetched = 0;
+        let upstreamAggregationType;
+        let metadata;
         for (;;) {
             const body = await this.call(`${WEBMASTERS}/${encodeURIComponent(siteUrl)}/searchAnalytics/query`, {
                 method: "POST",
@@ -154,22 +173,33 @@ class FetchGscDataSource {
                             },
                         ]
                         : undefined,
-                    searchType: q.searchType ?? "web",
+                    type: q.searchType ?? "web",
+                    ...(q.aggregationType ? { aggregationType: q.aggregationType } : {}),
                     dataState: q.dataState ?? "final",
                     rowLimit: pageSize,
                     startRow,
                 }),
             }, "searchAnalytics.query");
-            const page = parseOrThrow(SearchAnalyticsResponse, body, "searchAnalytics.query").rows;
+            const parsed = parseOrThrow(SearchAnalyticsResponse, body, "searchAnalytics.query");
+            const page = parsed.rows;
+            upstreamAggregationType = parsed.responseAggregationType ?? upstreamAggregationType;
+            if (parsed.metadata) {
+                metadata ??= {};
+                for (const key of ["first_incomplete_date", "first_incomplete_hour"]) {
+                    const value = parsed.metadata[key];
+                    if (value && (!metadata[key] || (key === "first_incomplete_hour" ? Date.parse(value) < Date.parse(metadata[key]) : value < metadata[key])))
+                        metadata[key] = value;
+                }
+            }
             pagesFetched++;
             const room = maxFetch - rows.length;
             if (room <= 0)
-                return { rows, pagesFetched, truncated: true };
+                return { rows, pagesFetched, truncated: true, upstreamAggregationType, metadata };
             rows.push(...page.slice(0, room));
             if (page.length < pageSize)
-                return { rows, pagesFetched, truncated: false };
+                return { rows, pagesFetched, truncated: false, upstreamAggregationType, metadata };
             if (rows.length >= maxFetch)
-                return { rows, pagesFetched, truncated: true };
+                return { rows, pagesFetched, truncated: true, upstreamAggregationType, metadata };
             startRow += pageSize;
         }
     }

@@ -1,6 +1,7 @@
 import { getSearchConsoleClient, resolveSiteUrl, type SearchConsoleClient } from "./auth.js";
 import { assertSiteAllowed } from "./profiles.js";
 import { GscError } from "./gsc/errors.js";
+import { assertSearchAnalyticsRules } from "./gsc/analytics-rules.js";
 
 export interface SearchAnalyticsRow {
   keys: string[];
@@ -24,6 +25,7 @@ export interface QueryParams {
   rowLimit?: number;
   maxTotalRows?: number;
   type?: "web" | "image" | "video" | "news" | "discover" | "googleNews";
+  aggregationType?: string;
 }
 
 interface AnalyticsPage {
@@ -96,6 +98,7 @@ function requestBody(params: QueryParams, startRow: number, pageSize: number): R
     dataState: "all",
   };
   if (params.type) body.type = params.type;
+  if (params.aggregationType) body.aggregationType = params.aggregationType;
   return body;
 }
 
@@ -104,6 +107,7 @@ export async function fetchAllRows(
   siteUrlOverride?: string,
   clientOverride?: SearchConsoleClient,
 ): Promise<SearchAnalyticsRow[]> {
+  assertSearchAnalyticsRules({ dimensions: params.dimensions, filters: (params.dimensionFilterGroups ?? []).flatMap(group => group.filters), type: params.type, aggregationType: params.aggregationType });
   const client = clientOverride ?? (await getSearchConsoleClient());
   const siteUrl = resolveSiteUrl(siteUrlOverride);
   assertSiteAllowed(siteUrl);

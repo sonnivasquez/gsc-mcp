@@ -12,6 +12,7 @@ const SHARED_EXACT = new Set([
   'package.json',
   'package-lock.json',
   'src/version.ts',
+  'src/gsc/catalog.ts',
   'manifest.json',
   'CHANGELOG.md',
   'DESIGN.md',

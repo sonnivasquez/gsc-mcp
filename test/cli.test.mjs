@@ -5,6 +5,7 @@ import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } from "nod
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { CLI_VERSION } from "../dist/version.js";
 import { CLI_TEST_TIMEOUT_MS, homeEnvironment, observeChild, stopChild } from "./helpers/subprocess.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -54,7 +55,7 @@ test("homeEnvironment isolates subprocess home and Windows application data path
 test("cli --version prints the version", { timeout: CLI_TEST_TIMEOUT_MS }, () => {
   const r = spawnSync(process.execPath, [entry, "--version"], { encoding: "utf8" });
   assert.equal(r.status, 0);
-  assert.equal(r.stdout.trim(), "1.0.0");
+  assert.equal(r.stdout.trim(), CLI_VERSION);
 });
 
 test("cli --help documents serve, setup and doctor", { timeout: CLI_TEST_TIMEOUT_MS }, () => {
@@ -317,7 +318,7 @@ test("serve completes handshake without credentials and keeps stdout pure JSON-R
       assert.equal(msg.jsonrpc, "2.0");
       if (msg.id === 2) tools = msg.result.tools;
     }
-    assert.equal(tools.length, 29);
+    assert.equal(tools.length, 34);
   } finally {
     try { await stopChild(observed); }
     finally { if (observed.closed) rmSync(home, { recursive: true, force: true }); }

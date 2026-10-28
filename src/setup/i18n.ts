@@ -205,7 +205,7 @@ Quiet by default (title, one line per step, one result line); --verbose
 shows full detail (JSON entries, paths, finish verification, skill/sample
 notes). Finish verification reuses the single sites.list call (no second
 Google call) and reports runtime, auth, API reachability, selected
-properties, write state, client targets, and the 29-tool catalog. The sample
+properties, write state, client targets, and the 34-tool catalog. The sample
 query is never bulk and never prints query strings; without permission or
 data it reports honestly instead of claiming success.
 
@@ -304,7 +304,7 @@ Silencioso por defecto (título, una línea por paso, una línea de resultado);
 notas de skill/muestra). La verificación final reutiliza la única llamada sites.list
 (sin segunda llamada a Google) e informa el tiempo de ejecución, la autenticación,
 el alcance de la API, las propiedades seleccionadas, el estado de escritura, los
-destinos de cliente y el catálogo de 29 herramientas. La consulta de muestra nunca
+destinos de cliente y el catálogo de 34 herramientas. La consulta de muestra nunca
 es masiva y nunca imprime cadenas de consulta; sin permiso o sin datos, lo informa
 honestamente en lugar de afirmar éxito.
 

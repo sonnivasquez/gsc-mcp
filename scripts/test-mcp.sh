@@ -13,8 +13,8 @@ if [ ! -f "$ENTRY" ]; then
 fi
 
 OUT="$("$RUNTIME" "$ENTRY" --version 2>/dev/null)"
-if [ "$OUT" != "1.0.0" ]; then
-  echo "test:mcp: --version returned '$OUT', expected 1.0.0" >&2
+if [ "$OUT" != "1.1.0" ]; then
+  echo "test:mcp: --version returned '$OUT', expected 1.1.0" >&2
   exit 1
 fi
 
@@ -44,9 +44,9 @@ child.stdout.on("data", (c) => {
     if (msg.id !== undefined) byId[msg.id] = msg;
   }
   const tools = byId[2].result.tools;
-  if (tools.length !== 29) throw new Error(`tools/list: ${tools.length}, expected 29`);
+  if (tools.length !== 34) throw new Error(`tools/list: ${tools.length}, expected 34`);
   const text = JSON.parse(byId[3].result.content[0].text);
-  if (text.data.tools.length !== 29) throw new Error(`capabilities: ${text.data.tools.length}, expected 29`);
+  if (text.data.tools.length !== 34) throw new Error(`capabilities: ${text.data.tools.length}, expected 34`);
   console.log(`test:mcp OK: ${tools.length} tools, capabilities roundtrip works (${runtime})`);
   child.kill();
   process.exit(0);

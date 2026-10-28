@@ -8,9 +8,7 @@
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-blue)](https://registry.modelcontextprotocol.io/)
 -->
 
-<!-- TODO: uncomment the Glama score badge after this server is listed on Glama.
-[![Glama score](https://glama.ai/mcp/servers/io.github.sonnivasquez/gsc-mcp/badges/score.svg)](https://glama.ai/mcp/servers/io.github.sonnivasquez/gsc-mcp)
--->
+[![Glama score](https://glama.ai/mcp/servers/sonnivasquez/gsc-mcp/badges/score.svg)](https://glama.ai/mcp/servers/sonnivasquez/gsc-mcp)
 
 <!-- TODO: add screenshots/demo.gif and switch the preview below to that file. The PNG stays until the GIF exists. -->
 
@@ -18,7 +16,7 @@
 
 A local Google Search Console MCP server to compare search performance, find SEO opportunities, and check URL indexing status from your AI assistant using your own Google Search Console data.
 
-GSC MCP is an open-source MCP server by [Sonni Vasquez](https://github.com/sonnivasquez). It runs locally over stdio with Node.js or Bun and provides 29 tools. Google API requests run from your machine, with read-only Google access by default and access limited to the properties you select.
+GSC MCP is an open-source MCP server by [Sonni Vasquez](https://github.com/sonnivasquez). It runs locally over stdio with Node.js or Bun and provides 34 tools. Google API requests run from your machine, with read-only Google access by default and access limited to the properties you select.
 
 [Website](https://gscmcp.dev/) · [npm package](https://www.npmjs.com/package/@sonnivasquez/gsc-mcp) · [Quickstart](docs/quickstart.md) · [Guía en español](docs/quickstart.es.md) · [Tool catalog](docs/tools.md)
 
@@ -68,7 +66,7 @@ Quick Connect is the path that skips creating a Google Cloud OAuth client. Custo
 | Google Cloud project | Not required. This package ships a shared read-only OAuth client. | Custom OAuth needs your client (`GSC_OAUTH_SECRETS_FILE`, or `GSC_OAUTH_CLIENT_ID` plus `GSC_OAUTH_CLIENT_SECRET`). A service account needs `GSC_KEY_FILE`. |
 | Where it runs | Local stdio process. Google API requests run from your machine. | Same local process. |
 | Default access | Read-only. Setup refuses full access for Quick Connect. | Read-only unless `GSC_ACCESS_MODE=full`. That mode enables `gsc_submit_url`, `gsc_submit_batch`, and `gsc_submit_sitemap`. |
-| Tools | 29 `gsc_*` tools registered by the server. | The same 29 tools. |
+| Tools | 34 `gsc_*` tools registered by the server. | The same 34 tools. |
 | Also registered here | `gsc_genai_conversation_queries`, `gsc_check_update_impact`, and `gsc_image_page_audit`. | The same tools. |
 
 `gsc_genai_conversation_queries` reads AI-conversation exhaust in query data. `gsc_check_update_impact` compares a drop window with confirmed ranking updates and reports temporal coincidence only. `gsc_image_page_audit` fetches your own pages and their image bytes.
@@ -179,6 +177,21 @@ status for each. Then list its registered sitemaps. Do not submit anything.
 ```
 
 You can also ask for pages with sustained traffic declines, query overlap across your own pages, brand versus non-brand segments, or a Markdown performance report. Saving reports and exporting datasets require `GSC_EXPORTS=1` in your MCP client's server environment. Restart the client after changing that environment.
+
+## On-demand website audits and change history
+
+Version 1.1.0 adds `gsc_page_audit`, `gsc_indexing_audit`,
+`gsc_internal_link_audit`, `gsc_change_impact`, and `gsc_migration_audit`.
+They combine bounded HTTP HTML or sitemap reads with your own GSC data.
+They do not render JavaScript or run in the background. Continue batches
+explicitly using `nextCursor`; sessions expire after 15 idle minutes.
+
+`GSC_HISTORY=1` enables explicit local change records and saved measurements,
+independently of `GSC_EXPORTS`. Transient before/after analysis needs no history.
+No alerts service, scheduler or automatic captures are installed.
+See [audit inputs, limits, evidence pagination and examples](docs/tools.md#auditorías-bajo-demanda-110).
+These audits require version 1.1.0 or later. Check `gsc_capabilities` in the
+running server after updating and restarting your MCP client.
 
 ## Authentication and access
 

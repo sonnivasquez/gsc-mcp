@@ -251,8 +251,8 @@ test("shares one RequestBudget with the real drop engine", async () => {
   assert.equal(exhausted.error.code, "REQUEST_BUDGET_EXCEEDED");
 });
 
-test("catalog holds 29 tools including the new read tool", () => {
-  assert.equal(tools.CANONICAL_TOOLS.length, 29);
+test("catalog holds 34 tools including the new read tool", () => {
+  assert.equal(tools.CANONICAL_TOOLS.length, 34);
   const entry = tools.CANONICAL_TOOLS.find((t) => t.name === "gsc_check_update_impact");
   assert.ok(entry);
   assert.equal(entry.kind, "read");

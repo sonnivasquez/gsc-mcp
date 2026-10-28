@@ -20,6 +20,7 @@ export interface QueryParams {
     rowLimit?: number;
     maxTotalRows?: number;
     type?: "web" | "image" | "video" | "news" | "discover" | "googleNews";
+    aggregationType?: string;
 }
 export declare function getDateRange(days: number): {
     startDate: string;

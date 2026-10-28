@@ -16,7 +16,7 @@ Do not use for general SEO advice without data; run the tools first.
 
 ## Hard Rules
 
-- Invoke only `gsc_*` names from `references/tool-catalog.md` (29 tools).
+- Invoke only `gsc_*` names from `references/tool-catalog.md` (34 tools).
   Never invent tool names or strip the prefix.
 - Read-only by default: 23 `read` tools never mutate Google.
 - `write` (`gsc_submit_url`, `gsc_submit_batch`, `gsc_submit_sitemap`)
@@ -47,15 +47,23 @@ Do not use for general SEO advice without data; run the tools first.
 | Large results | Page with `gsc_get_dataset` (`datasetId`, zero new Google calls) |
 | Request indexing or send a sitemap | Gated `gsc_submit_url`, `gsc_submit_batch`, `gsc_submit_sitemap` with full access and explicit user authorization |
 | Image page diagnosis | `gsc_image_page_audit` on allowlisted URLs |
+| Live HTML and exact-page queries | `gsc_page_audit` |
+| Sitemap/index sample | `gsc_indexing_audit` |
+| Bounded HTML link graph | `gsc_internal_link_audit` |
+| Explicit change records and comparisons | `gsc_change_impact`; persistent actions need `GSC_HISTORY=1` |
+| Declared route/domain mappings | `gsc_migration_audit` |
 
 ## Execution Steps
 
 1. Call `gsc_capabilities`, then `gsc_list_sites` to fix the exact property.
 2. Query with explicit dates (`last_7_days`, `last_28_days`,
    `last_90_days`, or `startDate`/`endDate`) and dimensions
-   (`date,page,query,country,device`).
+   (`date,page,query,country,device,hour,searchAppearance`).
 3. Page large outputs via `gsc_get_dataset`; never re-query for pagination.
-4. State coverage, status (`ok`/`partial`/`error`), and missing evidence.
+4. Continue audits only on request with `nextCursor`; no scheduler or daemon.
+   Full evidence uses dataset parts; large saved history uses `snapshotChunk`
+   and its own `nextCursor`, as documented in the tool catalog.
+5. State coverage, status (`ok`/`partial`/`error`), and missing evidence.
 
 ## Output Contract
 
@@ -64,4 +72,4 @@ status, and what the data cannot prove. Never speculate about causes.
 
 ## References
 
-- `references/tool-catalog.md` — full 29-tool catalog with kinds and gates.
+- `references/tool-catalog.md` — full 34-tool catalog with kinds and gates.

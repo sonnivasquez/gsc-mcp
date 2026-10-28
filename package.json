@@ -1,9 +1,9 @@
 {
   "name": "@sonnivasquez/gsc-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "mcpName": "io.github.sonnivasquez/gsc-mcp",
   "packageManager": "bun@1.4.2",
-  "description": "Local Google Search Console MCP server, read-only by default (29 tools: 24 canonical gsc_* plus 5 legacy). GSC_ACCESS_MODE=full enables three Google write operations; legacy access settings remain compatible. OAuth, service accounts, Bun and Node.",
+  "description": "Local Google Search Console MCP server with 34 on-demand tools. Read-only Google access by default; explicit local history and export gates. OAuth, service accounts, Bun and Node.",
   "main": "dist/index.js",
   "bin": {
     "gsc": "dist/index.js",
@@ -14,7 +14,7 @@
     "build:node": "node ./node_modules/typescript/bin/tsc",
     "typecheck": "bunx --bun tsc --noEmit",
     "typecheck:node": "node ./node_modules/typescript/bin/tsc --noEmit",
-    "test": "bun run build && bun --test test",
+    "test": "bun run build && bun test ./test",
     "test:node": "npm run build:node && node --test",
     "test:mcp": "scripts/test-mcp.sh",
     "test:package": "scripts/test-package.sh",
@@ -47,6 +47,8 @@
     "image-size": "^2.0.2",
     "node-html-parser": "^9.0.1",
     "open": "^10.1.0",
+    "robots-parser": "^3.0.1",
+    "saxes": "^6.0.0",
     "zod": "^3.24.0"
   },
   "devDependencies": {

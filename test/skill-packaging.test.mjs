@@ -7,13 +7,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { npmCommand } from "../scripts/npm-command.mjs";
+import { CANONICAL_TOOLS } from "../dist/gsc/catalog.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SKILL_DIR = path.join(ROOT, "skills", "google-search-console-mcp");
 const SKILL_MD = path.join(SKILL_DIR, "SKILL.md");
 const CATALOG_MD = path.join(SKILL_DIR, "references", "tool-catalog.md");
 
-const EXPECTED_29 = [
+const LEGACY_29 = [
   "gsc_capabilities",
   "gsc_list_sites",
   "gsc_search_analytics",
@@ -148,7 +149,8 @@ test("skill sections arrive in contract order and stay within budget", () => {
 test("skill uses only current gsc_* names and current safety gates", () => {
   const skill = read(SKILL_MD);
   const catalog = read(CATALOG_MD);
-  const allowed = new Set(EXPECTED_29);
+  const allowed = new Set(CANONICAL_TOOLS.map(tool => tool.name));
+  assert(LEGACY_29.every(name => allowed.has(name)), "historical names remain available");
   for (const text of [skill, catalog]) {
     assert.ok(
       !/gsc_[A-Za-z0-9_]+\*/.test(text),
@@ -160,7 +162,7 @@ test("skill uses only current gsc_* names and current safety gates", () => {
       assert.ok(allowed.has(name), `stale or unknown tool name: ${name}`);
     }
   }
-  for (const name of EXPECTED_29) {
+  for (const name of allowed) {
     assert.ok(
       skill.includes(name) || catalog.includes(name),
       `current tool missing from skill bundle: ${name}`
@@ -171,7 +173,7 @@ test("skill uses only current gsc_* names and current safety gates", () => {
     assert.ok(!bare.test(skill), `stale legacy tool naming in SKILL.md: ${stale}`);
     assert.ok(!bare.test(catalog), `stale legacy tool naming in tool-catalog.md: ${stale}`);
   }
-  for (const gate of ["GSC_ACCESS_MODE=full", "GSC_SCOPES=full", "GSC_ENABLE_WRITE=1", "GSC_EXPORTS=1", "write_ops"]) {
+  for (const gate of ["GSC_ACCESS_MODE=full", "GSC_SCOPES=full", "GSC_ENABLE_WRITE=1", "GSC_EXPORTS=1", "GSC_HISTORY=1", "write_ops"]) {
     assert.ok(skill.includes(gate) || catalog.includes(gate), `safety gate missing: ${gate}`);
   }
 });

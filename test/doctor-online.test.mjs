@@ -6,6 +6,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { CLI_VERSION } from "../dist/version.js";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const entry = resolve(root, "dist/index.js");
@@ -63,7 +64,7 @@ test("online doctor verifies API, properties, and tools with one bounded call", 
         return {
           status: 200,
           ok: true,
-          json: async () => ({ "dist-tags": { latest: "1.0.0" } }),
+          json: async () => ({ "dist-tags": { latest: CLI_VERSION } }),
         };
       }
       calls++;
@@ -73,7 +74,7 @@ test("online doctor verifies API, properties, and tools with one bounded call", 
         { siteUrl: "https://b.example/", permissionLevel: "siteFullUser" },
       ])();
     };
-    const report = await doctor.runDoctorOnline({ provider: tokenProvider(), fetchImpl, toolCount: 29, cacheDir });
+    const report = await doctor.runDoctorOnline({ provider: tokenProvider(), fetchImpl, toolCount: 34, cacheDir });
     assert.equal(calls, 1);
     assert.equal(registryCalls, 1);
     assert.equal(seenAuth, "Bearer test-token");
@@ -86,7 +87,7 @@ test("online doctor verifies API, properties, and tools with one bounded call", 
     assert.equal(report.checks.find((c) => c.id === "tools").ok, true);
     const version = report.checks.find((c) => c.id === "version");
     assert.equal(version.ok, true);
-    assert.match(version.detail, /up to date \(1\.0\.0\)/);
+    assert.ok(version.detail.includes(`up to date (${CLI_VERSION})`));
     assert.ok(!JSON.stringify(report).includes("test-token"));
   });
 });
@@ -103,7 +104,7 @@ test("online doctor reports partial visibility and catalog drift honestly", asyn
     assert.match(properties.detail, /1 of 2 selected properties visible/);
     const tools = report.checks.find((c) => c.id === "tools");
     assert.equal(tools.ok, false);
-    assert.match(tools.detail, /expected 29 gsc_\* tools, found 28/);
+    assert.match(tools.detail, /expected 34 gsc_\* tools, found 28/);
     assert.ok(report.failed > 0);
   });
 });
@@ -114,7 +115,7 @@ test("online doctor classifies 401, 403, and 500 without claiming access", async
       const report = await doctor.runDoctorOnline({
         provider: tokenProvider(),
         fetchImpl: async () => ({ status, ok: false, json: async () => ({}) }),
-        toolCount: 29,
+        toolCount: 34,
       });
       assert.equal(report.checks.find((c) => c.id === "api").ok, false, `status ${status}`);
       assert.match(report.checks.find((c) => c.id === "api").detail, pattern, `status ${status}`);
@@ -134,7 +135,7 @@ test("online doctor fails the API check on malformed 2xx sites.list bodies", asy
       ["null body", async () => ({ status: 200, ok: true, json: async () => null })],
     ];
     for (const [name, fetchImpl] of malformed) {
-      const report = await doctor.runDoctorOnline({ provider: tokenProvider(), fetchImpl, toolCount: 29 });
+      const report = await doctor.runDoctorOnline({ provider: tokenProvider(), fetchImpl, toolCount: 34 });
       const api = report.checks.find((c) => c.id === "api");
       assert.equal(api.ok, false, name);
       assert.match(api.detail, /UPSTREAM_SCHEMA_CHANGED/, name);
@@ -144,7 +145,7 @@ test("online doctor fails the API check on malformed 2xx sites.list bodies", asy
     const empty = await doctor.runDoctorOnline({
       provider: tokenProvider(),
       fetchImpl: async () => ({ status: 200, ok: true, json: async () => ({}) }),
-      toolCount: 29,
+      toolCount: 34,
     });
     assert.equal(empty.checks.find((c) => c.id === "api").ok, true);
     assert.match(empty.checks.find((c) => c.id === "api").detail, /0 properties visible/);
@@ -160,7 +161,7 @@ test("online doctor never leaks raw exception text", async () => {
     const viaProvider = await doctor.runDoctorOnline({
       provider: failingProvider,
       fetchImpl: async () => { throw new Error("fetch must stay untouched"); },
-      toolCount: 29,
+      toolCount: 34,
     });
     const providerApi = viaProvider.checks.find((c) => c.id === "api");
     assert.equal(providerApi.ok, false);
@@ -171,7 +172,7 @@ test("online doctor never leaks raw exception text", async () => {
     const viaFetch = await doctor.runDoctorOnline({
       provider: tokenProvider(),
       fetchImpl: async () => { throw new Error(`getaddrinfo EAI_AGAIN ${sentinel} internal=secret-value`); },
-      toolCount: 29,
+      toolCount: 34,
     });
     const fetchApi = viaFetch.checks.find((c) => c.id === "api");
     assert.equal(fetchApi.ok, false);
@@ -189,7 +190,7 @@ test("online doctor reports a missing session without touching the Google API", 
         if (!String(url).includes("registry.npmjs.org")) calls++;
         throw new Error("network must stay untouched");
       },
-      toolCount: 29,
+      toolCount: 34,
     });
     assert.equal(calls, 0);
     assert.match(report.checks.find((c) => c.id === "api").detail, /AUTH_REQUIRED/);
@@ -210,7 +211,7 @@ test("doctor offline and online never echo allowlist values", async () => {
       const online = await doctor.runDoctorOnline({
         provider: tokenProvider(),
         fetchImpl: sitesResponse([{ siteUrl: "sc-domain:a.example", permissionLevel: "siteOwner" }]),
-        toolCount: 29,
+        toolCount: 34,
       });
       const properties = online.checks.find((c) => c.id === "properties");
       assert.equal(properties.ok, false, value);
@@ -305,7 +306,7 @@ test("cli doctor --online is honest JSON without secrets when no session exists"
   assert.ok(ids.includes("version"));
   assert.equal(report.checks.find((c) => c.id === "api").ok, false);
   assert.match(report.checks.find((c) => c.id === "api").detail, /GSC_KEY_FILE|AUTH_REQUIRED/);
-  assert.match(report.checks.find((c) => c.id === "tools").detail, /29 gsc_\* tools/);
+  assert.match(report.checks.find((c) => c.id === "tools").detail, /34 gsc_\* tools/);
 });
 
 test("offline doctor reports the active scoped token, never the default fixture", { timeout: CLI_TEST_TIMEOUT_MS }, async () => {
@@ -383,7 +384,7 @@ const versionReport = (fetchImpl, extra = {}) =>
     doctor.runDoctorOnline({
       provider: tokenProvider(),
       fetchImpl,
-      toolCount: 29,
+      toolCount: 34,
       cacheDir: mkdtempSync(join(tmpdir(), "gsc-reg-version-")),
       ...extra,
     })
@@ -401,7 +402,7 @@ test("online doctor reports an outdated install without failing", async () => {
   assert.equal(registryCalls, 1);
   const version = report.checks.find((c) => c.id === "version");
   assert.equal(version.ok, true);
-  assert.match(version.detail, /installed 1\.0\.0, registry latest 9\.9\.9/);
+  assert.ok(version.detail.includes(`installed ${CLI_VERSION}, registry latest 9.9.9`));
   assert.match(version.detail, /gsc update/);
   assert.ok(report.checks.filter((c) => !c.ok).every((c) => c.id !== "version"));
 });
@@ -433,14 +434,14 @@ test("online doctor caches the registry version for an hour", async () => {
   let registryCalls = 0;
   const fetchImpl = async (url) => {
     if (String(url).includes("registry.npmjs.org")) {
-      return registryFetch("1.0.0", () => registryCalls++)();
+      return registryFetch(CLI_VERSION, () => registryCalls++)();
     }
     return sitesResponse([{ siteUrl: "sc-domain:a.example", permissionLevel: "siteOwner" }])();
   };
   const opts = {
     provider: tokenProvider(),
     fetchImpl,
-    toolCount: 29,
+    toolCount: 34,
     cacheDir,
   };
   const first = await withEnv({ GSC_SITE_URLS: allowlistEnv }, () => doctor.runDoctorOnline(opts));
@@ -461,13 +462,13 @@ test("online doctor bypasses a stale registry cache", async () => {
   let registryCalls = 0;
   const fetchImpl = async (url) => {
     if (String(url).includes("registry.npmjs.org")) {
-      return registryFetch("1.0.0", () => registryCalls++)();
+      return registryFetch(CLI_VERSION, () => registryCalls++)();
     }
     return sitesResponse([{ siteUrl: "sc-domain:a.example", permissionLevel: "siteOwner" }])();
   };
   const report = await withEnv({ GSC_SITE_URLS: allowlistEnv }, () =>
-    doctor.runDoctorOnline({ provider: tokenProvider(), fetchImpl, toolCount: 29, cacheDir })
+    doctor.runDoctorOnline({ provider: tokenProvider(), fetchImpl, toolCount: 34, cacheDir })
   );
   assert.equal(registryCalls, 1);
-  assert.match(report.checks.find((c) => c.id === "version").detail, /up to date \(1\.0\.0\)/);
+  assert.ok(report.checks.find((c) => c.id === "version").detail.includes(`up to date (${CLI_VERSION})`));
 });

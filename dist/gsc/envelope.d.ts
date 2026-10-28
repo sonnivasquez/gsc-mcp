@@ -14,7 +14,7 @@ export interface Coverage {
     sortAppliedTo?: "retrieved_dataset";
 }
 export interface Provenance {
-    source: "google_search_console" | "local_cache" | "local_dataset" | "local_status";
+    source: "google_search_console" | "local_cache" | "local_dataset" | "local_status" | "website_fetch" | "local_history";
     fetchedAt: string | null;
     servedAt: string;
     siteUrl?: string;

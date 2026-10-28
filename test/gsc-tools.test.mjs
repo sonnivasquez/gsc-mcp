@@ -64,7 +64,7 @@ test("gsc_capabilities works offline with limits and disabled list", () => {
   const env = tools.gscCapabilities({ provider, allowlist: [] });
   assert.equal(env.schemaVersion, "1.0");
   assert.equal(env.status, "ok");
-  assert.deepEqual(env.data.tools.map((t) => t.name), [
+  assert.deepEqual(env.data.tools.slice(5).map((t) => t.name), [
     "gsc_capabilities",
     "gsc_list_sites",
     "gsc_search_analytics",
@@ -126,8 +126,8 @@ test("gsc_capabilities mirrors the write gate in disabledCapabilities", async ()
     assert.ok(!on.includes("gsc_submit_url"));
     assert.ok(!on.includes("gsc_submit_batch"));
     assert.ok(!on.includes("gsc_submit_sitemap"));
-    assert.ok(on.includes("gsc_image_page_audit"));
-    assert.ok(on.includes("gsc_genai_conversation_queries"));
+    assert.ok(!on.includes("gsc_image_page_audit"));
+    assert.ok(!on.includes("gsc_genai_conversation_queries"));
   });
 });
 
@@ -329,9 +329,9 @@ test("gsc_capabilities answers over MCP without credentials", { timeout: CLI_TES
     if (msg.id !== undefined) byId[msg.id] = msg;
   }
   const text = JSON.parse(byId[3].result.content[0].text);
-  assert.equal(text.data.tools.length, 29);
+  assert.equal(text.data.tools.length, 34);
   const list = byId[2].result.tools.map((t) => t.name);
   assert.ok(list.includes("gsc_search_analytics"));
   assert.ok(list.includes("gsc_check_update_impact"));
-  assert.equal(list.length, 29);
+  assert.equal(list.length, 34);
 });

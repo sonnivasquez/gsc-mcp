@@ -36,6 +36,11 @@ export interface CannibalizationData {
     candidates: CannibalizationCandidate[];
     candidatesTotal: number;
     ruleVersion: string;
+    evidencePreview?: {
+        storedCandidates: number;
+        encoding: string;
+        instructions: string;
+    };
 }
 export interface AlertsData {
     alerts: Alert[];
@@ -72,6 +77,7 @@ export interface SearchAnalyticsInput {
     }>;
     searchType?: string;
     dataState?: string;
+    aggregationType?: string;
     sortBy?: string;
     sortDirection?: string;
     resultLimit?: number;
@@ -174,6 +180,9 @@ export interface OpportunitiesInput extends PeriodInput, SearchCommon {
 }
 export declare function gscFindOpportunities(input: OpportunitiesInput, deps?: ToolDeps): Promise<ToolEnvelope<OpportunityResult>>;
 export interface CannibalizationInput extends PeriodInput, SearchCommon {
+    includeTimeline?: boolean;
+    timelineQueryLimit?: number;
+    minDailyImpressions?: number;
     minPages?: number;
     minImpressionsPerPage?: number;
     minSharePct?: number;
