@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, mkdtemp, rm, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { AjvJsonSchemaValidator } from '@modelcontextprotocol/sdk/validation/ajv';
@@ -37,7 +37,7 @@ test('every published example matches the real MCP SDK tools/list input schema',
         assert.ok(result.valid, `${key}: ${result.errorMessage}`);
         for (const field of Object.keys(example.arguments)) assert.ok(field in tool.inputSchema.properties, `${key}: exposed field ${field}`);
       }
-      const { assertSearchAnalyticsRules } = await import(join(build, 'gsc/analytics-rules.js'));
+      const { assertSearchAnalyticsRules } = await import(pathToFileURL(join(build, 'gsc/analytics-rules.js')).href);
       for (const key of ['hourly', 'appearance', 'appearanceDetail']) assert.doesNotThrow(() => assertSearchAnalyticsRules(examples[key].arguments));
     });
   } finally {
