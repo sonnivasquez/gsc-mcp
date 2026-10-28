@@ -180,7 +180,7 @@ You can also ask for pages with sustained traffic declines, query overlap across
 
 ## On-demand website audits and change history
 
-The current source adds `gsc_page_audit`, `gsc_indexing_audit`,
+Version 1.1.0 adds `gsc_page_audit`, `gsc_indexing_audit`,
 `gsc_internal_link_audit`, `gsc_change_impact`, and `gsc_migration_audit`.
 They combine bounded HTTP HTML or sitemap reads with your own GSC data.
 They do not render JavaScript or run in the background. Continue batches
@@ -189,9 +189,9 @@ explicitly using `nextCursor`; sessions expire after 15 idle minutes.
 `GSC_HISTORY=1` enables explicit local change records and saved measurements,
 independently of `GSC_EXPORTS`. Transient before/after analysis needs no history.
 No alerts service, scheduler or automatic captures are installed.
-See [audit inputs, limits, evidence pagination and examples](docs/tools.md#auditorías-bajo-demanda-ampliación-local-pendiente-de-release).
-These source additions are pending release; installing the published 1.0.0
-package does not imply they are available. Check `gsc_capabilities`.
+See [audit inputs, limits, evidence pagination and examples](docs/tools.md#auditorías-bajo-demanda-110).
+These audits require version 1.1.0 or later. Check `gsc_capabilities` in the
+running server after updating and restarting your MCP client.
 
 ## Authentication and access
 

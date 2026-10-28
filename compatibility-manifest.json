@@ -288,7 +288,8 @@
     "note": "Capabilities of retired names live on in canonical tools (see capabilities[].target). No alias profile is published in 0.1.0."
   },
   "current": {
-    "status": "unreleased",
+    "status": "release_candidate",
+    "version": "1.1.0",
     "liveToolCount": 34,
     "baselinePreserved": true,
     "addedTools": [

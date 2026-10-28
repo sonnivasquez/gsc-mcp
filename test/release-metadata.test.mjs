@@ -10,6 +10,9 @@ const pkg = json("package.json");
 test("release versions agree across package, lock, manifest, source and built CLI", () => {
   assert.equal(CLI_VERSION, pkg.version, "rebuild dist before packing");
   assert.equal(json("manifest.json").version, pkg.version);
+  const registry = json("server.json");
+  assert.equal(registry.version, pkg.version);
+  assert.ok(registry.packages.every(entry => entry.version === pkg.version));
   const lock = json("package-lock.json");
   assert.equal(lock.version, pkg.version);
   assert.equal(lock.packages[""].version, pkg.version);

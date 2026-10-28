@@ -1,7 +1,7 @@
 // Single source of truth for product facts shown on this site.
 // Values mirror the MCP package root: package.json, README.md, PRIVACY.md.
 export const PKG_NAME = "@sonnivasquez/gsc-mcp";
-export const PKG_VERSION = "1.0.0";
+export const PKG_VERSION = "1.1.0";
 export const PINNED_SPEC = `${PKG_NAME}@${PKG_VERSION}`;
 
 export const TOKEN_DIR = "~/.gsc-mcp/";

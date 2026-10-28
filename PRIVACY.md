@@ -27,7 +27,7 @@ cliente antes de consultar propiedades sensibles.
 
 ## Permisos mínimos
 
-Quick Connect usa el cliente OAuth compartido y solo admite lectura en 1.0.0.
+Quick Connect usa el cliente OAuth compartido y solo admite lectura.
 La escritura requiere OAuth propio o service account con permisos adecuados.
 Scope único `webmasters.readonly` por defecto. Con esos modos, `GSC_ACCESS_MODE=full` solicita
 además `webmasters` e `indexing` y habilita envíos de sitemaps y notificaciones

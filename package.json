@@ -1,6 +1,6 @@
 {
   "name": "@sonnivasquez/gsc-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "mcpName": "io.github.sonnivasquez/gsc-mcp",
   "packageManager": "bun@1.4.2",
   "description": "Local Google Search Console MCP server with 34 on-demand tools. Read-only Google access by default; explicit local history and export gates. OAuth, service accounts, Bun and Node.",

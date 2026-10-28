@@ -13,8 +13,8 @@ if [ ! -f "$ENTRY" ]; then
 fi
 
 OUT="$("$RUNTIME" "$ENTRY" --version 2>/dev/null)"
-if [ "$OUT" != "1.0.0" ]; then
-  echo "test:mcp: --version returned '$OUT', expected 1.0.0" >&2
+if [ "$OUT" != "1.1.0" ]; then
+  echo "test:mcp: --version returned '$OUT', expected 1.1.0" >&2
   exit 1
 fi
 

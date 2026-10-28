@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0
 
 - Fix capped audit termination, resumable sitemap byte budgets, isolated sitemap children, effective-URL graph deduplication and persistent partial status.
 - Respect cancellation before history effects; stream large saved snapshots through bounded scoped cursors.

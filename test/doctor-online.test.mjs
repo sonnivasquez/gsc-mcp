@@ -6,6 +6,7 @@ import { mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { CLI_VERSION } from "../dist/version.js";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const entry = resolve(root, "dist/index.js");
@@ -63,7 +64,7 @@ test("online doctor verifies API, properties, and tools with one bounded call", 
         return {
           status: 200,
           ok: true,
-          json: async () => ({ "dist-tags": { latest: "1.0.0" } }),
+          json: async () => ({ "dist-tags": { latest: CLI_VERSION } }),
         };
       }
       calls++;
@@ -86,7 +87,7 @@ test("online doctor verifies API, properties, and tools with one bounded call", 
     assert.equal(report.checks.find((c) => c.id === "tools").ok, true);
     const version = report.checks.find((c) => c.id === "version");
     assert.equal(version.ok, true);
-    assert.match(version.detail, /up to date \(1\.0\.0\)/);
+    assert.ok(version.detail.includes(`up to date (${CLI_VERSION})`));
     assert.ok(!JSON.stringify(report).includes("test-token"));
   });
 });
@@ -401,7 +402,7 @@ test("online doctor reports an outdated install without failing", async () => {
   assert.equal(registryCalls, 1);
   const version = report.checks.find((c) => c.id === "version");
   assert.equal(version.ok, true);
-  assert.match(version.detail, /installed 1\.0\.0, registry latest 9\.9\.9/);
+  assert.ok(version.detail.includes(`installed ${CLI_VERSION}, registry latest 9.9.9`));
   assert.match(version.detail, /gsc update/);
   assert.ok(report.checks.filter((c) => !c.ok).every((c) => c.id !== "version"));
 });
@@ -433,7 +434,7 @@ test("online doctor caches the registry version for an hour", async () => {
   let registryCalls = 0;
   const fetchImpl = async (url) => {
     if (String(url).includes("registry.npmjs.org")) {
-      return registryFetch("1.0.0", () => registryCalls++)();
+      return registryFetch(CLI_VERSION, () => registryCalls++)();
     }
     return sitesResponse([{ siteUrl: "sc-domain:a.example", permissionLevel: "siteOwner" }])();
   };
@@ -461,7 +462,7 @@ test("online doctor bypasses a stale registry cache", async () => {
   let registryCalls = 0;
   const fetchImpl = async (url) => {
     if (String(url).includes("registry.npmjs.org")) {
-      return registryFetch("1.0.0", () => registryCalls++)();
+      return registryFetch(CLI_VERSION, () => registryCalls++)();
     }
     return sitesResponse([{ siteUrl: "sc-domain:a.example", permissionLevel: "siteOwner" }])();
   };
@@ -469,5 +470,5 @@ test("online doctor bypasses a stale registry cache", async () => {
     doctor.runDoctorOnline({ provider: tokenProvider(), fetchImpl, toolCount: 34, cacheDir })
   );
   assert.equal(registryCalls, 1);
-  assert.match(report.checks.find((c) => c.id === "version").detail, /up to date \(1\.0\.0\)/);
+  assert.ok(report.checks.find((c) => c.id === "version").detail.includes(`up to date (${CLI_VERSION})`));
 });

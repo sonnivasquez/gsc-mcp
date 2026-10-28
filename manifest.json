@@ -2,7 +2,7 @@
   "manifest_version": "0.2",
   "name": "sonnivasquez-gsc-mcp",
   "display_name": "GSC MCP local",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Local Google Search Console MCP server with 34 on-demand tools, read-only Google access by default.",
   "long_description": "Local stdio MCP server with 34 tools, including five bounded website, indexing, link, change and migration audits. GSC_HISTORY=1 enables explicit local history separately from exports. No scheduler or daemon. Google read-only by default; explicit full access enables submission operations. Apache-2.0. Tool results may be sent to the MCP client AI provider.",
   "author": {

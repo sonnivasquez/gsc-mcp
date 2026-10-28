@@ -5,4 +5,4 @@ exports.CLI_VERSION = void 0;
 // Imported by doctor.ts (re-exported to preserve its public API) and by
 // client-config.ts for pinned automatic setup outputs. Kept dependency-free
 // so pure config builders never pull oauth/auth-provider/googleapis.
-exports.CLI_VERSION = "1.0.0";
+exports.CLI_VERSION = "1.1.0";

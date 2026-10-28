@@ -59,7 +59,7 @@ Deltas: `deltaX = actual − base`; `%` solo con base positiva
 `UPSTREAM_SCHEMA_CHANGED`, `DATASET_EXPIRED`/`DATASET_NOT_FOUND`,
 `INSUFFICIENT_DATA`, `CANCELLED`. Cada uno trae `retryable` y acción sugerida.
 
-## Auditorías bajo demanda (ampliación local, pendiente de release)
+## Auditorías bajo demanda (1.1.0)
 
 El catálogo actual del código contiene **34 herramientas**: 23 `read`, tres
 `write`, cinco `fetch` y tres `local`. Se conservan los 29 nombres anteriores.
