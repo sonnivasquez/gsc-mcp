@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { CANONICAL_TOOLS } from '../dist/gsc/catalog.js';
 import { assertSearchAnalyticsRules } from '../dist/gsc/analytics-rules.js';
 
-const read = async path => readFile(new URL(path, import.meta.url), 'utf8');
+const read = async path => (await readFile(new URL(path, import.meta.url), 'utf8')).replace(/\r\n/g, '\n');
 const fixture = JSON.parse(await read('../fixtures/mcp-tool-list-current.json'));
 const docs = await read('../docs/tools.md');
 
