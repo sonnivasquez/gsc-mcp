@@ -70,6 +70,8 @@ const HOME = [
   "web/src/components/use-conversation-motion.ts",
 ];
 
+const EXAMPLES = ["web/src/components/mcp-example.tsx", "web/src/data/examples.json"];
+
 const DOCS_INDEX = [
   "web/src/routes/docs.index.tsx",
   "web/src/components/agent-install.tsx",
@@ -84,7 +86,11 @@ const ROUTES = [
   { path: "/docs", changefreq: "monthly", priority: "0.9", sources: [...SHELL, ...DOC_CHROME, ...DOCS_INDEX] },
   { path: "/docs/credentials", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, "web/src/routes/docs.credentials.tsx"] },
   { path: "/docs/clients", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, ...TABS, "web/src/routes/docs.clients.tsx"] },
-  { path: "/docs/commands", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, ...TOOL_CATALOG, "web/src/routes/docs.commands.tsx"] },
+  { path: "/docs/commands", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, "web/src/routes/docs.commands.tsx"] },
+  { path: "/docs/tools", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, ...TOOL_CATALOG, "web/src/routes/docs.tools.tsx"] },
+  { path: "/docs/audits", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, ...EXAMPLES, "web/src/routes/docs.audits.tsx"] },
+  { path: "/docs/history", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, ...EXAMPLES, "web/src/routes/docs.history.tsx"] },
+  { path: "/docs/analytics", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, ...EXAMPLES, "web/src/routes/docs.analytics.tsx"] },
   { path: "/docs/troubleshooting", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, "web/src/routes/docs.troubleshooting.tsx"] },
   { path: "/docs/uninstall", changefreq: "monthly", priority: "0.6", sources: [...SHELL, ...DOC_CHROME, ...TABS, "web/src/routes/docs.uninstall.tsx"] },
   { path: "/privacy", changefreq: "yearly", priority: "0.3", sources: [...SHELL, "web/src/routes/privacy.tsx"] },

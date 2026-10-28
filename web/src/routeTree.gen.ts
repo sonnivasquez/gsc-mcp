@@ -14,9 +14,13 @@ import { Route as DocsRouteRouteImport } from './routes/docs.route'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as DocsIndexRouteImport } from './routes/docs.index'
+import { Route as DocsAnalyticsRouteImport } from './routes/docs.analytics'
+import { Route as DocsAuditsRouteImport } from './routes/docs.audits'
 import { Route as DocsClientsRouteImport } from './routes/docs.clients'
 import { Route as DocsCommandsRouteImport } from './routes/docs.commands'
 import { Route as DocsCredentialsRouteImport } from './routes/docs.credentials'
+import { Route as DocsHistoryRouteImport } from './routes/docs.history'
+import { Route as DocsToolsRouteImport } from './routes/docs.tools'
 import { Route as DocsTroubleshootingRouteImport } from './routes/docs.troubleshooting'
 import { Route as DocsUninstallRouteImport } from './routes/docs.uninstall'
 
@@ -45,6 +49,16 @@ const DocsIndexRoute = DocsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DocsRouteRoute,
 } as any)
+const DocsAnalyticsRoute = DocsAnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
+  getParentRoute: () => DocsRouteRoute,
+} as any)
+const DocsAuditsRoute = DocsAuditsRouteImport.update({
+  id: '/audits',
+  path: '/audits',
+  getParentRoute: () => DocsRouteRoute,
+} as any)
 const DocsClientsRoute = DocsClientsRouteImport.update({
   id: '/clients',
   path: '/clients',
@@ -58,6 +72,16 @@ const DocsCommandsRoute = DocsCommandsRouteImport.update({
 const DocsCredentialsRoute = DocsCredentialsRouteImport.update({
   id: '/credentials',
   path: '/credentials',
+  getParentRoute: () => DocsRouteRoute,
+} as any)
+const DocsHistoryRoute = DocsHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => DocsRouteRoute,
+} as any)
+const DocsToolsRoute = DocsToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
   getParentRoute: () => DocsRouteRoute,
 } as any)
 const DocsTroubleshootingRoute = DocsTroubleshootingRouteImport.update({
@@ -76,9 +100,13 @@ export interface FileRoutesByFullPath {
   '/docs': typeof DocsRouteRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/docs/analytics': typeof DocsAnalyticsRoute
+  '/docs/audits': typeof DocsAuditsRoute
   '/docs/clients': typeof DocsClientsRoute
   '/docs/commands': typeof DocsCommandsRoute
   '/docs/credentials': typeof DocsCredentialsRoute
+  '/docs/history': typeof DocsHistoryRoute
+  '/docs/tools': typeof DocsToolsRoute
   '/docs/troubleshooting': typeof DocsTroubleshootingRoute
   '/docs/uninstall': typeof DocsUninstallRoute
   '/docs/': typeof DocsIndexRoute
@@ -87,9 +115,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/docs/analytics': typeof DocsAnalyticsRoute
+  '/docs/audits': typeof DocsAuditsRoute
   '/docs/clients': typeof DocsClientsRoute
   '/docs/commands': typeof DocsCommandsRoute
   '/docs/credentials': typeof DocsCredentialsRoute
+  '/docs/history': typeof DocsHistoryRoute
+  '/docs/tools': typeof DocsToolsRoute
   '/docs/troubleshooting': typeof DocsTroubleshootingRoute
   '/docs/uninstall': typeof DocsUninstallRoute
   '/docs': typeof DocsIndexRoute
@@ -100,9 +132,13 @@ export interface FileRoutesById {
   '/docs': typeof DocsRouteRouteWithChildren
   '/privacy': typeof PrivacyRoute
   '/terms': typeof TermsRoute
+  '/docs/analytics': typeof DocsAnalyticsRoute
+  '/docs/audits': typeof DocsAuditsRoute
   '/docs/clients': typeof DocsClientsRoute
   '/docs/commands': typeof DocsCommandsRoute
   '/docs/credentials': typeof DocsCredentialsRoute
+  '/docs/history': typeof DocsHistoryRoute
+  '/docs/tools': typeof DocsToolsRoute
   '/docs/troubleshooting': typeof DocsTroubleshootingRoute
   '/docs/uninstall': typeof DocsUninstallRoute
   '/docs/': typeof DocsIndexRoute
@@ -114,9 +150,13 @@ export interface FileRouteTypes {
     | '/docs'
     | '/privacy'
     | '/terms'
+    | '/docs/analytics'
+    | '/docs/audits'
     | '/docs/clients'
     | '/docs/commands'
     | '/docs/credentials'
+    | '/docs/history'
+    | '/docs/tools'
     | '/docs/troubleshooting'
     | '/docs/uninstall'
     | '/docs/'
@@ -125,9 +165,13 @@ export interface FileRouteTypes {
     | '/'
     | '/privacy'
     | '/terms'
+    | '/docs/analytics'
+    | '/docs/audits'
     | '/docs/clients'
     | '/docs/commands'
     | '/docs/credentials'
+    | '/docs/history'
+    | '/docs/tools'
     | '/docs/troubleshooting'
     | '/docs/uninstall'
     | '/docs'
@@ -137,9 +181,13 @@ export interface FileRouteTypes {
     | '/docs'
     | '/privacy'
     | '/terms'
+    | '/docs/analytics'
+    | '/docs/audits'
     | '/docs/clients'
     | '/docs/commands'
     | '/docs/credentials'
+    | '/docs/history'
+    | '/docs/tools'
     | '/docs/troubleshooting'
     | '/docs/uninstall'
     | '/docs/'
@@ -189,6 +237,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsIndexRouteImport
       parentRoute: typeof DocsRouteRoute
     }
+    '/docs/analytics': {
+      id: '/docs/analytics'
+      path: '/analytics'
+      fullPath: '/docs/analytics'
+      preLoaderRoute: typeof DocsAnalyticsRouteImport
+      parentRoute: typeof DocsRouteRoute
+    }
+    '/docs/audits': {
+      id: '/docs/audits'
+      path: '/audits'
+      fullPath: '/docs/audits'
+      preLoaderRoute: typeof DocsAuditsRouteImport
+      parentRoute: typeof DocsRouteRoute
+    }
     '/docs/clients': {
       id: '/docs/clients'
       path: '/clients'
@@ -210,6 +272,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsCredentialsRouteImport
       parentRoute: typeof DocsRouteRoute
     }
+    '/docs/history': {
+      id: '/docs/history'
+      path: '/history'
+      fullPath: '/docs/history'
+      preLoaderRoute: typeof DocsHistoryRouteImport
+      parentRoute: typeof DocsRouteRoute
+    }
+    '/docs/tools': {
+      id: '/docs/tools'
+      path: '/tools'
+      fullPath: '/docs/tools'
+      preLoaderRoute: typeof DocsToolsRouteImport
+      parentRoute: typeof DocsRouteRoute
+    }
     '/docs/troubleshooting': {
       id: '/docs/troubleshooting'
       path: '/troubleshooting'
@@ -228,18 +304,26 @@ declare module '@tanstack/react-router' {
 }
 
 interface DocsRouteRouteChildren {
+  DocsAnalyticsRoute: typeof DocsAnalyticsRoute
+  DocsAuditsRoute: typeof DocsAuditsRoute
   DocsClientsRoute: typeof DocsClientsRoute
   DocsCommandsRoute: typeof DocsCommandsRoute
   DocsCredentialsRoute: typeof DocsCredentialsRoute
+  DocsHistoryRoute: typeof DocsHistoryRoute
+  DocsToolsRoute: typeof DocsToolsRoute
   DocsTroubleshootingRoute: typeof DocsTroubleshootingRoute
   DocsUninstallRoute: typeof DocsUninstallRoute
   DocsIndexRoute: typeof DocsIndexRoute
 }
 
 const DocsRouteRouteChildren: DocsRouteRouteChildren = {
+  DocsAnalyticsRoute: DocsAnalyticsRoute,
+  DocsAuditsRoute: DocsAuditsRoute,
   DocsClientsRoute: DocsClientsRoute,
   DocsCommandsRoute: DocsCommandsRoute,
   DocsCredentialsRoute: DocsCredentialsRoute,
+  DocsHistoryRoute: DocsHistoryRoute,
+  DocsToolsRoute: DocsToolsRoute,
   DocsTroubleshootingRoute: DocsTroubleshootingRoute,
   DocsUninstallRoute: DocsUninstallRoute,
   DocsIndexRoute: DocsIndexRoute,

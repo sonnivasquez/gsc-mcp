@@ -176,6 +176,10 @@ export const DOC_NAV: readonly DocNavItem[] = [
     label: "Commands",
     blurb: "setup, serve, doctor, auth, and config reference",
   },
+  { to: "/docs/tools", label: "MCP tools", blurb: "Complete tool catalog and access" },
+  { to: "/docs/audits", label: "On-demand audits", blurb: "Inputs, limits, and continuation" },
+  { to: "/docs/history", label: "Change history", blurb: "Optional records and snapshots" },
+  { to: "/docs/analytics", label: "Analytics", blurb: "Hourly data and search appearance" },
   {
     to: "/docs/troubleshooting",
     label: "Troubleshooting",

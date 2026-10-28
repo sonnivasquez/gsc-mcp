@@ -9,7 +9,7 @@ test("the website renders the canonical catalog and derives its displayed counts
   assert.ok(names.includes("gsc_page_audit") && names.includes("gsc_migration_audit"));
   const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
   const [source, commands, home, flow] = await Promise.all([
-    read("../src/lib/tools.ts"), read("../src/routes/docs.commands.tsx"),
+    read("../src/lib/tools.ts"), read("../src/routes/docs.tools.tsx"),
     read("../src/routes/index.tsx"), read("../src/components/data-flow.tsx"),
   ]);
   assert.match(source, /export\s*\{\s*CANONICAL_TOOLS\s*\}\s*from\s*["']\.\.\/\.\.\/\.\.\/src\/gsc\/catalog["']/);
