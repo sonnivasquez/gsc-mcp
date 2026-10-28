@@ -9,7 +9,7 @@
 | Perfiles (allowlists) | Mismo directorio, sin secretos | Solo tu máquina |
 | Respuestas de tools | Proceso MCP → tu cliente MCP | **Tu cliente y su proveedor de IA** |
 | Historial opt-in | `<GSC_DATA_DIR>/history`, aislado por perfil/propiedad; GSC_HISTORY=1, 100 MiB, sin purga automática | Proceso local; las respuestas solicitadas llegan al cliente MCP |
-| Caché/datasets | Memoria del proceso (15 min datasets) | El proceso local |
+| Caché/datasets y sesiones de auditoría | Memoria del proceso (datasets: 15 min desde su creación; sesiones: 15 min de inactividad; pueden expulsarse por capacidad o al terminar el proceso) | El proceso local; los resultados solicitados llegan al cliente MCP |
 
 ## Lo que "local" NO significa
 
@@ -40,8 +40,9 @@ GSC MCP llama a las APIs de Search Console e Indexing directamente desde tu
 máquina. Sin servidores del desarrollador, sin telemetría, sin cuentas, sin
 uso publicitario. Las lecturas analizan tus propias propiedades cuando lo
 pides; las escrituras solo ocurren con acceso `full` y acción explícita tuya
-(sitemaps, notificaciones de URL). Las auditorías de imagen además descargan
-páginas de tu propio sitio, no de Google. Las respuestas van al cliente MCP y
+(sitemaps, notificaciones de URL). Las auditorías web descargan páginas, robots.txt y sitemaps de propiedades
+autorizadas. La auditoría de imagen también puede descargar imágenes de
+hosts públicos externos, como una CDN. Las respuestas van al cliente MCP y
 a su proveedor de IA; su retención sigue la política de tu cliente. Antes de
 conectar, revisa las condiciones y ajustes de retención, entrenamiento y
 revisión humana de ambos. GSC MCP no controla esos servicios ni garantiza
@@ -62,5 +63,7 @@ auditoría caducan en memoria tras quince minutos de inactividad y se pierden
 al cerrar el servidor. GSC_HISTORY=1 habilita, por separado de GSC_EXPORTS,
 registro de cambios y mediciones solicitadas explícitamente. Pueden contener
 URLs y consultas sensibles; no guardan HTML completo, tokens ni credenciales.
-Para eliminarlos usa gsc_change_impact con action=delete y changeId o revisa
+El límite del historial es 100 MiB y una eliminación cancelada después de
+borrar archivos puede quedar parcial. Para eliminarlos usa gsc_change_impact
+con action=delete y changeId o revisa
 el directorio history. Logout no elimina el historial; no hay purga automática.

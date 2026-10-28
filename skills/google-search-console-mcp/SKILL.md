@@ -4,7 +4,7 @@ description: "Trigger: Google Search Console, GSC, search analytics, SEO audit. 
 license: Apache-2.0
 metadata:
   author: "sonnivasquez"
-  version: "1.0"
+  version: "1.1.0"
 ---
 
 ## Activation Contract
@@ -23,10 +23,13 @@ Do not use for general SEO advice without data; run the tools first.
   requires `GSC_ACCESS_MODE=full`. Without that variable, legacy configuration
   still needs `GSC_SCOPES=full` and `GSC_ENABLE_WRITE=1`. Check `doctor`
   (`write_ops`) first; never bypass the gate or infer permission to submit.
-- `fetch` (`gsc_image_page_audit`) downloads only the user's own pages
-  and image bytes. `local` (`gsc_export_dataset`, `gsc_generate_report`)
-  writes only to the user's machine; export needs `GSC_EXPORTS=1`,
-  never overwrites, never uploads.
+- `fetch` covers page, indexing, internal-link and migration audits and
+  `gsc_image_page_audit`: website requests are bounded and authorized;
+  referenced image files can be on external public hosts.
+- `local` includes `gsc_export_dataset`, `gsc_generate_report` and
+  `gsc_change_impact`. Exports and saved reports need `GSC_EXPORTS=1`;
+  persistent change records and snapshots need independent `GSC_HISTORY=1`.
+  Transient change analysis needs neither. Never infer consent to save or delete.
 - Use exact property IDs (`sc-domain:example.com` or the exact URL-prefix
   identifier returned by `gsc_list_sites`). Respect the instance allowlist.
 - Evidence discipline: analyze only returned rows; absent rows are not
@@ -59,11 +62,17 @@ Do not use for general SEO advice without data; run the tools first.
 2. Query with explicit dates (`last_7_days`, `last_28_days`,
    `last_90_days`, or `startDate`/`endDate`) and dimensions
    (`date,page,query,country,device,hour,searchAppearance`).
-3. Page large outputs via `gsc_get_dataset`; never re-query for pagination.
-4. Continue audits only on request with `nextCursor`; no scheduler or daemon.
-   Full evidence uses dataset parts; large saved history uses `snapshotChunk`
-   and its own `nextCursor`, as documented in the tool catalog.
-5. State coverage, status (`ok`/`partial`/`error`), and missing evidence.
+3. For `gsc_search_analytics`, use explicit `startDate` and `endDate`;
+   `hour` and `hourly_all` require each other and dates within the last ten days.
+   Query `searchAppearance`
+   alone, then filter a returned appearance with `equals` in a second query.
+4. Page datasets via `gsc_get_dataset`; never re-query for pagination.
+   Continue an audit explicitly with its own `nextCursor`; sessions expire
+   after 15 idle minutes or server restart. Large saved history has a separate
+   snapshot cursor. Reassemble each evidence format as in the catalog.
+5. Report status, coverage, warnings and unknowns. Completion is not proof of
+   complete coverage; HTTP-only audits cannot see client-rendered content.
+   No scheduler, daemon, automatic captures or causal conclusions.
 
 ## Output Contract
 

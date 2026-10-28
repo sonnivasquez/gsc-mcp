@@ -82,9 +82,17 @@ gsc auth status --online
 
 If your client does not show the MCP tools after setup, restart that client. The server provides **34 tools** for Search Console performance, comparisons, indexing, sitemaps, and reports. See the [tool catalog](tools.md).
 
+To try an audit, ask for an on-demand page audit of one of your authorized
+URLs. The server fetches HTTP HTML without rendering JavaScript; inspect status,
+coverage and warnings. Continue using the returned cursor when requested.
+Persistent change history is optional and requires `GSC_HISTORY=1`, independently
+of exports. See [inputs, limits and examples](tools.md#auditorías-bajo-demanda-110).
+Verify the running version with `gsc --version` and `gsc_capabilities` after
+restarting the client; 1.0.0 does not include these five audits.
+
 ## Update or uninstall
 
-Updates never break a working install. If a major change requires migration, the tool performs it automatically with a backup of your configuration; it never asks you for manual steps.
+The updater preserves your Google tokens, profiles, and client configurations. Check release notes for any version-specific steps, and restart your MCP client after updating.
 
 The assisted path checks the registry, reinstalls, and verifies:
 

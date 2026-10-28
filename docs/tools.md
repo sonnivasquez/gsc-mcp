@@ -11,7 +11,9 @@
 - Clases (`kind` en `gsc_capabilities`): `read` (23), `write`
   (`gsc_submit_*`, mutan Google), `fetch` (auditorías web, incluidas `gsc_image_page_audit`,
   descarga tus páginas/imágenes), `local` (`gsc_export_dataset`,
-  `gsc_generate_report`, escriben en tu máquina con opt-in).
+  `gsc_generate_report`, `gsc_change_impact`; sus efectos locales requieren opt-in).
+  Historial (`GSC_HISTORY=1`) y exportación (`GSC_EXPORTS=1`) son gates
+  independientes; el análisis de cambios transitorio no escribe.
 - Escritura: `GSC_ACCESS_MODE=full` habilita los tres envíos. Readonly los
   bloquea antes de llamar a Google; `doctor` informa `write_ops`. Sin la variable
   nueva se conserva el control legacy: `GSC_SCOPES=full` y `GSC_ENABLE_WRITE=1`.
@@ -36,19 +38,42 @@ Deltas: `deltaX = actual − base`; `%` solo con base positiva
 
 ## Catálogo
 
-| Tool | Hace |
-|---|---|
-| `gsc_capabilities` | Tools, auth, límites, allowlist. Sin red ni credenciales. |
-| `gsc_list_sites` | Propiedades visibles para esta instancia (filtra por allowlist). |
-| `gsc_search_analytics` | Query flexible: dimensiones `date,page,query,country,device,hour,searchAppearance`; `hour` requiere `hourly_all`, appearance agrupa solo. `searchType` (`web,image,video,news,discover,googleNews`) se envía como `type`. Admite `aggregationType`. Ordena el dataset recuperado (`sortAppliedTo`); devuelve `datasetId`. |
-| `gsc_performance_overview` | Totales de la fila agregada + serie `date` + comparación opcional. Nunca suma tops. |
-| `gsc_compare_periods` | Join completo por clave: `compared`, `not_observed_in_current`, `not_observed_in_baseline`. Ausencia ≠ cero. |
-| `gsc_page_queries` | Queries observadas para una URL exacta (filtro `page equals`). |
-| `gsc_query_pages` | Páginas observadas para una query exacta. Dos URLs ≠ canibalización probada. |
-| `gsc_inspect_urls` | 1–10 URLs, concurrencia 3, orden estable, parcial con éxitos. Inspección de índice, no live. |
-| `gsc_list_sitemaps` | Sitemaps registrados. Lectura; jamás envía. |
-| `gsc_get_dataset` | Pagina un resultado previo (cero llamadas Google). TTL 15 min, por perfil. |
-| `gsc_check_update_impact` | Ventana de caída vs updates confirmados de ranking (core/spam/reviews) del Search Status Dashboard. Coincidencia temporal, nunca causalidad. Historial desde dic-2022. |
+| Tool | Tipo | Hace |
+|---|---|---|
+| `gsc_capabilities` | `read` | Tools, auth, límites, allowlist. Sin red ni credenciales. |
+| `gsc_list_sites` | `read` | Propiedades visibles para esta instancia (filtra por allowlist). |
+| `gsc_search_analytics` | `read` | Query flexible: dimensiones `date,page,query,country,device,hour,searchAppearance`; `hour` requiere `hourly_all`, appearance agrupa solo. `searchType` (`web,image,video,news,discover,googleNews`) se envía como `type`. Admite `aggregationType`. Ordena el dataset recuperado (`sortAppliedTo`); devuelve `datasetId`. |
+| `gsc_performance_overview` | `read` | Totales de la fila agregada + serie `date` + comparación opcional. Nunca suma tops. |
+| `gsc_compare_periods` | `read` | Join completo por clave: `compared`, `not_observed_in_current`, `not_observed_in_baseline`. Ausencia ≠ cero. |
+| `gsc_page_queries` | `read` | Queries observadas para una URL exacta (filtro `page equals`). |
+| `gsc_query_pages` | `read` | Páginas observadas para una query exacta. Dos URLs ≠ canibalización probada. |
+| `gsc_inspect_urls` | `read` | 1–10 URLs, concurrencia 3, orden estable, parcial con éxitos. Inspección de índice, no live. |
+| `gsc_list_sitemaps` | `read` | Sitemaps registrados. Lectura; jamás envía. |
+| `gsc_get_dataset` | `read` | Pagina un resultado previo (cero llamadas Google). TTL 15 min, por perfil. |
+| `gsc_check_update_impact` | `read` | Ventana de caída vs updates confirmados; coincidencia temporal, no causal. |
+| `gsc_find_opportunities` | `read` | Candidatos según reglas y umbrales explícitos. |
+| `gsc_detect_cannibalization` | `read` | Consultas compartidas; evidencia candidata, temporal opcional. |
+| `gsc_analyze_segments` | `read` | Compara segmentos definidos; pueden solaparse. |
+| `gsc_export_dataset` | `local` | Exporta dataset local con `GSC_EXPORTS=1`; no sobrescribe. |
+| `gsc_analyze_traffic_drop` | `read` | Descompone cambios observados y evidencia faltante. |
+| `gsc_content_decay` | `read` | Candidatos de caída en tres ventanas. |
+| `gsc_check_alerts` | `read` | Evalúa reglas solo bajo demanda; no monitoriza. |
+| `gsc_content_candidates` | `read` | Consultas observadas a posiciones débiles. |
+| `gsc_content_recommendations` | `read` | Recomendaciones candidatas con evidencia. |
+| `gsc_multi_site_overview` | `read` | Estado por propiedad, con fallos aislados. |
+| `gsc_generate_report` | `local` | Informe Markdown; guardado requiere `GSC_EXPORTS=1`. |
+| `gsc_verify_claim` | `read` | Contrasta afirmación con evidencia comparable. |
+| `gsc_compare_web_image` | `read` | Compara web e imágenes sin sumar audiencias. |
+| `gsc_submit_url` | `write` | Notificación Indexing API individual; requiere acceso de escritura. |
+| `gsc_submit_batch` | `write` | Hasta 200 notificaciones Indexing API; requiere escritura. |
+| `gsc_submit_sitemap` | `write` | Envía sitemap a Google; requiere escritura. |
+| `gsc_genai_conversation_queries` | `read` | Clasifica consultas conversacionales observadas. |
+| `gsc_image_page_audit` | `fetch` | Descarga páginas e imágenes para auditar atributos y metadatos. |
+| `gsc_page_audit` | `fetch` | HTML HTTP y consultas de páginas explícitas. |
+| `gsc_indexing_audit` | `fetch` | Sitemaps y muestra del índice de Google. |
+| `gsc_internal_link_audit` | `fetch` | Grafo de enlaces HTML acotado. |
+| `gsc_change_impact` | `local` | Comparaciones bajo demanda e historial local opt-in. |
+| `gsc_migration_audit` | `fetch` | Compara pares declarados de URLs y propiedades. |
 
 ## Errores (códigos estables)
 
@@ -215,6 +240,8 @@ No se certifica recuperación de tráfico ni éxito global por una redirección.
 
 `gsc_search_analytics` añade `hour`, `searchAppearance` y `hourly_all`.
 `hour` requiere `hourly_all` y viceversa. Las horas mantienen sus offsets.
+Google limita los datos horarios a los últimos diez días; usa fechas dentro
+de esa ventana ([documentación oficial](https://developers.google.com/search/blog/2025/04/san-hourly-data)).
 Los campos `metadata.first_incomplete_date/first_incomplete_hour` señalan datos
 provisionales. `upstreamAggregationType` conserva la agregación comunicada
 por Google; `responseAggregationType=by_row` se mantiene por compatibilidad.
@@ -245,5 +272,96 @@ MCP completo, conserva `meta.coverage` y expone `meta.datasetId` con todos los
 candidatos recuperados. Sus filas usan `index,part,parts,evidenceBase64`: agrupa
 por index, concatena evidenceBase64 por part, decodifica base64 a UTF-8 y aplica
 JSON.parse. Este formato es distinto de los fragmentos `evidence` de auditorías.
-Los filtros, la superficie de búsqueda y el estado de datos se conservan al
-consultar cada línea temporal. `PREVIEW_TRIMMED` señala un recorte recuperable.
+Las líneas temporales conservan el alcance de la consulta agregada. El esquema MCP
+de esta herramienta no expone filtros, `searchType` ni `dataState`. `PREVIEW_TRIMMED` señala un recorte recuperable.
+
+
+## Ejemplos de llamadas MCP
+
+Cada bloque contiene el nombre de la herramienta y sus argumentos, no es una
+respuesta real. Sustituye la propiedad, las URLs y las fechas. Estos ejemplos
+no envían URLs a Google ni crean un seguimiento automático.
+
+```json
+{"tool":"gsc_page_audit","arguments":{"siteUrl":"https://example.com/","urls":["https://example.com/page"],"preset":"last_28_days"}}
+```
+
+```json
+{"tool":"gsc_indexing_audit","arguments":{"siteUrl":"https://example.com/","sitemapUrls":["https://example.com/sitemap.xml"],"selection":"sitemap_order","inspectLimit":5}}
+```
+
+```json
+{"tool":"gsc_internal_link_audit","arguments":{"siteUrl":"https://example.com/","startUrls":["https://example.com/"],"maxPages":25,"batchSize":10}}
+```
+
+```json
+{"tool":"gsc_change_impact","arguments":{"siteUrl":"https://example.com/","action":"analyze","change":{"date":"2026-01-01","urls":["https://example.com/page"]}}}
+```
+
+Para registrar o eliminar un cambio, el usuario debe pedirlo y activar
+`GSC_HISTORY=1`; `record` devuelve un ID usado en otras acciones:
+
+```json
+{"tool":"gsc_change_impact","arguments":{"siteUrl":"https://example.com/","action":"record","change":{"date":"2026-01-01","label":"Title","urls":["https://example.com/page"]},"idempotencyKey":"change-2026-01-01"}}
+```
+
+```json
+{"tool":"gsc_migration_audit","arguments":{"sourceSiteUrl":"https://example.com/","targetSiteUrl":"https://example.com/","migrationDate":"2026-01-01","mappings":[{"oldUrl":"https://example.com/old","newUrl":"https://example.com/new"}]}}
+```
+
+Para continuar una auditoría sustituye el marcador por `data.nextCursor`
+devuelto. Para `analyze` conserva `action`; para migración se necesitan ambas
+propiedades. El cursor corresponde a la sesión y no al dataset:
+
+```json
+{"tool":"gsc_change_impact","arguments":{"siteUrl":"https://example.com/","action":"analyze","cursor":"CURSOR_DEVUELTO"}}
+```
+
+En una migración hay que conservar las dos propiedades:
+
+```json
+{"tool":"gsc_migration_audit","arguments":{"sourceSiteUrl":"https://example.com/","targetSiteUrl":"https://example.com/","cursor":"CURSOR_DEVUELTO"}}
+```
+
+El cursor de `list` con `changeId` sirve exclusivamente para continuar una
+instantánea persistente grande, no una auditoría ni un dataset:
+
+```json
+{"tool":"gsc_change_impact","arguments":{"siteUrl":"https://example.com/","action":"list","changeId":"ID_DEVUELTO","cursor":"CURSOR_DEVUELTO"}}
+```
+
+Para la evidencia completa usa el `meta.datasetId` devuelto y sigue el
+`nextCursor` de cada página del dataset, si existe:
+
+```json
+{"tool":"gsc_get_dataset","arguments":{"datasetId":"DATASET_DEVUELTO","limit":100}}
+```
+
+Ejemplo horario con fechas ilustrativas: sustitúyelas por días dentro de los
+últimos diez días. Las fechas son inclusivas y se conservan los offsets recibidos:
+
+```json
+{"tool":"gsc_search_analytics","arguments":{"siteUrl":"https://example.com/","startDate":"2026-01-01","endDate":"2026-01-07","dimensions":["hour"],"dataState":"hourly_all"}}
+```
+
+Para elegir páginas de imagen antes de `gsc_image_page_audit`, usa la
+dimensión `page` y `searchType=image`:
+
+```json
+{"tool":"gsc_search_analytics","arguments":{"siteUrl":"https://example.com/","startDate":"2026-01-01","endDate":"2026-01-28","dimensions":["page"],"searchType":"image"}}
+```
+
+Primero descubre apariencias y luego usa un valor devuelto por Google como
+filtro `equals`; el valor del ejemplo es ilustrativo:
+
+```json
+{"tool":"gsc_search_analytics","arguments":{"siteUrl":"https://example.com/","startDate":"2026-01-01","endDate":"2026-01-28","dimensions":["searchAppearance"]}}
+```
+
+```json
+{"tool":"gsc_search_analytics","arguments":{"siteUrl":"https://example.com/","startDate":"2026-01-01","endDate":"2026-01-28","dimensions":["page"],"filters":[{"dimension":"searchAppearance","operator":"equals","expression":"APARIENCIA_DEVUELTA"}]}}
+```
+
+```json
+{"tool":"gsc_detect_cannibalization","arguments":{"siteUrl":"https://example.com/","preset":"last_28_days","includeTimeline":true,"timelineQueryLimit":5,"minDailyImpressions":10}}
+```

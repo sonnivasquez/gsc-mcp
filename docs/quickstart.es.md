@@ -84,9 +84,17 @@ gsc auth status --online
 
 Si tu cliente no muestra las herramientas MCP al terminar la configuración, reinícialo. El servidor ofrece **34 herramientas** para rendimiento de Search Console, comparaciones, indexación, sitemaps e informes. Consulta el [catálogo de herramientas](tools.md).
 
+Para probar una auditoría, pide una auditoría de página bajo demanda para
+una URL autorizada. Se lee el HTML HTTP sin ejecutar JavaScript: revisa estado,
+cobertura y advertencias. Continúa con el cursor devuelto cuando lo solicites.
+El historial persistente es opcional y requiere `GSC_HISTORY=1`, independiente
+de las exportaciones. Consulta [entradas, límites y ejemplos](tools.md#auditorías-bajo-demanda-110).
+Comprueba la versión con `gsc --version` y `gsc_capabilities` tras reiniciar
+el cliente; 1.0.0 no incluye estas cinco auditorías.
+
 ## Actualiza o desinstala
 
-Las actualizaciones nunca rompen una instalación que funciona. Si un cambio grande requiere migración, la herramienta la hace sola con respaldo de tu configuración; nunca te pedirá pasos manuales.
+El actualizador conserva tus tokens de Google, perfiles y configuraciones de clientes. Revisa las notas de la versión por si necesita pasos específicos y reinicia tu cliente MCP después de actualizar.
 
 La vía asistida comprueba el registro, reinstala y verifica:
 
