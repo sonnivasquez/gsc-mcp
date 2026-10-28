@@ -240,6 +240,8 @@ No se certifica recuperación de tráfico ni éxito global por una redirección.
 
 `gsc_search_analytics` añade `hour`, `searchAppearance` y `hourly_all`.
 `hour` requiere `hourly_all` y viceversa. Las horas mantienen sus offsets.
+Google limita los datos horarios a los últimos diez días; usa fechas dentro
+de esa ventana ([documentación oficial](https://developers.google.com/search/blog/2025/04/san-hourly-data)).
 Los campos `metadata.first_incomplete_date/first_incomplete_hour` señalan datos
 provisionales. `upstreamAggregationType` conserva la agregación comunicada
 por Google; `responseAggregationType=by_row` se mantiene por compatibilidad.
@@ -335,7 +337,8 @@ Para la evidencia completa usa el `meta.datasetId` devuelto y sigue el
 {"tool":"gsc_get_dataset","arguments":{"datasetId":"DATASET_DEVUELTO","limit":100}}
 ```
 
-Ejemplo horario; las fechas son inclusivas y se conservan los offsets recibidos:
+Ejemplo horario con fechas ilustrativas: sustitúyelas por días dentro de los
+últimos diez días. Las fechas son inclusivas y se conservan los offsets recibidos:
 
 ```json
 {"tool":"gsc_search_analytics","arguments":{"siteUrl":"https://example.com/","startDate":"2026-01-01","endDate":"2026-01-07","dimensions":["hour"],"dataState":"hourly_all"}}

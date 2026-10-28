@@ -63,7 +63,8 @@ Do not use for general SEO advice without data; run the tools first.
    `last_90_days`, or `startDate`/`endDate`) and dimensions
    (`date,page,query,country,device,hour,searchAppearance`).
 3. For `gsc_search_analytics`, use explicit `startDate` and `endDate`;
-   `hour` and `hourly_all` require each other. Query `searchAppearance`
+   `hour` and `hourly_all` require each other and dates within the last ten days.
+   Query `searchAppearance`
    alone, then filter a returned appearance with `equals` in a second query.
 4. Page datasets via `gsc_get_dataset`; never re-query for pagination.
    Continue an audit explicitly with its own `nextCursor`; sessions expire
