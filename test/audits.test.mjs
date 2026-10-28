@@ -203,7 +203,9 @@ test('history record idempotency, isolation, snapshots, reload and delete', asyn
     const conflict = await gscChangeImpact({ ...recordInput, change: { ...recordInput.change, label: 'other' } }, deps); assert.equal(conflict.error.code, 'INVALID_ARGUMENT');
     const analysis = await gscChangeImpact({ siteUrl: SITE, action: 'analyze', changeId: first.data.id, saveSnapshot: true }, deps);
     assert.equal(analysis.status, 'ok'); assert.ok(analysis.data.summary.snapshotPath);
-    assert.equal((await stat(analysis.data.summary.snapshotPath)).mode & 0o777, 0o600);
+    const snapshotStat = await stat(analysis.data.summary.snapshotPath);
+    assert.ok(snapshotStat.isFile());
+    if (process.platform !== 'win32') assert.equal(snapshotStat.mode & 0o777, 0o600);
     const otherStore = new HistoryStore('other', SITE, root); assert.equal((await otherStore.list()).length, 0);
     const reload = new HistoryStore('test', SITE, root); assert.equal((await reload.snapshots(first.data.id)).length, 1);
     await reload.delete(first.data.id); assert.equal((await reload.list()).length, 0);
@@ -213,7 +215,7 @@ test('history record idempotency, isolation, snapshots, reload and delete', asyn
 test('history rejects symlink directories, corruption and conflicting concurrent writers', async () => {
   const root = await mkdtemp(join(tmpdir(), 'gsc-history-')); const outside = await mkdtemp(join(tmpdir(), 'gsc-outside-')); const saved = process.env.GSC_HISTORY; process.env.GSC_HISTORY = '1';
   try {
-    await symlink(outside, join(root, 'history'));
+    await symlink(outside, join(root, 'history'), process.platform === 'win32' ? 'junction' : 'dir');
     const h = new HistoryStore('test', SITE, root); await assert.rejects(h.list(), /symbolic/); assert.deepEqual(await readdir(outside), []);
     await rm(join(root, 'history')); await h.list();
     const record = await h.record({ date: '2026-01-01', label: '', description: '', urls: [`${SITE}a`] });

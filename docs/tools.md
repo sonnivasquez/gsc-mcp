@@ -186,7 +186,9 @@ puede quedar parcialmente aplicada: no se promete rollback de efectos terminados
 
 Los archivos viven en `<GSC_DATA_DIR>/history` (o `~/.gsc-mcp/history`), con
 subdirectorios derivados del perfil y propiedad, esquemas versionados,
-permisos 0700/0600 y escrituras atómicas. Límite acumulado: 100 MiB.
+permisos POSIX 0700/0600 donde el sistema los admite y escrituras atómicas.
+En Windows se aplican las ACL heredadas del directorio local del usuario.
+Límite acumulado: 100 MiB.
 No hay purga automática. Se rechazan enlaces simbólicos en el historial.
 Las escrituras simultáneas se bloquean de forma explícita: reintenta después.
 Si un proceso se interrumpe durante la escritura puede quedar

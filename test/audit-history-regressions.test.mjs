@@ -33,7 +33,8 @@ test('history cancellation prevents pre-aborted record and delete and stops at l
   } finally { if (saved === undefined) delete process.env.GSC_HISTORY; else process.env.GSC_HISTORY = saved; await rm(root, { recursive: true, force: true }); }
 });
 
-test('large history is fully recoverable through bounded scoped pages', async () => {
+// Thousands of real filesystem pages need more than Bun's default 5s on Windows.
+test('large history is fully recoverable through bounded scoped pages', { timeout: 60_000 }, async () => {
   const root = await mkdtemp(join(tmpdir(), 'history-pages-')); const saved = process.env.GSC_HISTORY; process.env.GSC_HISTORY = '1';
   try {
     const h = new HistoryStore('test', site, root); const c = await h.record({ ...change, idempotencyKey: 'same' });
