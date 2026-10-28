@@ -24,6 +24,7 @@ function ok(data, provenance, opts = {}) {
             oauthAttempts: 0,
             cacheHit: false,
             datasetId: opts.datasetId,
+            datasetExpiresAt: opts.datasetExpiresAt,
             warnings,
         },
     };

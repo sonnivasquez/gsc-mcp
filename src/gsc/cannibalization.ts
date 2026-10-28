@@ -8,6 +8,11 @@ export interface CannibalizationCandidate {
   totalImpressions: number;
   verdict: "candidate";
   temporalOverlap: "unknown";
+  temporal?: TemporalEvidence;
+  temporalAnalysisStatus?: "pending" | "analyzed" | "insufficient_data" | "error";
+  temporalError?: string;
+  temporalPendingReason?: "query_limit" | "request_budget";
+  temporalCoverage?: { fetchedRows: number; truncated: boolean };
 }
 
 export interface CannibalizationOpts {
@@ -49,4 +54,39 @@ export function detectCannibalization(rows: AnalyticsRow[], opts: Cannibalizatio
   }
   out.sort((a, b) => b.totalImpressions - a.totalImpressions);
   return out;
+}
+
+export interface TemporalEvidence {
+  status: "insufficient_data" | "analyzed";
+  observedDays: number;
+  sameDayOverlap: string[];
+  daily: Array<{ date: string; dominantUrl: string | null; pages: Array<{ page: string; clicks: number; impressions: number }> }>;
+  sustainedChanges: Array<{ date: string; from: string; to: string }>;
+  ruleVersion: "temporal.1";
+}
+// Coexistence is an observation within a date, never evidence of the same SERP.
+export function temporalEvidence(rows: AnalyticsRow[], minDailyImpressions = 10): TemporalEvidence {
+  const days = new Map<string, Array<{ page: string; clicks: number; impressions: number }>>();
+  for (const r of rows) {
+    if (r.impressions < minDailyImpressions) continue;
+    const day = r.keys[0], page = r.keys[1];
+    if (!day || !page) continue;
+    const list = days.get(day) ?? []; list.push({ page, clicks: r.clicks, impressions: r.impressions }); days.set(day, list);
+  }
+  const daily = [...days].sort(([a], [b]) => a.localeCompare(b)).map(([date, pages]) => {
+    pages.sort((a, b) => b.clicks - a.clicks || b.impressions - a.impressions || a.page.localeCompare(b.page));
+    const tied = pages.length > 1 && pages[0].clicks === pages[1].clicks && pages[0].impressions === pages[1].impressions;
+    return { date, dominantUrl: tied ? null : pages[0].page, pages };
+  });
+  const sustainedChanges: TemporalEvidence["sustainedChanges"] = [];
+  let stable: string | null = null;
+  for (let i = 2; i < daily.length; i++) {
+    const triplet = daily.slice(i - 2, i + 1);
+    if (triplet[0].dominantUrl && triplet.every((d) => d.dominantUrl === triplet[0].dominantUrl) && Date.parse(triplet[1].date) - Date.parse(triplet[0].date) === 86400000 && Date.parse(triplet[2].date) - Date.parse(triplet[1].date) === 86400000) {
+      if (stable && stable !== triplet[0].dominantUrl) sustainedChanges.push({ date: triplet[0].date, from: stable, to: triplet[0].dominantUrl });
+      stable = triplet[0].dominantUrl;
+    }
+  }
+  const enough = daily.length >= 7;
+  return { status: enough ? "analyzed" : "insufficient_data", observedDays: daily.length, sameDayOverlap: daily.filter((d) => d.pages.length > 1).map((d) => d.date), daily, sustainedChanges: enough ? sustainedChanges : [], ruleVersion: "temporal.1" };
 }

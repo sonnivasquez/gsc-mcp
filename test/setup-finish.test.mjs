@@ -48,10 +48,10 @@ test("finish report reuses the supplied sites.list entries without a second call
   assert.ok(!clients.detail.includes("configured"));
   const toolSection = report.sections.find((s) => s.id === "tools");
   assert.equal(toolSection.ok, true);
-  assert.match(toolSection.detail, /29 gsc_\* tools/);
+  assert.match(toolSection.detail, /34 gsc_\* tools/);
   const lines = finish.formatFinishReport(report);
   assert.match(lines[0], /Finish verification:/);
-  assert.ok(lines.some((l) => l.includes("[ok] tools: 29 gsc_* tools")));
+  assert.ok(lines.some((l) => l.includes("[ok] tools: 34 gsc_* tools")));
 });
 
 test("finish report stays honest when the account lists no properties", () => {
@@ -148,15 +148,15 @@ test("dry-run finish preview performs no verification and says so", () => {
   assert.match(finish.formatFinishReport(report)[0], /dry-run preview/);
 });
 
-test("tool catalog mismatch fails honestly instead of claiming 29", () => {
+test("tool catalog mismatch fails honestly instead of claiming 34", () => {
   const section = finish.toolCatalogSummary(28);
   assert.equal(section.ok, false);
-  assert.match(section.detail, /expected 29 gsc_\* tools, found 28/);
+  assert.match(section.detail, /expected 34 gsc_\* tools, found 28/);
 });
 
-test("compiled tool catalog holds exactly 29 canonical tools", () => {
-  assert.equal(tools.CANONICAL_TOOLS.length, 29);
-  assert.equal(finish.EXPECTED_TOOL_COUNT, 29);
+test("compiled tool catalog holds exactly 34 canonical tools", () => {
+  assert.equal(tools.CANONICAL_TOOLS.length, 34);
+  assert.equal(finish.EXPECTED_TOOL_COUNT, 34);
 });
 
 test("first-query confirmation is explicit opt-in only", () => {
@@ -449,7 +449,7 @@ test("setup dry-run prints the finish preview without Google calls", { timeout: 
   // Finish diagnostics go to stderr so the generic JSON on stdout stays
   // the last structured content (T03 machine-readable contract).
   assert.match(r.stderr, /Finish verification \(dry-run preview\):/);
-  assert.match(r.stderr, /\[ok\] tools: 29 gsc_\* tools/);
+  assert.match(r.stderr, /\[ok\] tools: 34 gsc_\* tools/);
   assert.match(r.stderr, /Sample query skipped in --dry-run/);
   assert.match(r.stderr, /preview: print printed \(preview\); nothing configured/);
   const printed = JSON.parse(r.stdout.slice(r.stdout.indexOf("{")));

@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const toolList = JSON.parse(readFileSync(join(root, "fixtures/mcp-tool-list.json"), "utf8"));
+const currentToolList = JSON.parse(readFileSync(join(root, "fixtures/mcp-tool-list-current.json"), "utf8"));
 
 const { GUARDRAIL_SUFFIX, VISUAL_SUFFIX, POSITION_CAVEAT, withMeta } = await import("../dist/guardrails.js");
 const { getDateRange, getPriorDateRange, fetchAllRows } = await import("../dist/analytics.js");
@@ -80,7 +81,7 @@ function shiftDays(day, delta) {
   return isoDay(date);
 }
 
-test("registered MCP tools stay 29 names with the captured schemas", async () => {
+test("registered MCP tools preserve the 29-name snapshot and expose the extended 34-tool contract", async () => {
   assert.equal(toolList.length, 29);
   assert.deepEqual(toolList.map((tool) => tool.name), NAMES);
   const home = mkdtempSync(join(tmpdir(), "gsc-tool-list-"));
@@ -131,7 +132,16 @@ test("registered MCP tools stay 29 names with the captured schemas", async () =>
     }
     assert.ok(messages.has(2), stderr || "tools/list did not answer");
     assert.equal(messages.get(1).result.serverInfo.name, "gsc-mcp");
-    assert.deepEqual(messages.get(2).result.tools, toolList);
+    assert.equal(currentToolList.length, 34);
+    assert.deepEqual(messages.get(2).result.tools, currentToolList);
+    for (const old of toolList) {
+      const current = currentToolList.find(t => t.name === old.name);
+      assert.ok(current, old.name);
+      for (const key of Object.keys(old.inputSchema.properties)) assert.ok(key in current.inputSchema.properties, `${old.name}.${key}`);
+      assert.deepEqual(current.inputSchema.required, old.inputSchema.required);
+      // Additive analytics inputs and corrected descriptions from PR #5.
+      if (!["gsc_search_analytics", "gsc_detect_cannibalization", "gsc_image_page_audit", "gsc_submit_url", "gsc_submit_batch", "gsc_submit_sitemap"].includes(old.name)) assert.deepEqual(current, old);
+    }
   } finally {
     child.kill();
     rmSync(home, { recursive: true, force: true });

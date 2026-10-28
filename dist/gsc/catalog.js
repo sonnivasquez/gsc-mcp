@@ -2,6 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.CANONICAL_TOOLS = void 0;
 exports.CANONICAL_TOOLS = [
+    { name: "gsc_page_audit", description: "Live HTML and exact-page GSC evidence; on demand, no JavaScript rendering.", kind: "fetch" },
+    { name: "gsc_indexing_audit", description: "Sitemap discovery and sampled indexed-state inspection in explicit batches.", kind: "fetch" },
+    { name: "gsc_internal_link_audit", description: "Bounded website link graph with observed incoming links and evidence-backed suggestions.", kind: "fetch" },
+    { name: "gsc_change_impact", description: "On-demand before/after analysis; explicit history actions require GSC_HISTORY=1.", kind: "local" },
+    { name: "gsc_migration_audit", description: "Explicit route/domain migration map audit; current HTTP and historical GSC evidence.", kind: "fetch" },
     { name: "gsc_capabilities", description: "What this server can do, its auth state and limits. Works offline.", kind: "read" },
     { name: "gsc_list_sites", description: "GSC properties visible to this instance.", kind: "read" },
     { name: "gsc_search_analytics", description: "Flexible performance query with explicit coverage.", kind: "read" },

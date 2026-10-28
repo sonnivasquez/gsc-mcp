@@ -1,13 +1,12 @@
 export interface AnalyticsRuleFilter {
     dimension: string;
     operator?: string;
+    expression?: string;
 }
 export interface AnalyticsRuleInput {
     dimensions?: readonly string[];
     filters?: readonly AnalyticsRuleFilter[];
-    /** Tool input name. Mapped to the Google `type` field. */
     searchType?: string;
-    /** Already-mapped report type, used by the googleapis helper. */
     type?: string;
     aggregationType?: string;
 }

@@ -1,152 +1,59 @@
-import assert from "node:assert/strict";
-import test from "node:test";
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
-const { FetchGscDataSource } = await import("../dist/gsc/client.js");
-const { GscError } = await import("../dist/gsc/errors.js");
-const { gscSearchAnalytics } = await import("../dist/gsc/tools.js");
-const { DatasetStore } = await import("../dist/gsc/datasets.js");
-const { fetchAllRows } = await import("../dist/analytics.js");
-const { setInstanceAllowlist } = await import("../dist/profiles.js");
-
-const SITE = "sc-domain:example.com";
-const provider = { getAccessToken: async () => "tok", describe: () => ({ mode: "oauth", scopeTier: "readonly" }) };
-const range = { startDate: "2026-08-01", endDate: "2026-08-28" };
-
-function source(calls) {
-  return new FetchGscDataSource(provider, {
-    fetchImpl: async (_url, init) => {
-      calls.push(JSON.parse(init.body));
-      return new Response(JSON.stringify({ rows: [] }), { status: 200 });
-    },
-  });
+const dist = process.env.AUDIT_TEST_DIST || resolve('dist');
+const load = (path) => import(pathToFileURL(resolve(dist, path)).href);
+const { FetchGscDataSource } = await load('gsc/client.js');
+const { gscSearchAnalytics } = await load('gsc/tools.js');
+const { fetchAllRows } = await load('analytics.js');
+const { setInstanceAllowlist } = await load('profiles.js');
+const SITE = 'sc-domain:example.com';
+const range = { startDate: '2026-08-01', endDate: '2026-08-28' };
+const provider = { getAccessToken: async () => 'token' };
+const filter = (dimension, expression = 'x', operator = 'equals') => ({ dimension, expression, operator });
+function fixture() {
+  const calls = [];
+  const deps = { provider, allowlist: [SITE], fetchImpl: async (_url, init) => { calls.push(JSON.parse(init.body)); return Response.json({ rows: [], responseAggregationType: 'byProperty', metadata: { first_incomplete_date: '2026-08-27' } }); } };
+  return { calls, deps, source: new FetchGscDataSource(provider, deps) };
 }
 
-async function rejected(query, pattern) {
-  const calls = [];
-  await assert.rejects(source(calls).queryAnalytics(SITE, { ...range, dimensions: ["page"], ...query }), (err) => {
-    assert.ok(err instanceof GscError);
-    assert.equal(err.code, "INVALID_ARGUMENT");
-    assert.match(err.message, pattern);
-    assert.match(err.suggestedAction, /Remove|Group|Filter|Use aggregationType/);
-    return true;
-  });
-  assert.equal(calls.length, 0);
-}
-
-async function accepted(query) {
-  const calls = [];
-  const result = await source(calls).queryAnalytics(SITE, { ...range, dimensions: ["page"], ...query });
-  assert.equal(result.rows.length, 0);
-  assert.equal(calls.length, 1);
-  assert.equal(Object.hasOwn(calls[0], "searchType"), false);
-  return calls[0];
-}
-
-test("discover rejects query and device before the Google call", async () => {
-  await rejected({ dimensions: ["query"], searchType: "discover" }, /type "discover" does not support the query dimension/);
-  await rejected(
-    {
-      dimensions: ["page"],
-      searchType: "discover",
-      filters: [{ dimension: "device", operator: "equals", expression: "MOBILE" }],
-    },
-    /type "discover" does not support the device dimension/,
-  );
-  const body = await accepted({ dimensions: ["page"], searchType: "discover" });
-  assert.equal(body.type, "discover");
-});
-
-test("news and googleNews reject query and still allow device", async () => {
-  await rejected({ dimensions: ["query"], searchType: "googleNews" }, /type "googleNews" does not support the query dimension/);
-  await rejected(
-    {
-      dimensions: ["country"],
-      searchType: "news",
-      filters: [{ dimension: "query", operator: "contains", expression: "seo" }],
-    },
-    /type "news" does not support the query dimension/,
-  );
-  const body = await accepted({ dimensions: ["device"], searchType: "googleNews" });
-  assert.equal(body.type, "googleNews");
-});
-
-test("searchAppearance is grouped alone and filtered with equals", async () => {
-  await rejected(
-    { dimensions: ["searchAppearance", "page"], searchType: "web" },
-    /searchAppearance cannot be grouped with other dimensions/,
-  );
-  await rejected(
-    {
-      dimensions: ["page"],
-      searchType: "web",
-      filters: [{ dimension: "searchAppearance", operator: "contains", expression: "AMP" }],
-    },
-    /searchAppearance filters must use operator "equals"/,
-  );
-  const alone = await accepted({ dimensions: ["searchAppearance"], searchType: "web" });
-  assert.deepEqual(alone.dimensions, ["searchAppearance"]);
-  assert.equal(alone.type, "web");
-  const filtered = await accepted({
-    dimensions: ["device"],
-    searchType: "web",
-    filters: [{ dimension: "searchAppearance", operator: "equals", expression: "AMP_BLUE_LINK" }],
-  });
-  assert.equal(filtered.dimensionFilterGroups[0].filters[0].operator, "equals");
-});
-
-test("byProperty is rejected for discover and googleNews and sent for news", async () => {
-  await rejected(
-    { dimensions: ["page"], searchType: "discover", aggregationType: "byProperty" },
-    /aggregationType "byProperty" is not supported for type "discover"/,
-  );
-  await rejected(
-    { dimensions: ["page"], searchType: "googleNews", aggregationType: "byProperty" },
-    /aggregationType "byProperty" is not supported for type "googleNews"/,
-  );
-  const body = await accepted({ dimensions: ["page"], searchType: "news", aggregationType: "byProperty" });
-  assert.equal(body.type, "news");
-  assert.equal(body.aggregationType, "byProperty");
-});
-
-test("tool input searchType is mapped to type and the tool returns the rule error", async () => {
-  const calls = [];
-  const fetchImpl = async (_url, init) => {
-    calls.push(JSON.parse(init.body));
-    return new Response(JSON.stringify({ rows: [] }), { status: 200 });
-  };
-  const deps = { provider, fetchImpl, store: new DatasetStore(), profileAlias: "rules" };
-  const image = await gscSearchAnalytics({ ...range, siteUrl: SITE, dimensions: ["query"], searchType: "image" }, deps);
-  assert.equal(image.status, "ok");
-  assert.equal(calls[0].type, "image");
-  assert.equal(Object.hasOwn(calls[0], "searchType"), false);
-
-  calls.length = 0;
-  const blocked = await gscSearchAnalytics(
-    { ...range, siteUrl: SITE, dimensions: ["query"], searchType: "discover" },
-    deps,
-  );
-  assert.equal(blocked.status, "error");
-  assert.equal(blocked.error.code, "INVALID_ARGUMENT");
-  assert.match(blocked.error.message, /Remove query from dimensions and filters/);
-  assert.match(blocked.error.suggestedAction, /group Discover by page, country, date, or searchAppearance/);
+test('report and aggregation rules are enforced before transport', async () => {
+  const { source, calls } = fixture();
+  const cases = [
+    { searchType: 'discover', dimensions: ['query'] },
+    { searchType: 'discover', dimensions: ['page'], filters: [filter('device')] },
+    { searchType: 'googleNews', dimensions: ['query'] },
+    { searchType: 'googleNews', dimensions: ['page'], filters: [filter('query')] },
+    { dimensions: ['page'], aggregationType: 'byProperty' },
+    { dimensions: ['country'], filters: [filter('page')], aggregationType: 'byProperty' },
+    { dimensions: ['country'], searchType: 'googleNews', aggregationType: 'byProperty' },
+    { dimensions: ['country'], searchType: 'discover', aggregationType: 'byProperty' },
+    { dimensions: ['searchAppearance', 'page'] },
+    { dimensions: ['page'], filters: [filter('searchAppearance', 'x', 'contains')] },
+    { dimensions: ['country'], aggregationType: 'byNewsShowcasePanel', searchType: 'googleNews' },
+  ];
+  for (const query of cases) await assert.rejects(source.queryAnalytics(SITE, { ...range, ...query }), e => e.code === 'INVALID_ARGUMENT' && !!e.suggestedAction);
   assert.equal(calls.length, 0);
 });
 
-test("fetchAllRows rejects a Discover query before calling the client", async () => {
-  setInstanceAllowlist(null);
-  let calls = 0;
-  await assert.rejects(
-    () => fetchAllRows(
-      { ...range, dimensions: ["query"], type: "discover" },
-      SITE,
-      { searchanalytics: { query: async () => { calls += 1; return { data: { rows: [] } }; } } },
-    ),
-    (err) => {
-      assert.ok(err instanceof GscError);
-      assert.match(err.message, /type "discover" does not support the query dimension/);
-      return true;
-    },
-  );
+test('news query and valid aggregation pass through; hourly metadata survives', async () => {
+  const { calls, deps } = fixture();
+  const result = await gscSearchAnalytics({ ...range, siteUrl: SITE, dimensions: ['query'], searchType: 'news', aggregationType: 'byProperty' }, deps);
+  assert.equal(result.status, 'ok'); assert.equal(calls[0].type, 'news'); assert.equal(calls[0].aggregationType, 'byProperty');
+  const hourly = await gscSearchAnalytics({ ...range, siteUrl: SITE, dimensions: ['hour'], dataState: 'hourly_all' }, deps);
+  assert.equal(hourly.status, 'ok'); assert.equal(calls[1].dataState, 'hourly_all'); assert.equal(hourly.data.metadata.first_incomplete_date, '2026-08-27');
+  assert.equal(hourly.data.upstreamAggregationType, 'byProperty');
+  const valid = await gscSearchAnalytics({ ...range, siteUrl: SITE, dimensions: ['country'], searchType: 'googleNews', aggregationType: 'byNewsShowcasePanel', filters: [filter('searchAppearance', 'NEWS_SHOWCASE')] }, deps);
+  assert.equal(valid.status, 'ok'); assert.equal(calls[2].aggregationType, 'byNewsShowcasePanel');
+});
+
+test('legacy client applies the same rules before querying and passes valid aggregation', async () => {
+  setInstanceAllowlist(null); let calls = 0; let body;
+  const client = { searchanalytics: { query: async request => { calls++; body = request.requestBody; return { data: { rows: [] } }; } } };
+  await assert.rejects(fetchAllRows({ ...range, dimensions: ['page'], aggregationType: 'byProperty' }, SITE, client), e => e.code === 'INVALID_ARGUMENT');
   assert.equal(calls, 0);
-  setInstanceAllowlist(null);
+  await fetchAllRows({ ...range, dimensions: ['query'], type: 'news', aggregationType: 'byProperty' }, SITE, client);
+  assert.equal(calls, 1); assert.equal(body.type, 'news'); assert.equal(body.aggregationType, 'byProperty');
 });

@@ -25,7 +25,7 @@ test('shared design inputs route to both', () => {
 });
 
 test('shared workflow, classifier and site mirror routes to both', () => {
-  for (const file of ['.github/workflows/ci.yml', 'scripts/ci-changed.mjs', 'test/ci-changed.test.mjs']) {
+  for (const file of ['.github/workflows/ci.yml', 'scripts/ci-changed.mjs', 'test/ci-changed.test.mjs', 'src/gsc/catalog.ts']) {
     assert.deepEqual(classify([file]), { mcp_changed: true, web_changed: true }, file);
   }
 });

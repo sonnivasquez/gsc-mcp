@@ -36,6 +36,7 @@ import { submitSitemap } from "./tools/submit-sitemap.js";
 import { genaiConversationQueries } from "./tools/genai-conversation-queries.js";
 import { imagePageAudit } from "./tools/image-page-audit.js";
 import { checkUpdateImpact } from "./tools/update-impact.js";
+import { registerAudits } from "./audits/register.js";
 import { toolDescription } from "./tool-descriptions.js";
 
 function phrase(parts: readonly string[]): string {
@@ -78,6 +79,7 @@ const IMAGE_NOTE = phrase([
 export async function serve(opts: ServeOpts): Promise<void> {
   const server = new McpServer({ name: "gsc-mcp", version: CLI_VERSION });
   registerPrompts(server);
+  registerAudits(server);
 
   server.tool(
     "gsc_submit_url",
@@ -229,13 +231,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
       siteUrl: described("Exact GSC property identifier"),
       startDate: described("Inclusive start, YYYY-MM-DD"),
       endDate: described("Inclusive end, YYYY-MM-DD"),
-      dimensions: z.array(z.string()).describe(
-        phrase([
-          "date, page, query, country, device. ",
-          "searchAppearance must be the only ",
-          "dimension",
-        ]),
-      ),
+      dimensions: z.array(z.string()).describe("Subset of date, page, query, country, device, hour, searchAppearance (appearance alone)"),
       filters: z.array(z.object({
         dimension: z.string(),
         operator: z.string(),
@@ -244,15 +240,9 @@ export async function serve(opts: ServeOpts): Promise<void> {
       searchType: z.string().optional().describe(
         phrase(["web, image, video, news, discover, ", "googleNews (default web)"]),
       ),
-      aggregationType: z.string().optional().describe(
-        phrase([
-          "auto, byPage, byProperty, or ",
-          "byNewsShowcasePanel. byProperty ",
-          "is rejected for discover and ",
-          "googleNews",
-        ]),
-      ),
-      dataState: z.string().optional().describe("final or all (default final)"),
+      aggregationType: z.enum(["auto", "byPage", "byProperty", "byNewsShowcasePanel"]).optional()
+        .describe("Google aggregation; page grouping/filtering excludes byProperty"),
+      dataState: z.string().optional().describe("final, all, hourly_all (requires hour); default final"),
       sortBy: z.string().optional().describe(
         phrase(["clicks, impressions, ctr, position ", "(default clicks)"]),
       ),
@@ -387,6 +377,9 @@ export async function serve(opts: ServeOpts): Promise<void> {
     "gsc_detect_cannibalization",
     toolDescription("gsc_detect_cannibalization"),
     {
+      includeTimeline: z.boolean().optional(),
+      timelineQueryLimit: z.number().int().min(1).max(10).optional(),
+      minDailyImpressions: z.number().int().min(1).optional(),
       siteUrl: described("Exact GSC property identifier"),
       preset: z.string().optional(),
       startDate: z.string().optional(),

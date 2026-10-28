@@ -293,18 +293,18 @@ test("clients branches localize with target names exact", () => {
 
 test("tools branches localize with counts and gsc_* exact", () => {
   const okEn = finish.toolCatalogSummary();
-  assert.equal(okEn.detail, "29 gsc_* tools (canonical catalog)");
-  const okEs = finish.toolCatalogSummary(29, "es");
-  assert.ok(okEs.detail.includes("29"), okEs.detail);
+  assert.equal(okEn.detail, "34 gsc_* tools (canonical catalog)");
+  const okEs = finish.toolCatalogSummary(34, "es");
+  assert.ok(okEs.detail.includes("34"), okEs.detail);
   assert.ok(okEs.detail.includes("gsc_*"), okEs.detail);
   assert.ok(!okEs.detail.includes("canonical catalog"), okEs.detail);
   const badEn = finish.toolCatalogSummary(28);
-  assert.match(badEn.detail, /expected 29 gsc_\* tools, found 28/);
+  assert.match(badEn.detail, /expected 34 gsc_\* tools, found 28/);
   const badEs = finish.toolCatalogSummary(28, "es");
-  assert.ok(badEs.detail.includes("29"), badEs.detail);
+  assert.ok(badEs.detail.includes("34"), badEs.detail);
   assert.ok(badEs.detail.includes("28"), badEs.detail);
   assert.ok(badEs.detail.includes("gsc_*"), badEs.detail);
-  assert.ok(!badEs.detail.includes("expected 29"), badEs.detail);
+  assert.ok(!badEs.detail.includes("expected 34"), badEs.detail);
 });
 
 // --- Skill section: statuses exact, report honesty preserved ---

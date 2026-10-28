@@ -317,7 +317,7 @@ test("serve completes handshake without credentials and keeps stdout pure JSON-R
       assert.equal(msg.jsonrpc, "2.0");
       if (msg.id === 2) tools = msg.result.tools;
     }
-    assert.equal(tools.length, 29);
+    assert.equal(tools.length, 34);
   } finally {
     try { await stopChild(observed); }
     finally { if (observed.closed) rmSync(home, { recursive: true, force: true }); }

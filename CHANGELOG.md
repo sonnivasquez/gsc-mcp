@@ -1,20 +1,19 @@
 # Changelog
 
-## Unreleased / 1.0.1
-
-- `gsc_image_page_audit` points at `gsc_find_opportunities` and
-  `gsc_search_analytics`. Tool descriptions are checked so a `gsc_*` name or
-  a retired legacy name has to be one of the 29 registered tools.
-- Search Analytics requests send `type`. Inputs named `searchType` still
-  work and are mapped to that field.
-- Invalid dimension combinations are rejected before the Google call:
-  Discover rejects `query` and `device`; `news` and `googleNews` reject
-  `query`; `searchAppearance` must be grouped alone and filtered with
-  `equals`; `aggregationType=byProperty` is rejected for Discover and
-  Google News.
-- The README shows the live Glama score badge for this listing.
-
 ## Unreleased
+
+- Fix capped audit termination, resumable sitemap byte budgets, isolated sitemap children, effective-URL graph deduplication and persistent partial status.
+- Respect cancellation before history effects; stream large saved snapshots through bounded scoped cursors.
+- Parse robots directives by token and crawler scope; bound temporal MCP previews with fully recoverable evidence.
+
+- Add five bounded, on-demand website/indexing/link/change/migration audits.
+- Add independently gated local history (GSC_HISTORY=1), resumable in-memory audit batches and recoverable evidence previews.
+- Support hourly and search-appearance analytics, provider aggregation and incomplete-data metadata; use the provider type parameter.
+- Add opt-in temporal cannibalization evidence and correct capability gates.
+- No scheduler, daemon or notification service.
+- Centralize Search Analytics request rules and expose optional aggregation; distinguish the News search tab from Google News and map the public searchType input to Google's type field in both clients and setup.
+- Replace retired image-tool references, validate all registered tool mappings, and show the live Glama score badge.
+- Align the website, agent skill, registry environment variables and installed-release checks with the complete 34-tool catalog.
 
 - Rewrote the Search Analytics, OAuth, indexing, sitemap, image-audit,
   and GenAI query modules in this repository. Tool names, input schemas,

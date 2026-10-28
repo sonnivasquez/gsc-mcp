@@ -1,7 +1,7 @@
 import { getSearchConsoleClient, resolveSiteUrl, type SearchConsoleClient } from "./auth.js";
 import { assertSiteAllowed } from "./profiles.js";
-import { assertSearchAnalyticsRules } from "./gsc/analytics-rules.js";
 import { GscError } from "./gsc/errors.js";
+import { assertSearchAnalyticsRules } from "./gsc/analytics-rules.js";
 
 export interface SearchAnalyticsRow {
   keys: string[];
@@ -88,13 +88,6 @@ function asRow(raw: AnalyticsPage): SearchAnalyticsRow {
 }
 
 function requestBody(params: QueryParams, startRow: number, pageSize: number): Record<string, unknown> {
-  const filters = (params.dimensionFilterGroups ?? []).flatMap((group) => group.filters);
-  assertSearchAnalyticsRules({
-    dimensions: params.dimensions,
-    filters,
-    type: params.type,
-    aggregationType: params.aggregationType,
-  });
   const body: Record<string, unknown> = {
     startDate: params.startDate,
     endDate: params.endDate,
@@ -114,6 +107,7 @@ export async function fetchAllRows(
   siteUrlOverride?: string,
   clientOverride?: SearchConsoleClient,
 ): Promise<SearchAnalyticsRow[]> {
+  assertSearchAnalyticsRules({ dimensions: params.dimensions, filters: (params.dimensionFilterGroups ?? []).flatMap(group => group.filters), type: params.type, aggregationType: params.aggregationType });
   const client = clientOverride ?? (await getSearchConsoleClient());
   const siteUrl = resolveSiteUrl(siteUrlOverride);
   assertSiteAllowed(siteUrl);

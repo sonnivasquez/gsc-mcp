@@ -1,7 +1,7 @@
 import type { AuthProvider } from "../auth-provider.js";
 import { RequestBudget } from "./budget.js";
 export type SearchType = "web" | "image" | "video" | "news" | "discover" | "googleNews";
-export type DataState = "final" | "all";
+export type DataState = "final" | "all" | "hourly_all";
 export interface AnalyticsFilter {
     dimension: string;
     operator: string;
@@ -16,7 +16,6 @@ export interface AnalyticsQuery {
     dataState?: DataState;
     rowLimit?: number;
     maxFetchRows?: number;
-    /** Sent as Google's aggregationType. Tool callers may omit it. */
     aggregationType?: string;
 }
 export interface AnalyticsRow {
@@ -30,6 +29,11 @@ export interface QueryResult {
     rows: AnalyticsRow[];
     pagesFetched: number;
     truncated: boolean;
+    upstreamAggregationType?: string;
+    metadata?: {
+        first_incomplete_date?: string;
+        first_incomplete_hour?: string;
+    };
 }
 export interface SiteEntry {
     siteUrl: string;
@@ -46,6 +50,8 @@ export interface DataSourceOpts {
     fetchImpl?: typeof fetch;
     allowlist?: string[] | null;
     timeoutMs?: number;
+    deadline?: number;
+    signal?: AbortSignal;
 }
 export declare class FetchGscDataSource {
     private readonly provider;
@@ -53,6 +59,8 @@ export declare class FetchGscDataSource {
     private readonly fetchImpl;
     private readonly allowlist;
     private readonly timeoutMs;
+    private readonly deadline?;
+    private readonly signal?;
     constructor(provider: AuthProvider, opts?: DataSourceOpts);
     private checkSite;
     private fetchOnce;

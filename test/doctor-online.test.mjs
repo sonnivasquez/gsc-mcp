@@ -73,7 +73,7 @@ test("online doctor verifies API, properties, and tools with one bounded call", 
         { siteUrl: "https://b.example/", permissionLevel: "siteFullUser" },
       ])();
     };
-    const report = await doctor.runDoctorOnline({ provider: tokenProvider(), fetchImpl, toolCount: 29, cacheDir });
+    const report = await doctor.runDoctorOnline({ provider: tokenProvider(), fetchImpl, toolCount: 34, cacheDir });
     assert.equal(calls, 1);
     assert.equal(registryCalls, 1);
     assert.equal(seenAuth, "Bearer test-token");
@@ -103,7 +103,7 @@ test("online doctor reports partial visibility and catalog drift honestly", asyn
     assert.match(properties.detail, /1 of 2 selected properties visible/);
     const tools = report.checks.find((c) => c.id === "tools");
     assert.equal(tools.ok, false);
-    assert.match(tools.detail, /expected 29 gsc_\* tools, found 28/);
+    assert.match(tools.detail, /expected 34 gsc_\* tools, found 28/);
     assert.ok(report.failed > 0);
   });
 });
@@ -114,7 +114,7 @@ test("online doctor classifies 401, 403, and 500 without claiming access", async
       const report = await doctor.runDoctorOnline({
         provider: tokenProvider(),
         fetchImpl: async () => ({ status, ok: false, json: async () => ({}) }),
-        toolCount: 29,
+        toolCount: 34,
       });
       assert.equal(report.checks.find((c) => c.id === "api").ok, false, `status ${status}`);
       assert.match(report.checks.find((c) => c.id === "api").detail, pattern, `status ${status}`);
@@ -134,7 +134,7 @@ test("online doctor fails the API check on malformed 2xx sites.list bodies", asy
       ["null body", async () => ({ status: 200, ok: true, json: async () => null })],
     ];
     for (const [name, fetchImpl] of malformed) {
-      const report = await doctor.runDoctorOnline({ provider: tokenProvider(), fetchImpl, toolCount: 29 });
+      const report = await doctor.runDoctorOnline({ provider: tokenProvider(), fetchImpl, toolCount: 34 });
       const api = report.checks.find((c) => c.id === "api");
       assert.equal(api.ok, false, name);
       assert.match(api.detail, /UPSTREAM_SCHEMA_CHANGED/, name);
@@ -144,7 +144,7 @@ test("online doctor fails the API check on malformed 2xx sites.list bodies", asy
     const empty = await doctor.runDoctorOnline({
       provider: tokenProvider(),
       fetchImpl: async () => ({ status: 200, ok: true, json: async () => ({}) }),
-      toolCount: 29,
+      toolCount: 34,
     });
     assert.equal(empty.checks.find((c) => c.id === "api").ok, true);
     assert.match(empty.checks.find((c) => c.id === "api").detail, /0 properties visible/);
@@ -160,7 +160,7 @@ test("online doctor never leaks raw exception text", async () => {
     const viaProvider = await doctor.runDoctorOnline({
       provider: failingProvider,
       fetchImpl: async () => { throw new Error("fetch must stay untouched"); },
-      toolCount: 29,
+      toolCount: 34,
     });
     const providerApi = viaProvider.checks.find((c) => c.id === "api");
     assert.equal(providerApi.ok, false);
@@ -171,7 +171,7 @@ test("online doctor never leaks raw exception text", async () => {
     const viaFetch = await doctor.runDoctorOnline({
       provider: tokenProvider(),
       fetchImpl: async () => { throw new Error(`getaddrinfo EAI_AGAIN ${sentinel} internal=secret-value`); },
-      toolCount: 29,
+      toolCount: 34,
     });
     const fetchApi = viaFetch.checks.find((c) => c.id === "api");
     assert.equal(fetchApi.ok, false);
@@ -189,7 +189,7 @@ test("online doctor reports a missing session without touching the Google API", 
         if (!String(url).includes("registry.npmjs.org")) calls++;
         throw new Error("network must stay untouched");
       },
-      toolCount: 29,
+      toolCount: 34,
     });
     assert.equal(calls, 0);
     assert.match(report.checks.find((c) => c.id === "api").detail, /AUTH_REQUIRED/);
@@ -210,7 +210,7 @@ test("doctor offline and online never echo allowlist values", async () => {
       const online = await doctor.runDoctorOnline({
         provider: tokenProvider(),
         fetchImpl: sitesResponse([{ siteUrl: "sc-domain:a.example", permissionLevel: "siteOwner" }]),
-        toolCount: 29,
+        toolCount: 34,
       });
       const properties = online.checks.find((c) => c.id === "properties");
       assert.equal(properties.ok, false, value);
@@ -305,7 +305,7 @@ test("cli doctor --online is honest JSON without secrets when no session exists"
   assert.ok(ids.includes("version"));
   assert.equal(report.checks.find((c) => c.id === "api").ok, false);
   assert.match(report.checks.find((c) => c.id === "api").detail, /GSC_KEY_FILE|AUTH_REQUIRED/);
-  assert.match(report.checks.find((c) => c.id === "tools").detail, /29 gsc_\* tools/);
+  assert.match(report.checks.find((c) => c.id === "tools").detail, /34 gsc_\* tools/);
 });
 
 test("offline doctor reports the active scoped token, never the default fixture", { timeout: CLI_TEST_TIMEOUT_MS }, async () => {
@@ -383,7 +383,7 @@ const versionReport = (fetchImpl, extra = {}) =>
     doctor.runDoctorOnline({
       provider: tokenProvider(),
       fetchImpl,
-      toolCount: 29,
+      toolCount: 34,
       cacheDir: mkdtempSync(join(tmpdir(), "gsc-reg-version-")),
       ...extra,
     })
@@ -440,7 +440,7 @@ test("online doctor caches the registry version for an hour", async () => {
   const opts = {
     provider: tokenProvider(),
     fetchImpl,
-    toolCount: 29,
+    toolCount: 34,
     cacheDir,
   };
   const first = await withEnv({ GSC_SITE_URLS: allowlistEnv }, () => doctor.runDoctorOnline(opts));
@@ -466,7 +466,7 @@ test("online doctor bypasses a stale registry cache", async () => {
     return sitesResponse([{ siteUrl: "sc-domain:a.example", permissionLevel: "siteOwner" }])();
   };
   const report = await withEnv({ GSC_SITE_URLS: allowlistEnv }, () =>
-    doctor.runDoctorOnline({ provider: tokenProvider(), fetchImpl, toolCount: 29, cacheDir })
+    doctor.runDoctorOnline({ provider: tokenProvider(), fetchImpl, toolCount: 34, cacheDir })
   );
   assert.equal(registryCalls, 1);
   assert.match(report.checks.find((c) => c.id === "version").detail, /up to date \(1\.0\.0\)/);

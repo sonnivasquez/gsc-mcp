@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawn } from 'node:child_process';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { verify, NAME } from './release-candidate.mjs';
@@ -81,6 +81,11 @@ async function checkInstall(base, entry, runtime, version, env, aliases) {
   // own path canonically. realpathSync.native converges both spellings.
   const realEntry = fs.realpathSync.native(entry);
   assert(inside(fs.realpathSync.native(base), realEntry) && !inside(ROOT, realEntry), 'Entrypoint escaped installation');
+  // Finalize can run from a newer checkout than the approved candidate.
+  // Compare the installed server to its own canonical catalog, not main's.
+  const { CANONICAL_TOOLS } = await import(pathToFileURL(path.join(path.dirname(realEntry), 'gsc', 'catalog.js')).href);
+  const expectedTools = CANONICAL_TOOLS.map(tool => tool.name).sort();
+  assert.equal(new Set(expectedTools).size, expectedTools.length, 'Duplicate canonical tool names');
   const invoke = args => run(runtime, [entry, ...args], base, env);
   assert.equal(await invoke(['--version']), version);
   const commands = aliases.length ? aliases.map(file => args => aliasCommand(file, args, base, env)) : [invoke];
@@ -101,17 +106,17 @@ async function checkInstall(base, entry, runtime, version, env, aliases) {
   await withClient({ name: 'release-installed-smoke' }, async (client, options) => {
     assert.equal(client.getServerVersion()?.version, version, 'MCP initialize version');
     const listing = await client.listTools({}, options);
-    assert.equal(listing.tools.length, 29);
-    assert.equal(new Set(listing.tools.map(tool => tool.name)).size, 29);
+    assert.equal(new Set(listing.tools.map(tool => tool.name)).size, expectedTools.length);
+    assert.deepEqual(listing.tools.map(tool => tool.name).sort(), expectedTools);
     assert(!listing.nextCursor, 'Unexpected additional tools');
     assert(listing.tools.some(tool => tool.name === 'gsc_capabilities'));
     const result = await client.callTool({ name: 'gsc_capabilities', arguments: {} }, undefined, options);
     assert(!result.isError, 'Capabilities tool failed');
     const envelope = JSON.parse(result.content.find(item => item.type === 'text')?.text);
     assert.equal(envelope.status, 'ok');
-    assert.equal(envelope.data.tools.length, 29);
+    assert.deepEqual(envelope.data.tools.map(tool => tool.name).sort(), expectedTools);
   }); // Resolves only after the helper confirms transport closure.
-  console.log(`${path.basename(runtime)}: installed CLI/config, MCP version, 29 tools, capabilities, close OK`);
+  console.log(`${path.basename(runtime)}: installed CLI/config, MCP version, ${expectedTools.length} tools, capabilities, close OK`);
 }
 
 let temporary;

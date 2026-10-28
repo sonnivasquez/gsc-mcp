@@ -50,7 +50,7 @@ test("verbose dry-run restores full detail", { timeout: 30000 }, () => {
     [entry, "setup", "--dry-run", "--verbose", "--yes", "--auth", "shared", "--site", "sc-domain:a.example", "--client", "desktop"],
     { encoding: "utf8", env });
   assert.equal(r.status, 0, r.stderr);
-  assert.match(r.stderr, /\[ok\] tools: 29 gsc_\* tools/);
+  assert.match(r.stderr, /\[ok\] tools: 34 gsc_\* tools/);
   assert.match(r.stdout, /Config file:/);
 });
 

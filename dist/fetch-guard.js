@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.defaultResolveHost = void 0;
 exports.isPrivateLiteral = isPrivateLiteral;
 exports.assertPublicUrl = assertPublicUrl;
+exports.withAbort = withAbort;
 exports.guardedFetch = guardedFetch;
 exports.readBoundedBody = readBoundedBody;
 const promises_1 = require("node:dns/promises");
@@ -139,6 +140,18 @@ async function assertPublicUrl(url, resolveHost = exports.defaultResolveHost) {
         }
     }
 }
+// Bound even non-cancellable DNS/auth providers; a late completion never starts a fetch.
+async function withAbort(work, signal) {
+    if (!signal)
+        return work;
+    return new Promise((resolve, reject) => {
+        const stopped = () => { signal.removeEventListener("abort", stopped); reject(new errors_js_1.GscError("CANCELLED", "operation aborted")); };
+        signal.addEventListener("abort", stopped, { once: true });
+        work.then((value) => { signal.removeEventListener("abort", stopped); resolve(value); }, (err) => { signal.removeEventListener("abort", stopped); reject(err); });
+        if (signal.aborted)
+            stopped();
+    });
+}
 // Fetch with a public-host policy and manual redirect handling. Every hop is
 // revalidated with assertPublicUrl plus the optional allowUrl predicate;
 // more than maxRedirects hops fails closed.
@@ -149,18 +162,22 @@ async function guardedFetch(url, opts = {}) {
     const timeoutMs = opts.timeoutMs;
     let current = url;
     for (let hop = 0; hop <= maxRedirects; hop++) {
-        await assertPublicUrl(current, resolveHost);
+        if (opts.signal)
+            await withAbort(assertPublicUrl(current, resolveHost), opts.signal);
+        else
+            await assertPublicUrl(current, resolveHost);
         if (opts.allowUrl && !opts.allowUrl(current)) {
             throw new errors_js_1.GscError("PROPERTY_NOT_ALLOWED", `"${current}" is not in this instance's allowlist. Change the instance profile explicitly.`, { suggestedAction: "serve with a profile that includes the property, or add it to GSC_SITE_URLS" });
         }
+        await opts.beforeRequest?.(current);
         const controller = new AbortController();
         const timer = timeoutMs !== undefined ? setTimeout(() => controller.abort(), timeoutMs) : undefined;
         let response;
         try {
-            response = await globalThis.fetch(current, {
+            response = await (opts.fetchImpl ?? globalThis.fetch)(current, {
                 headers,
                 redirect: "manual",
-                signal: controller.signal,
+                signal: opts.signal ? AbortSignal.any([controller.signal, opts.signal]) : controller.signal,
             });
         }
         finally {
@@ -174,7 +191,10 @@ async function guardedFetch(url, opts = {}) {
                     suggestedAction: "pass a URL that resolves within 5 redirects",
                 });
             }
-            current = new URL(location, current).href;
+            const target = new URL(location, current).href;
+            opts.onRedirect?.(current, target, response.status);
+            await response.body?.cancel();
+            current = target;
             continue;
         }
         return { response, finalUrl: current };

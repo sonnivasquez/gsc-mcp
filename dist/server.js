@@ -13,6 +13,7 @@ const submit_sitemap_js_1 = require("./tools/submit-sitemap.js");
 const genai_conversation_queries_js_1 = require("./tools/genai-conversation-queries.js");
 const image_page_audit_js_1 = require("./tools/image-page-audit.js");
 const update_impact_js_1 = require("./tools/update-impact.js");
+const register_js_1 = require("./audits/register.js");
 const tool_descriptions_js_1 = require("./tool-descriptions.js");
 function phrase(parts) {
     return parts.join("");
@@ -47,6 +48,7 @@ const IMAGE_NOTE = phrase([
 async function serve(opts) {
     const server = new mcp_js_1.McpServer({ name: "gsc-mcp", version: version_js_1.CLI_VERSION });
     (0, prompts_js_1.registerPrompts)(server);
+    (0, register_js_1.registerAudits)(server);
     server.tool("gsc_submit_url", (0, tool_descriptions_js_1.toolDescription)("gsc_submit_url", guardrails_js_1.GUARDRAIL_SUFFIX), {
         url: described("The full URL to submit for indexing"),
         action: indexingAction(),
@@ -113,24 +115,16 @@ async function serve(opts) {
         siteUrl: described("Exact GSC property identifier"),
         startDate: described("Inclusive start, YYYY-MM-DD"),
         endDate: described("Inclusive end, YYYY-MM-DD"),
-        dimensions: zod_1.z.array(zod_1.z.string()).describe(phrase([
-            "date, page, query, country, device. ",
-            "searchAppearance must be the only ",
-            "dimension",
-        ])),
+        dimensions: zod_1.z.array(zod_1.z.string()).describe("Subset of date, page, query, country, device, hour, searchAppearance (appearance alone)"),
         filters: zod_1.z.array(zod_1.z.object({
             dimension: zod_1.z.string(),
             operator: zod_1.z.string(),
             expression: zod_1.z.string(),
         })).optional(),
         searchType: zod_1.z.string().optional().describe(phrase(["web, image, video, news, discover, ", "googleNews (default web)"])),
-        aggregationType: zod_1.z.string().optional().describe(phrase([
-            "auto, byPage, byProperty, or ",
-            "byNewsShowcasePanel. byProperty ",
-            "is rejected for discover and ",
-            "googleNews",
-        ])),
-        dataState: zod_1.z.string().optional().describe("final or all (default final)"),
+        aggregationType: zod_1.z.enum(["auto", "byPage", "byProperty", "byNewsShowcasePanel"]).optional()
+            .describe("Google aggregation; page grouping/filtering excludes byProperty"),
+        dataState: zod_1.z.string().optional().describe("final, all, hourly_all (requires hour); default final"),
         sortBy: zod_1.z.string().optional().describe(phrase(["clicks, impressions, ctr, position ", "(default clicks)"])),
         sortDirection: zod_1.z.string().optional().describe("asc or desc (default desc)"),
         resultLimit: zod_1.z.number().optional().describe("Rows returned, 1-200 (default 50)"),
@@ -209,6 +203,9 @@ async function serve(opts) {
         maxFetchRows: zod_1.z.number().optional(),
     }, async (args) => textResult(await (0, tools_js_1.gscFindOpportunities)(args)));
     server.tool("gsc_detect_cannibalization", (0, tool_descriptions_js_1.toolDescription)("gsc_detect_cannibalization"), {
+        includeTimeline: zod_1.z.boolean().optional(),
+        timelineQueryLimit: zod_1.z.number().int().min(1).max(10).optional(),
+        minDailyImpressions: zod_1.z.number().int().min(1).optional(),
         siteUrl: described("Exact GSC property identifier"),
         preset: zod_1.z.string().optional(),
         startDate: zod_1.z.string().optional(),

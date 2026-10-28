@@ -1,3 +1,4 @@
+import { CANONICAL_TOOLS } from "./gsc/catalog.js";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { dataDir, envAllowlist, isAllowAllAllowlist } from "./profiles.js";
@@ -257,13 +258,13 @@ export async function runDoctorOnline(
   const checks: DoctorCheck[] = [...base.checks];
 
   if (deps.toolCount !== undefined) {
-    const okTools = deps.toolCount === 29;
+    const okTools = deps.toolCount === CANONICAL_TOOLS.length;
     checks.push({
       id: "tools",
       ok: okTools,
       detail: okTools
         ? `${deps.toolCount} gsc_* tools (canonical catalog)`
-        : `expected 29 gsc_* tools, found ${deps.toolCount}; release evidence needs reconciliation`,
+        : `expected ${CANONICAL_TOOLS.length} gsc_* tools, found ${deps.toolCount}; release evidence needs reconciliation`,
     });
   }
 

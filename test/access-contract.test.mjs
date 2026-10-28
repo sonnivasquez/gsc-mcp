@@ -50,11 +50,11 @@ for (const [label, access, writes] of [
 ]) {
   test(`offline MCP capability matrix changes only the three submission tools: ${label}`, { timeout: MCP_TEST_TIMEOUT_MS }, async () => {
     const submit = ["gsc_submit_url", "gsc_submit_batch", "gsc_submit_sitemap"];
-    const otherDisabled = ["gsc_image_page_audit", "gsc_genai_conversation_queries"];
+    const otherDisabled = [];
     await withMcpClient({ name: "offline-access-contract", env: access }, async (client, options) => {
       const result = await client.callTool({ name: "gsc_capabilities", arguments: {} }, undefined, options);
       const envelope = JSON.parse(result.content.find((item) => item.type === "text").text);
-      assert.equal(envelope.data.tools.length, 29);
+      assert.equal(envelope.data.tools.length, 34);
       assert.deepEqual(envelope.data.disabledCapabilities, [...(writes ? [] : submit), ...otherDisabled]);
     });
   });

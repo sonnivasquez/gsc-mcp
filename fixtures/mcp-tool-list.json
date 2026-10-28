@@ -132,7 +132,7 @@
   },
   {
     "name": "gsc_image_page_audit",
-    "description": "Fetches pages from YOUR OWN site and audits every image on them for the on-page factors that drive image-search performance: missing/empty/generic/duplicate alt text, non-descriptive filenames, missing width/height attributes, lazy loading on the LCP candidate, srcset coverage, file format and weight, intrinsic dimensions vs Google's ~250x200 indexing minimum, ImageObject and licensable schema, max-image-preview, inline background images, and the metadata inside the image files (camera EXIF and GPS that should be stripped, IPTC Creator/Copyright/Caption that should survive, XMP DigitalSourceType on AI-generated images). Feed it page URLs from gsc_find_opportunities (kind low_clicks, searchType image) or gsc_search_analytics grouped by page to turn 'which pages fail' into 'why they fail'. Only fetches the URLs given; no third-party service involved. Pages must belong to the instance allowlist and every fetch stays on public hosts with redirects revalidated (images may come from any public CDN host). Returns a per-image findings table, page-level checks, and an ordered top_fixes list. IMPORTANT: Base your analysis ONLY on the data returned. Report exact numbers from the results. Do not speculate about causes (e.g. algorithm updates, competitor actions) unless the data explicitly supports it. If the data does not contain enough information to answer a question, say so clearly rather than guessing. PRESENTATION: Always present these results as a rich, interactive visualization using artifacts. Use summary cards for key metrics, colour-coded indicators for severity or change direction (green for positive, red for negative), bar charts or sparklines for comparisons, and tabbed sections to organise different categories of results. Make the output visually scannable and dashboard-like rather than plain text or raw tables.",
+    "description": "Fetches pages from YOUR OWN site and audits every image on them for the on-page factors that drive image-search performance: missing/empty/generic/duplicate alt text, non-descriptive filenames, missing width/height attributes, lazy loading on the LCP candidate, srcset coverage, file format and weight, intrinsic dimensions vs Google's ~250x200 indexing minimum, ImageObject and licensable schema, max-image-preview, inline background images, and the metadata inside the image files (camera EXIF and GPS that should be stripped, IPTC Creator/Copyright/Caption that should survive, XMP DigitalSourceType on AI-generated images). Feed it URLs straight from image_impressions_no_clicks or image_search_quick_wins to turn 'which pages fail' into 'why they fail'. Only fetches the URLs given; no third-party service involved. Pages must belong to the instance allowlist and every fetch stays on public hosts with redirects revalidated (images may come from any public CDN host). Returns a per-image findings table, page-level checks, and an ordered top_fixes list. IMPORTANT: Base your analysis ONLY on the data returned. Report exact numbers from the results. Do not speculate about causes (e.g. algorithm updates, competitor actions) unless the data explicitly supports it. If the data does not contain enough information to answer a question, say so clearly rather than guessing. PRESENTATION: Always present these results as a rich, interactive visualization using artifacts. Use summary cards for key metrics, colour-coded indicators for severity or change direction (green for positive, red for negative), bar charts or sparklines for comparisons, and tabbed sections to organise different categories of results. Make the output visually scannable and dashboard-like rather than plain text or raw tables.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -218,7 +218,7 @@
           "items": {
             "type": "string"
           },
-          "description": "date, page, query, country, device. searchAppearance must be the only dimension"
+          "description": "Subset of date, page, query, country, device"
         },
         "filters": {
           "type": "array",
@@ -246,10 +246,6 @@
         "searchType": {
           "type": "string",
           "description": "web, image, video, news, discover, googleNews (default web)"
-        },
-        "aggregationType": {
-          "type": "string",
-          "description": "auto, byPage, byProperty, or byNewsShowcasePanel. byProperty is rejected for discover and googleNews"
         },
         "dataState": {
           "type": "string",

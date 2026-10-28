@@ -8,6 +8,7 @@
 | Credenciales aportadas por el usuario | Archivo en la ruta que configures; tú administras sus permisos | Tu proceso local, que las usa para autenticarse con Google |
 | Perfiles (allowlists) | Mismo directorio, sin secretos | Solo tu máquina |
 | Respuestas de tools | Proceso MCP → tu cliente MCP | **Tu cliente y su proveedor de IA** |
+| Historial opt-in | `<GSC_DATA_DIR>/history`, aislado por perfil/propiedad; GSC_HISTORY=1, 100 MiB, sin purga automática | Proceso local; las respuestas solicitadas llegan al cliente MCP |
 | Caché/datasets | Memoria del proceso (15 min datasets) | El proceso local |
 
 ## Lo que "local" NO significa
@@ -52,3 +53,14 @@ Esta página no afirma estado de verificación o aprobación.
 
 Mantenedor: Sonni Vasquez — https://sonnivasquez.com — https://github.com/sonnivasquez
 No se publica otro correo de soporte en esta página.
+
+## Auditorías e historial bajo demanda
+
+Las auditorías descargan HTML, robots.txt y sitemaps de las propiedades
+autorizadas. No ejecutan JavaScript ni tareas programadas. Las sesiones de
+auditoría caducan en memoria tras quince minutos de inactividad y se pierden
+al cerrar el servidor. GSC_HISTORY=1 habilita, por separado de GSC_EXPORTS,
+registro de cambios y mediciones solicitadas explícitamente. Pueden contener
+URLs y consultas sensibles; no guardan HTML completo, tokens ni credenciales.
+Para eliminarlos usa gsc_change_impact con action=delete y changeId o revisa
+el directorio history. Logout no elimina el historial; no hay purga automática.
