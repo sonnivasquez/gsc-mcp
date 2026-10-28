@@ -10,9 +10,12 @@ without that prefix.
 - `write` (3): mutates Google. Requires `GSC_ACCESS_MODE=full`. Without the new
   variable, legacy `GSC_SCOPES=full` and `GSC_ENABLE_WRITE=1` still apply.
   Verify with `doctor` (`write_ops`); obtain user authorization before submission.
-- `fetch` (5): downloads the user's own pages and image bytes.
-- `local` (3): writes to the user's machine only. `gsc_export_dataset`
-  additionally needs `GSC_EXPORTS=1`; it never overwrites, never uploads.
+- `fetch` (5): page, indexing, internal-link, migration and image audits fetch
+  authorized public pages or sitemaps; images can be on external public hosts.
+- `local` (3): `gsc_export_dataset`, `gsc_generate_report`, `gsc_change_impact`.
+  Export and saved reports need `GSC_EXPORTS=1`; persistent change operations
+  need `GSC_HISTORY=1`. Transient change analysis does not write files. Local
+  exports never overwrite or upload.
 
 ## Catalog
 
@@ -62,15 +65,24 @@ failure). Stable error codes include `AUTH_REQUIRED`, `PROPERTY_NOT_ALLOWED`,
 
 ## Audit contracts
 
-All audits run only on request. Follow nextCursor explicitly; sessions expire
-after 15 idle minutes or process exit. HTML is not JavaScript-rendered.
+All audits run only on request. Continue the same tool with the original
+parameters unchanged or property identifiers and `cursor` (`action=analyze`
+for change analysis). Sessions expire after 15 idle minutes or process exit.
+`complete` means scheduled work finished, not complete coverage; inspect
+`status`, warnings and coverage. HTML is not JavaScript-rendered: generated
+content and links remain unknown. A graph cannot prove a page is orphaned.
 Results preview 20 array elements and 2000 characters per string. Retrieve
 full evidence with gsc_get_dataset: group index, sort part, concatenate evidence,
 then JSON.parse. Search analytics adds hour + hourly_all, and searchAppearance
-alone followed by a filtered query. Cannibalization optionally adds
-includeTimeline, timelineQueryLimit and minDailyImpressions; candidates only.
+alone followed by an `equals` filter. Date and hour metadata can be incomplete;
+keep returned hourly offsets. Cannibalization optionally adds includeTimeline,
+timelineQueryLimit and minDailyImpressions; candidates are not causal proof.
+Its MCP schema does not expose filters, searchType or dataState.
 
-History list with changeId streams large snapshots as bounded base64 byte chunks
+A change record, list, deletion or saved snapshot requires `GSC_HISTORY=1`;
+transient analysis does not. Analyze uses a stored changeId or transient change,
+not both, and saveSnapshot requires the stored ID. History list with changeId
+streams large snapshots as bounded base64 byte chunks
 (snapshotChunk, nextCursor), independent of the transient dataset quota. Decode
 blocks, group snapshotId, concatenate by offset, then decode UTF-8 and JSON.parse.
 Small history remains snapshots + dataset. Partial audit errors survive continuation.

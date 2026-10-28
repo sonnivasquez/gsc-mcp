@@ -81,6 +81,9 @@ Quick Connect is the path that skips creating a Google Cloud OAuth client. Custo
 | Inspect indexing and sitemaps | Google's indexed view of selected URLs and registered sitemap states | `gsc_inspect_urls`, `gsc_list_sitemaps` |
 | Compare segments | Brand terms, site folders, countries, devices, or web versus image search | `gsc_analyze_segments`, `gsc_compare_web_image` |
 | Audit on-page images | Findings from downloading your own pages and their referenced images | `gsc_image_page_audit` |
+| Audit a page or an index sample | Current HTTP HTML and exact-page queries, or indexed-view inspection from sitemap discovery | `gsc_page_audit`, `gsc_indexing_audit` |
+| Review internal links | Bounded HTML link graph and literal suggestions | `gsc_internal_link_audit` |
+| Evaluate changes or a migration | Observed before/after metrics and declared URL mappings | `gsc_change_impact`, `gsc_migration_audit` |
 | Prepare reports | Markdown reports and optional local dataset exports | `gsc_generate_report`, `gsc_export_dataset` |
 
 These are analysis tools. Opportunity and cannibalization results are candidates to review, not proof that a particular SEO change will improve rankings.
@@ -183,12 +186,15 @@ You can also ask for pages with sustained traffic declines, query overlap across
 Version 1.1.0 adds `gsc_page_audit`, `gsc_indexing_audit`,
 `gsc_internal_link_audit`, `gsc_change_impact`, and `gsc_migration_audit`.
 They combine bounded HTTP HTML or sitemap reads with your own GSC data.
-They do not render JavaScript or run in the background. Continue batches
+They do not render JavaScript or run in the background; client-rendered content
+and links remain unknown. Continue batches
 explicitly using `nextCursor`; sessions expire after 15 idle minutes.
 
 `GSC_HISTORY=1` enables explicit local change records and saved measurements,
 independently of `GSC_EXPORTS`. Transient before/after analysis needs no history.
-No alerts service, scheduler or automatic captures are installed.
+Results may be partial even when the scheduled work completes: check status,
+coverage and warnings. Full evidence may require `gsc_get_dataset`. No alerts
+service, scheduler or automatic captures are installed.
 See [audit inputs, limits, evidence pagination and examples](docs/tools.md#auditorías-bajo-demanda-110).
 These audits require version 1.1.0 or later. Check `gsc_capabilities` in the
 running server after updating and restarting your MCP client.
@@ -211,7 +217,7 @@ Choosing all properties also includes future properties and requires an explicit
 
 GSC MCP has no hosted MCP backend or product telemetry. OAuth tokens stay in your local data directory, `~/.gsc-mcp/` by default, or `GSC_DATA_DIR`. Quick Connect shares an OAuth application and its Google API quotas; it does not share your tokens or property access with the maintainer.
 
-The optional image audit also downloads your selected pages and their referenced image files directly, including images served by external hosts.
+Website audits fetch selected pages, robots.txt and sitemaps directly from authorized properties. The image audit also fetches referenced images, including images served by external public hosts.
 
 Tool responses go to your MCP client and may be sent to its AI provider. Local execution does not mean your Search Console data stays entirely on your machine. Review your client's retention and training settings and the [privacy policy](PRIVACY.md).
 
