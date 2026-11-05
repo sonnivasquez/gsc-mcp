@@ -3,11 +3,8 @@
 [![npm version](https://img.shields.io/npm/v/@sonnivasquez/gsc-mcp)](https://www.npmjs.com/package/@sonnivasquez/gsc-mcp)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/sonnivasquez/gsc-mcp)](https://github.com/sonnivasquez/gsc-mcp)
-
-<!-- TODO: uncomment the MCP Registry badge after this server is listed.
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-listed-blue)](https://registry.modelcontextprotocol.io/)
--->
-
+[![Listed on MCP Collection](https://mcpcollection.com/badge/google-search-console-mcp.svg)](https://mcpcollection.com/server/google-search-console-mcp)
 [![Glama score](https://glama.ai/mcp/servers/sonnivasquez/gsc-mcp/badges/score.svg)](https://glama.ai/mcp/servers/sonnivasquez/gsc-mcp)
 
 <!-- TODO: add screenshots/demo.gif and switch the preview below to that file. The PNG stays until the GIF exists. -->
