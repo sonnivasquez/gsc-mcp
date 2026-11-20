@@ -270,9 +270,9 @@ coincidencias literales de `brandTerms` que proporciones.
 
 **Multimodal.** Usa `searchType=webMultimodal` para consultar tráfico de
 Google Lens, Rodea para Buscar y búsquedas con imágenes subidas a Google.
-Agrupa por `page`, `country` o `date`, por ejemplo. El MCP rechaza la
-dimensión `query` para este tipo, dado que el informe no ofrece consultas
-textuales. Conserva las métricas por tipo de búsqueda.
+Agrupa por `page`, `country` o `date`, por ejemplo. Omite la dimensión
+`query` y los filtros sobre `query`. El MCP valida ambas condiciones antes
+de llamar a Google. Conserva las métricas por tipo de búsqueda.
 [Ayuda de Search Console](https://support.google.com/webmasters/answer/17011259?hl=en).
 
 **Listas.** `filterLists` admite `country` con códigos ISO 3166-1 alfa-3

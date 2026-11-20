@@ -240,7 +240,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
       })).optional().describe('brandedClassification requires equals with BRANDED or NON_BRANDED. Grouping or filtering by brand excludes query filters.'),
       filterLists: analyticsFilterListsSchema.optional().describe("Exact country (ISO alpha-3) or device (DESKTOP, MOBILE, TABLET) values. OR within each list, AND across conditions. Keep each dimension in either filters or filterLists."),
       searchType: z.string().optional().describe(
-        "web, image, video, news, discover, googleNews, webMultimodal (default web)",
+        "web, image, video, news, discover, googleNews, webMultimodal (default web). Omit query dimensions and filters for webMultimodal.",
       ),
       aggregationType: z.enum(["auto", "byPage", "byProperty", "byNewsShowcasePanel"]).optional()
         .describe("Google aggregation; page grouping/filtering excludes byProperty"),

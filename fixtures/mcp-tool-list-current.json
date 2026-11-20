@@ -695,7 +695,7 @@
         },
         "searchType": {
           "type": "string",
-          "description": "web, image, video, news, discover, googleNews, webMultimodal (default web)"
+          "description": "web, image, video, news, discover, googleNews, webMultimodal (default web). Omit query dimensions and filters for webMultimodal."
         },
         "aggregationType": {
           "type": "string",

@@ -60,15 +60,15 @@ export function assertSearchAnalyticsRules(input: AnalyticsRuleInput): void {
       names.push(dimension);
     }
   }
+  const reportType = resolveReportType(input);
+  if (reportType === "webMultimodal" && names.includes("query")) {
+    reject('type "webMultimodal" does not support the query dimension or filter.', 'Remove query from dimensions and filters. Group by page, country, or date.');
+  }
   if ((dimensions.includes("brandedClassification") || filterDimensions.has("brandedClassification")) && filterDimensions.has("query")) {
     reject('brandedClassification cannot be combined with a query filter.', 'Remove the query filter or remove brandedClassification from the request.');
   }
   if (filters.some(f => f.dimension === "brandedClassification" && (f.operator !== "equals" || (f.expression !== "BRANDED" && f.expression !== "NON_BRANDED")))) {
     reject('brandedClassification filters require equals and a supported classification.', 'Use operator "equals" with "BRANDED" or "NON_BRANDED".');
-  }
-  const reportType = resolveReportType(input);
-  if (reportType === "webMultimodal" && dimensions.includes("query")) {
-    reject('type "webMultimodal" does not support the query dimension.', 'Group by another dimension such as page, country, or date.');
   }
   if (reportType === "discover") {
     const blocked = ["query", "device"].filter((name) => names.includes(name));

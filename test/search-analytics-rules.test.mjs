@@ -3,6 +3,7 @@ import test from 'node:test';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { google } from 'googleapis';
+import { MCP_TEST_TIMEOUT_MS, withMcpClient } from './helpers/mcp-client.mjs';
 
 const dist = process.env.AUDIT_TEST_DIST || resolve('dist');
 const load = (path) => import(pathToFileURL(resolve(dist, path)).href);
@@ -69,6 +70,8 @@ test('brand, list and multimodal validation rejects invalid analytics before HTT
     [{ filterLists: [list('country', 'PER')], filters: [filter('country', 'USA')] }, /both filters and filterLists/],
     [{ searchType: 'discover', filterLists: [list('device', 'MOBILE')] }, /discover.*device/],
     [{ searchType: 'webMultimodal', dimensions: ['query'] }, /webMultimodal.*query dimension/],
+    [{ searchType: 'webMultimodal', filters: [filter('query', 'example')] }, /webMultimodal.*query.*filter/],
+    [{ searchType: 'webMultimodal', filters: [filter('query', 'example', 'includingRegex')], filterLists: [list('country', 'PER')] }, /webMultimodal.*query.*filter/],
   ];
   for (const [query, message] of cases) {
     const result = await gscSearchAnalytics({ ...range, siteUrl: SITE, dimensions: ['date'], ...query }, deps);
@@ -78,6 +81,27 @@ test('brand, list and multimodal validation rejects invalid analytics before HTT
     assert.ok(result.error.suggestedAction);
   }
   assert.deepEqual(calls, []);
+});
+
+test('the stdio MCP tool rejects multimodal query grouping and filtering before Google', { timeout: MCP_TEST_TIMEOUT_MS }, async () => {
+  await withMcpClient({ name: 'multimodal-query-validation', env: { GSC_SITE_URLS: SITE } }, async (client, options) => {
+    const cases = [
+      { dimensions: ['query'] },
+      { dimensions: ['page'], filters: [filter('query', 'example')] },
+    ];
+    for (const args of cases) {
+      const result = await client.callTool({
+        name: 'gsc_search_analytics',
+        arguments: { ...range, siteUrl: SITE, searchType: 'webMultimodal', ...args },
+      }, undefined, options);
+      const payload = JSON.parse(result.content[0].text);
+      assert.equal(payload.status, 'error');
+      assert.equal(payload.error.code, 'INVALID_ARGUMENT');
+      assert.match(payload.error.suggestedAction, /Remove query from dimensions and filters/);
+      assert.equal(payload.meta.googleDataAttempts, 0);
+      assert.equal(payload.meta.oauthAttempts, 0);
+    }
+  });
 });
 
 test('brand grouping and exact filter preserve query grouping, key order and metrics', async () => {
@@ -132,9 +156,9 @@ test('multimodal lists retain each condition across pages and honor budgets and 
   assert.equal(paged.calls.length, 1);
 });
 
-test('multimodal simple query filters are passed through and missing rows stay empty', async () => {
+test('valid simple filters pass through and missing rows stay empty', async () => {
   const { calls, deps } = fixture(() => ({}));
-  const filters = [filter('query', 'example')];
+  const filters = [filter('page', 'https://example.com/')];
   const result = await gscSearchAnalytics({ ...range, siteUrl: SITE, dimensions: ['page'], searchType: 'webMultimodal', filters }, deps);
   assert.equal(result.status, 'ok');
   assert.deepEqual(calls, [{
@@ -149,6 +173,11 @@ test('multimodal simple query filters are passed through and missing rows stay e
   assert.equal(brand.status, 'ok');
   assert.equal(calls[1].dimensionFilterGroups[0].filters[0].expression, 'NON_BRANDED');
   assert.deepEqual(brand.data.rows, []);
+
+  const webFilters = [filter('query', 'example', 'includingRegex')];
+  const web = await gscSearchAnalytics({ ...range, siteUrl: SITE, dimensions: ['page'], searchType: 'web', filters: webFilters }, deps);
+  assert.equal(web.status, 'ok');
+  assert.deepEqual(calls[2].dimensionFilterGroups, [{ filters: webFilters }]);
 });
 
 test('derived tools keep their existing search types and do not forward filter lists', async () => {
@@ -222,6 +251,7 @@ test('legacy validation sees filter groups together and rejects before SDK calls
     { dimensionFilterGroups: [{ filterLists: [list('device', 'UNKNOWN')] }] },
     { type: 'discover', dimensionFilterGroups: [{ filterLists: [list('device', 'MOBILE')] }] },
     { type: 'webMultimodal', dimensions: ['query'] },
+    { type: 'webMultimodal', dimensionFilterGroups: [{ filterLists: [list('country', 'PER')] }, { filters: [filter('query', 'example')] }] },
   ];
   for (const query of cases) {
     await assert.rejects(fetchAllRows({ ...range, dimensions: ['date'], ...query }, SITE, client), e => e.code === 'INVALID_ARGUMENT' && !!e.suggestedAction);
