@@ -28,7 +28,7 @@ without that prefix.
 | `gsc_migration_audit` | fetch | Explicit old/new mappings across authorized properties. |
 | `gsc_capabilities` | read | Abilities, auth, limits. Offline, no credentials needed. |
 | `gsc_list_sites` | read | Properties visible to this instance (allowlist-filtered). |
-| `gsc_search_analytics` | read | Flexible query: dims `date,page,query,country,device,hour,searchAppearance`; `hour` pairs with `hourly_all`, appearance groups alone. Public `searchType` maps to provider `type`; optional `aggregationType`. Returns `datasetId`. |
+| `gsc_search_analytics` | read | Groups by `date,page,query,country,device,hour,searchAppearance,brandedClassification`. Supports `searchType=webMultimodal`, `aggregationType`, and country/device `filterLists`. Returns `datasetId`. |
 | `gsc_inspect_urls` | read | Index inspection, 1–10 URLs, stable order, partial results. |
 | `gsc_list_sitemaps` | read | Registered sitemaps. Never submits. |
 | `gsc_get_dataset` | read | Pages a previous result. Zero new Google calls. TTL 15 min, per profile. |

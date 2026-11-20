@@ -15,6 +15,7 @@ const image_page_audit_js_1 = require("./tools/image-page-audit.js");
 const update_impact_js_1 = require("./tools/update-impact.js");
 const register_js_1 = require("./audits/register.js");
 const tool_descriptions_js_1 = require("./tool-descriptions.js");
+const analytics_rules_js_1 = require("./gsc/analytics-rules.js");
 function phrase(parts) {
     return parts.join("");
 }
@@ -115,13 +116,14 @@ async function serve(opts) {
         siteUrl: described("Exact GSC property identifier"),
         startDate: described("Inclusive start, YYYY-MM-DD"),
         endDate: described("Inclusive end, YYYY-MM-DD"),
-        dimensions: zod_1.z.array(zod_1.z.string()).describe("Subset of date, page, query, country, device, hour, searchAppearance (appearance alone)"),
+        dimensions: zod_1.z.array(zod_1.z.string()).describe("Subset of date, page, query, country, device, hour, searchAppearance (appearance alone), brandedClassification"),
         filters: zod_1.z.array(zod_1.z.object({
             dimension: zod_1.z.string(),
             operator: zod_1.z.string(),
             expression: zod_1.z.string(),
-        })).optional(),
-        searchType: zod_1.z.string().optional().describe(phrase(["web, image, video, news, discover, ", "googleNews (default web)"])),
+        })).optional().describe('brandedClassification requires equals with BRANDED or NON_BRANDED. Grouping or filtering by brand excludes query filters.'),
+        filterLists: analytics_rules_js_1.analyticsFilterListsSchema.optional().describe("Exact country (ISO alpha-3) or device (DESKTOP, MOBILE, TABLET) values. OR within each list, AND across conditions. Keep each dimension in either filters or filterLists."),
+        searchType: zod_1.z.string().optional().describe("web, image, video, news, discover, googleNews, webMultimodal (default web). Omit query dimensions and filters for webMultimodal."),
         aggregationType: zod_1.z.enum(["auto", "byPage", "byProperty", "byNewsShowcasePanel"]).optional()
             .describe("Google aggregation; page grouping/filtering excludes byProperty"),
         dataState: zod_1.z.string().optional().describe("final, all, hourly_all (requires hour); default final"),

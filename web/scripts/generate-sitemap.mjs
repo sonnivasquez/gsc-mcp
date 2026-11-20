@@ -1,8 +1,8 @@
 // Generates web/public/sitemap.xml from the site's own route list.
 //
 // Each URL's lastmod is the latest commit date of the source files that
-// build that page (`git log -1 --format=%cs -- <files>`), not the clock time
-// of this run. Two generations from the same checkout must match.
+// build that page and the individual MCP examples it renders. Two
+// generations from the same checkout must match.
 //
 // The route list mirrors web/src/routeTree.gen.ts. That generated module
 // imports every route, so it is not dated here: including it would move
@@ -70,7 +70,8 @@ const HOME = [
   "web/src/components/use-conversation-motion.ts",
 ];
 
-const EXAMPLES = ["web/src/components/mcp-example.tsx", "web/src/data/examples.json"];
+const EXAMPLE_COMPONENT = "web/src/components/mcp-example.tsx";
+const EXAMPLE_DATA = "web/src/data/examples.json";
 
 const DOCS_INDEX = [
   "web/src/routes/docs.index.tsx",
@@ -88,9 +89,21 @@ const ROUTES = [
   { path: "/docs/clients", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, ...TABS, "web/src/routes/docs.clients.tsx"] },
   { path: "/docs/commands", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, "web/src/routes/docs.commands.tsx"] },
   { path: "/docs/tools", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, ...TOOL_CATALOG, "web/src/routes/docs.tools.tsx"] },
-  { path: "/docs/audits", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, ...EXAMPLES, "web/src/routes/docs.audits.tsx"] },
-  { path: "/docs/history", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, ...EXAMPLES, "web/src/routes/docs.history.tsx"] },
-  { path: "/docs/analytics", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, ...EXAMPLES, "web/src/routes/docs.analytics.tsx"] },
+  {
+    path: "/docs/audits", changefreq: "monthly", priority: "0.8",
+    sources: [...SHELL, ...DOC_CHROME, EXAMPLE_COMPONENT, "web/src/routes/docs.audits.tsx"],
+    examples: ["page", "indexing", "links", "analyze", "migration", "continueIndex"],
+  },
+  {
+    path: "/docs/history", changefreq: "monthly", priority: "0.8",
+    sources: [...SHELL, ...DOC_CHROME, EXAMPLE_COMPONENT, "web/src/routes/docs.history.tsx"],
+    examples: ["record", "analyze", "saveSnapshot", "list", "listSnapshots", "delete"],
+  },
+  {
+    path: "/docs/analytics", changefreq: "monthly", priority: "0.8",
+    sources: [...SHELL, ...DOC_CHROME, EXAMPLE_COMPONENT, "web/src/routes/docs.analytics.tsx"],
+    examples: ["hourly", "appearance", "appearanceDetail", "brandWithLists", "webMultimodal", "timeline"],
+  },
   { path: "/docs/troubleshooting", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, "web/src/routes/docs.troubleshooting.tsx"] },
   { path: "/docs/uninstall", changefreq: "monthly", priority: "0.6", sources: [...SHELL, ...DOC_CHROME, ...TABS, "web/src/routes/docs.uninstall.tsx"] },
   { path: "/privacy", changefreq: "yearly", priority: "0.3", sources: [...SHELL, "web/src/routes/privacy.tsx"] },
@@ -99,6 +112,19 @@ const ROUTES = [
 
 const SITE_ORIGIN = "https://gscmcp.dev";
 
+function git(args) {
+  try {
+    return execFileSync("git", args, {
+      cwd: repoRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    }).trim();
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "git failed";
+    throw new Error(`sitemap lastmod lookup failed: ${detail}`);
+  }
+}
+
 function latestCommitDate(files) {
   const unique = [...new Set(files)];
   for (const file of unique) {
@@ -106,25 +132,53 @@ function latestCommitDate(files) {
       throw new Error(`sitemap source missing: ${file}`);
     }
   }
-  let output;
-  try {
-    output = execFileSync("git", ["log", "-1", "--format=%cs", "--", ...unique], {
-      cwd: repoRoot,
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : "git log failed";
-    throw new Error(`sitemap lastmod git log failed: ${detail}`);
-  }
-  const date = output.trim();
+  const date = git(["log", "-1", "--format=%cs", "--", ...unique]);
   if (!DATE.test(date)) {
     throw new Error(`sitemap lastmod unavailable for ${unique.join(", ")}`);
   }
   return date;
 }
 
-const dated = ROUTES.map((route) => ({ ...route, lastmod: latestCommitDate(route.sources) }));
+function latestExampleDates() {
+  if (!existsSync(path.join(repoRoot, EXAMPLE_DATA))) throw new Error(`sitemap source missing: ${EXAMPLE_DATA}`);
+  // Keep merges and let Git rewrite their parents to the relevant file history.
+  const history = git(["log", "--full-history", "--parents", "--topo-order", "--reverse", "--format=%H%x09%P%x09%cs", "--", EXAMPLE_DATA]);
+  if (!history) throw new Error(`sitemap lastmod unavailable for ${EXAMPLE_DATA}`);
+
+  const snapshots = new Map();
+  let latest;
+  for (const revision of history.split(/\r?\n/)) {
+    const [commit, parentCommits, date] = revision.split("\t");
+    const parents = parentCommits ? parentCommits.split(" ").map((parent) => snapshots.get(parent)) : [];
+    const blob = git(["ls-tree", "--object-only", commit, "--", EXAMPLE_DATA]);
+    const examples = blob ? JSON.parse(git(["cat-file", "blob", blob])) : {};
+    const snapshot = new Map();
+    for (const [key, example] of Object.entries(examples)) {
+      const value = JSON.stringify(example);
+      let inheritedDate = "";
+      for (const parent of parents) {
+        const previous = parent.get(key);
+        if (previous?.value === value && previous.date > inheritedDate) {
+          inheritedDate = previous.date;
+        }
+      }
+      snapshot.set(key, { value, date: inheritedDate || date });
+    }
+    snapshots.set(commit, snapshot);
+    latest = snapshot;
+  }
+  return new Map([...latest].map(([key, example]) => [key, example.date]));
+}
+
+const exampleDates = latestExampleDates();
+const dated = ROUTES.map((route) => {
+  let lastmod = latestCommitDate(route.sources);
+  for (const key of route.examples ?? []) {
+    const date = exampleDates.get(key);
+    if (date && date > lastmod) lastmod = date;
+  }
+  return { ...route, lastmod };
+});
 
 const body = dated.map(
   (route) =>

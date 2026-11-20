@@ -45,7 +45,7 @@ function ok(data, provenance, opts = {}) {
     }
     return envelope;
 }
-function fail(err) {
+function fail(err, opts = {}) {
     const block = err instanceof errors_js_1.GscError
         ? { code: err.code, message: cleanMessage(err), retryable: err.retryable, suggestedAction: err.suggestedAction }
         : { code: "UPSTREAM_ERROR", message: String(err), retryable: false, suggestedAction: undefined };
@@ -56,7 +56,7 @@ function fail(err) {
         meta: {
             requestId: (0, node_crypto_1.randomUUID)(),
             provenance: { source: "google_search_console", fetchedAt: null, servedAt: new Date().toISOString() },
-            googleDataAttempts: 0,
+            googleDataAttempts: opts.attempts ?? 0,
             oauthAttempts: 0,
             cacheHit: false,
             warnings: [],

@@ -42,7 +42,7 @@ Deltas: `deltaX = actual − base`; `%` solo con base positiva
 |---|---|---|
 | `gsc_capabilities` | `read` | Tools, auth, límites, allowlist. Sin red ni credenciales. |
 | `gsc_list_sites` | `read` | Propiedades visibles para esta instancia (filtra por allowlist). |
-| `gsc_search_analytics` | `read` | Query flexible: dimensiones `date,page,query,country,device,hour,searchAppearance`; `hour` requiere `hourly_all`, appearance agrupa solo. `searchType` (`web,image,video,news,discover,googleNews`) se envía como `type`. Admite `aggregationType`. Ordena el dataset recuperado (`sortAppliedTo`); devuelve `datasetId`. |
+| `gsc_search_analytics` | `read` | Consulta por `date,page,query,country,device,hour,searchAppearance,brandedClassification`. Admite `searchType=webMultimodal`, `aggregationType` y `filterLists` de país o dispositivo. Ordena el dataset recuperado y devuelve `datasetId`. |
 | `gsc_performance_overview` | `read` | Totales de la fila agregada + serie `date` + comparación opcional. Nunca suma tops. |
 | `gsc_compare_periods` | `read` | Join completo por clave: `compared`, `not_observed_in_current`, `not_observed_in_baseline`. Ausencia ≠ cero. |
 | `gsc_page_queries` | `read` | Queries observadas para una URL exacta (filtro `page equals`). |
@@ -246,6 +246,8 @@ Los campos `metadata.first_incomplete_date/first_incomplete_hour` señalan datos
 provisionales. `upstreamAggregationType` conserva la agregación comunicada
 por Google; `responseAggregationType=by_row` se mantiene por compatibilidad.
 El parámetro público `searchType` sigue existiendo; al proveedor se envía `type`.
+Sus valores son `web`, `image`, `video`, `news`, `discover`, `googleNews`
+y `webMultimodal`.
 
 `searchAppearance` se consulta como única dimensión. Para desglosar un tipo,
 haz una segunda llamada filtrando ese valor y agrupando por page/query/etc.
@@ -256,6 +258,33 @@ device; Google News no admite query. La pestaña News (`news`) sí admite query.
 tipos Discover/Google News; Showcase requiere esos tipos, filtro `equals`
 `NEWS_SHOWCASE` y ninguna agrupación/filtro por page.
 Las herramientas con ventanas diarias conservan sus contratos anteriores.
+
+**Marca.** Agrupa por `brandedClassification` para obtener la clasificación
+de Google o filtra con `equals` y el valor `BRANDED` o `NON_BRANDED`. Si
+agrupas o filtras por marca, omite los filtros sobre `query`. Puedes incluir
+`query` como dimensión. La API ofrece datos de marca desde el 21 de febrero de
+2026 en propiedades elegibles. Una respuesta vacía deja el tráfico y la
+clasificación sin determinar. `gsc_analyze_segments` sigue usando las
+coincidencias literales de `brandTerms` que proporciones.
+[Referencia de Search Analytics](https://developers.google.com/webmaster-tools/v1/searchanalytics/query).
+
+**Multimodal.** Usa `searchType=webMultimodal` para consultar tráfico de
+Google Lens, Rodea para Buscar y búsquedas con imágenes subidas a Google.
+Agrupa por `page`, `country` o `date`, por ejemplo. Omite la dimensión
+`query` y los filtros sobre `query`. El MCP valida ambas condiciones antes
+de llamar a Google. Conserva las métricas por tipo de búsqueda.
+[Ayuda de Search Console](https://support.google.com/webmasters/answer/17011259?hl=en).
+
+**Listas.** `filterLists` admite `country` con códigos ISO 3166-1 alfa-3
+y `device` con `DESKTOP`, `MOBILE` o `TABLET`. Cualquier valor dentro de la
+lista satisface esa condición. Deben coincidir todas las condiciones, incluidas
+dos listas de la misma dimensión. Usa cada dimensión en `filters` o en
+`filterLists`. Omite el campo si no necesitas listas. El MCP requiere al
+menos una lista cuando envías el campo y un valor como mínimo en cada lista.
+[Anuncio de Google](https://developers.google.com/search/blog/2026/11/search-analytics-api-update).
+
+Si `maxFetchRows` recorta las filas recuperadas, `meta.coverage` indica
+`truncatedByProduct` y registra `maxFetchRows` en `stoppedBecause`.
 
 `gsc_detect_cannibalization` admite `includeTimeline=false`,
 `timelineQueryLimit=5` (1–10) y `minDailyImpressions=10`.
@@ -349,6 +378,18 @@ dimensión `page` y `searchType=image`:
 
 ```json
 {"tool":"gsc_search_analytics","arguments":{"siteUrl":"https://example.com/","startDate":"2026-01-01","endDate":"2026-01-28","dimensions":["page"],"searchType":"image"}}
+```
+
+Consulta la clasificación de marca para Perú o México en móvil o tablet.
+
+```json
+{"tool":"gsc_search_analytics","arguments":{"siteUrl":"https://example.com/","startDate":"2026-10-01","endDate":"2026-10-28","dimensions":["brandedClassification"],"filterLists":[{"dimension":"country","expressions":["PER","MEX"]},{"dimension":"device","expressions":["MOBILE","TABLET"]}]}}
+```
+
+Consulta el rendimiento web multimodal por página.
+
+```json
+{"tool":"gsc_search_analytics","arguments":{"siteUrl":"https://example.com/","startDate":"2026-10-01","endDate":"2026-10-28","dimensions":["page"],"searchType":"webMultimodal"}}
 ```
 
 Primero descubre apariencias y luego usa un valor devuelto por Google como

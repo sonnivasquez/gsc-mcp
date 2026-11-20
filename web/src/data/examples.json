@@ -129,6 +129,39 @@
       ]
     }
   },
+  "brandWithLists": {
+    "name": "gsc_search_analytics",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-28",
+      "dimensions": [
+        "brandedClassification"
+      ],
+      "filterLists": [
+        {
+          "dimension": "country",
+          "expressions": ["PER", "MEX"]
+        },
+        {
+          "dimension": "device",
+          "expressions": ["MOBILE", "TABLET"]
+        }
+      ]
+    }
+  },
+  "webMultimodal": {
+    "name": "gsc_search_analytics",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-28",
+      "dimensions": [
+        "page"
+      ],
+      "searchType": "webMultimodal"
+    }
+  },
   "timeline": {
     "name": "gsc_detect_cannibalization",
     "arguments": {

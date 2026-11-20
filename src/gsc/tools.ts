@@ -12,7 +12,7 @@ import type { AnalyticsQuery, AnalyticsRow } from "./client.js";
 import { fail, ok } from "./envelope.js";
 import type { Coverage, Provenance, ToolEnvelope } from "./envelope.js";
 import { GscError } from "./errors.js";
-import { assertSearchAnalyticsRules } from "./analytics-rules.js";
+import { assertSearchAnalyticsRules, FILTER_LIST_DIMENSIONS, type AnalyticsFilterList } from "./analytics-rules.js";
 import { datasets } from "./datasets.js";
 import type { DatasetStore } from "./datasets.js";
 import { resolvePeriods, shiftDays } from "./periods.js";
@@ -91,8 +91,9 @@ function source(deps: ToolDeps = {}): { ds: FetchGscDataSource; budget: RequestB
   return { ds, budget, allowlist };
 }
 
-export const SUPPORTED_DIMENSIONS = ["date", "page", "query", "country", "device", "hour", "searchAppearance"];
-export const SUPPORTED_SEARCH_TYPES = ["web", "image", "video", "news", "discover", "googleNews"];
+export const SUPPORTED_DIMENSIONS = ["date", "page", "query", "country", "device", "hour", "searchAppearance", "brandedClassification"];
+const WINDOW_SEARCH_TYPES = ["web", "image", "video", "news", "discover", "googleNews"];
+export const SUPPORTED_SEARCH_TYPES = [...WINDOW_SEARCH_TYPES, "webMultimodal"];
 
 export function gscCapabilities(deps: ToolDeps = {}): ToolEnvelope<Record<string, unknown>> {
   const allowlist = deps.allowlist !== undefined ? deps.allowlist : getInstanceAllowlist();
@@ -130,6 +131,7 @@ export function gscCapabilities(deps: ToolDeps = {}): ToolEnvelope<Record<string
       },
       supportedDimensions: SUPPORTED_DIMENSIONS,
       supportedSearchTypes: SUPPORTED_SEARCH_TYPES,
+      searchAnalyticsFilterListDimensions: FILTER_LIST_DIMENSIONS,
       dataStates: ["final", "all", "hourly_all"],
       historyEnabled: process.env.GSC_HISTORY === "1",
       auditLimits: { deadlineMs: 60000, idleTtlMs: 900000, sessionsMax: 100, memoryBytesMax: 67108864, inspectUrlsMax: 10, crawlPagesDefault: 100, crawlPagesMax: 500 },
@@ -182,6 +184,7 @@ export interface SearchAnalyticsInput {
   preset?: string;
   dimensions: string[];
   filters?: Array<{ dimension: string; operator: string; expression: string }>;
+  filterLists?: AnalyticsFilterList[];
   searchType?: string;
   dataState?: string;
   aggregationType?: string;
@@ -257,13 +260,14 @@ function validatedQuery(input: SearchAnalyticsInput): { query: AnalyticsQuery; s
       throw new GscError("INVALID_ARGUMENT", "filters need string dimension, operator and expression");
     }
   }
-  assertSearchAnalyticsRules({ dimensions: input.dimensions, filters: input.filters, searchType, aggregationType: input.aggregationType });
+  assertSearchAnalyticsRules(input);
   return {
     query: {
       startDate,
       endDate,
       dimensions: input.dimensions,
       filters: input.filters,
+      filterLists: input.filterLists,
       searchType: searchType as AnalyticsQuery["searchType"],
       dataState: dataState as AnalyticsQuery["dataState"],
       aggregationType: input.aggregationType || undefined,
@@ -304,9 +308,10 @@ function registerDataset(deps: ToolDeps, dimensions: string[], rows: AnalyticsRo
 }
 export async function gscSearchAnalytics(input: SearchAnalyticsInput, deps: ToolDeps = {}): Promise<ToolEnvelope<unknown>> {
   const fetchedAt = new Date().toISOString();
+  let ds: FetchGscDataSource | undefined;
   try {
     const { query, sortBy, desc, limit } = validatedQuery(input);
-    const { ds, budget } = source(deps);
+    ds = source(deps).ds;
     const result = await ds.queryAnalytics(input.siteUrl, query);
     const sorted = sortRows(result.rows, sortBy, desc);
     const returned = sorted.slice(0, limit);
@@ -337,7 +342,7 @@ export async function gscSearchAnalytics(input: SearchAnalyticsInput, deps: Tool
       },
       {
         coverage,
-        attempts: budget.attemptsUsed,
+        attempts: ds.dataAttemptsUsed,
         ...registerDataset(deps, query.dimensions, sorted),
         warnings: [sourceWarning, ...(result.metadata ? [{ code: "PROVISIONAL_DATA", message: "Data at or after the incomplete date/hour may change; timestamps retain provider offsets.", details: result.metadata }] : [])],
         shrink: (data) => {
@@ -351,7 +356,7 @@ export async function gscSearchAnalytics(input: SearchAnalyticsInput, deps: Tool
       }
     );
   } catch (err) {
-    return fail(err);
+    return fail(err, { attempts: ds?.dataAttemptsUsed ?? 0 });
   }
 }
 
@@ -564,7 +569,7 @@ async function fetchWindows(
   const canReuse = dimensions.length === 1 && dimensions[0] === "page" && reuse?.periodSpecKey === periodSpecKey(period);
   const periods = canReuse && reuse ? (reuse.periods ??= resolvePeriods(period)) : resolvePeriods(period);
   const searchType = common.searchType ?? "web";
-  if (!SUPPORTED_SEARCH_TYPES.includes(searchType)) {
+  if (!WINDOW_SEARCH_TYPES.includes(searchType)) {
     throw new GscError("INVALID_ARGUMENT", `searchType "${searchType}" is not supported`);
   }
   const dataState = common.dataState ?? "final";
@@ -788,6 +793,7 @@ export async function gscPageQueries(input: PageQueriesInput, deps: ToolDeps = {
     const periods = resolvePeriods(input);
     return gscSearchAnalytics({
       ...input,
+      filterLists: undefined,
       startDate: periods.current.startDate,
       endDate: periods.current.endDate,
       dimensions: ["query"],
@@ -803,9 +809,15 @@ export async function gscQueryPages(input: QueryPagesInput, deps: ToolDeps = {})
     if (typeof input.query !== "string" || input.query.trim() === "") {
       throw new GscError("INVALID_ARGUMENT", "query is required: the exact query string");
     }
+    if (input.searchType === "webMultimodal") {
+      throw new GscError("INVALID_ARGUMENT", 'searchType "webMultimodal" is not supported by gsc_query_pages', {
+        suggestedAction: 'Use gsc_search_analytics with searchType "webMultimodal" and a supported grouping.',
+      });
+    }
     const periods = resolvePeriods(input);
     return gscSearchAnalytics({
       ...input,
+      filterLists: undefined,
       startDate: periods.current.startDate,
       endDate: periods.current.endDate,
       dimensions: ["page"],
@@ -1191,6 +1203,11 @@ export async function gscContentDecay(input: DecayInput, deps: ToolDeps = {}): P
       throw new GscError("INVALID_ARGUMENT", "windowDays must be an integer between 7 and 90");
     }
     const searchType = input.searchType ?? "web";
+    if (searchType === "webMultimodal") {
+      throw new GscError("INVALID_ARGUMENT", 'searchType "webMultimodal" is not supported by gsc_content_decay', {
+        suggestedAction: 'Use gsc_search_analytics with searchType "webMultimodal" for each period.',
+      });
+    }
     const minBaseClicks = input.minBaseClicks ?? (searchType === "image" ? 5 : 50);
     const limit = input.resultLimit ?? 50;
     const ref = resolvePeriods({ preset: input.preset, startDate: input.startDate, endDate: input.endDate });

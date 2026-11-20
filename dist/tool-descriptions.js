@@ -93,10 +93,9 @@ const DESCRIPTIONS = {
         "eUrl identifier.",
     ]),
     "gsc_search_analytics": phrase([
-        "Flexible performance query with ",
-        "explicit coverage. Sort applies ",
-        "to the retrieved dataset, not to",
-        " all Google data.",
+        "Flexible performance query with explicit coverage. Supports Google brand classification, ",
+        "web multimodal results, and country/device filter lists. Sort applies ",
+        "to the retrieved dataset, not to all Google data.",
     ]),
     "gsc_inspect_urls": phrase([
         "Index inspection for 1-10 URLs. ",

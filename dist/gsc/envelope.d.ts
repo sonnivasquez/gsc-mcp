@@ -58,4 +58,6 @@ export interface OkOpts<T> {
     shrink?: (data: T) => T | null;
 }
 export declare function ok<T>(data: T, provenance: Omit<Provenance, "servedAt">, opts?: OkOpts<T>): ToolEnvelope<T>;
-export declare function fail<T = null>(err: unknown): ToolEnvelope<T>;
+export declare function fail<T = null>(err: unknown, opts?: {
+    attempts?: number;
+}): ToolEnvelope<T>;

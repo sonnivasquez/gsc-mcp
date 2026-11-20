@@ -4,6 +4,7 @@ import type { AuthProvider } from "../auth-provider.js";
 import { RequestBudget } from "./budget.js";
 import type { AnalyticsRow } from "./client.js";
 import type { ToolEnvelope } from "./envelope.js";
+import { type AnalyticsFilterList } from "./analytics-rules.js";
 import type { DatasetStore } from "./datasets.js";
 import type { DateRange } from "./periods.js";
 import type { OpportunityResult } from "./opportunities.js";
@@ -75,6 +76,7 @@ export interface SearchAnalyticsInput {
         operator: string;
         expression: string;
     }>;
+    filterLists?: AnalyticsFilterList[];
     searchType?: string;
     dataState?: string;
     aggregationType?: string;

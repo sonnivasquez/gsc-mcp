@@ -63,7 +63,7 @@ function requestBody(params, startRow, pageSize) {
     return body;
 }
 async function fetchAllRows(params, siteUrlOverride, clientOverride) {
-    (0, analytics_rules_js_1.assertSearchAnalyticsRules)({ dimensions: params.dimensions, filters: (params.dimensionFilterGroups ?? []).flatMap(group => group.filters), type: params.type, aggregationType: params.aggregationType });
+    (0, analytics_rules_js_1.assertSearchAnalyticsRules)(params);
     const client = clientOverride ?? (await (0, auth_js_1.getSearchConsoleClient)());
     const siteUrl = (0, auth_js_1.resolveSiteUrl)(siteUrlOverride);
     (0, profiles_js_1.assertSiteAllowed)(siteUrl);

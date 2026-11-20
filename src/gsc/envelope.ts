@@ -105,7 +105,7 @@ export function ok<T>(data: T, provenance: Omit<Provenance, "servedAt">, opts: O
   return envelope;
 }
 
-export function fail<T = null>(err: unknown): ToolEnvelope<T> {
+export function fail<T = null>(err: unknown, opts: { attempts?: number } = {}): ToolEnvelope<T> {
   const block =
     err instanceof GscError
       ? { code: err.code, message: cleanMessage(err), retryable: err.retryable, suggestedAction: err.suggestedAction }
@@ -117,7 +117,7 @@ export function fail<T = null>(err: unknown): ToolEnvelope<T> {
     meta: {
       requestId: randomUUID(),
       provenance: { source: "google_search_console", fetchedAt: null, servedAt: new Date().toISOString() },
-      googleDataAttempts: 0,
+      googleDataAttempts: opts.attempts ?? 0,
       oauthAttempts: 0,
       cacheHit: false,
       warnings: [],
