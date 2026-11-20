@@ -1,9 +1,32 @@
 # Changelog
 
-## Próximos cambios
+## 1.2.0
 
-- `gsc_search_analytics` admite la clasificación de marca de Google, tráfico web multimodal y listas de países o dispositivos en una consulta.
-- La cobertura indica cuándo `maxFetchRows` descarta filas de la última página devuelta por Google.
+Esta versión amplía `gsc_search_analytics` y conserva el catálogo de 34
+herramientas MCP y el acceso de solo lectura por defecto.
+
+### Nuevas consultas
+
+- `gsc_search_analytics` incorpora `brandedClassification` para agrupar o filtrar
+  búsquedas de marca y sin marca en propiedades elegibles.
+- `searchType=webMultimodal` consulta el rendimiento de Google Lens, Rodea para
+  Buscar y las búsquedas con imágenes subidas a Google.
+- `filterLists` permite incluir varios países o dispositivos en un informe. El
+  servidor valida las combinaciones de filtros antes de consultar a Google.
+
+### Cobertura y diagnóstico
+
+- La cobertura indica cuándo `maxFetchRows` descarta filas de la última página
+  devuelta por Google. `meta.googleDataAttempts` cuenta los intentos de cada
+  consulta, incluidos los que terminan en un error de Google.
+
+### Actualización
+
+Ejecuta `gsc update` cuando la versión esté disponible en npm. Reinicia tu
+cliente MCP y comprueba la versión con `gsc --version`. Se conservan los
+perfiles, las credenciales y la configuración de los clientes MCP.
+
+Consulta [las reglas y ejemplos de Search Analytics](docs/tools.md#novedades-de-search-analytics).
 
 ## 1.1.0
 

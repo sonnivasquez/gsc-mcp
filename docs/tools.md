@@ -259,11 +259,17 @@ tipos Discover/Google News; Showcase requiere esos tipos, filtro `equals`
 `NEWS_SHOWCASE` y ninguna agrupación/filtro por page.
 Las herramientas con ventanas diarias conservan sus contratos anteriores.
 
+#### Novedades de Search Analytics
+
+Estos parámetros están disponibles a partir de la versión 1.2.0. Consulta los
+[ejemplos de Search Analytics](#ejemplos-de-search-analytics).
+
 **Marca.** Agrupa por `brandedClassification` para obtener la clasificación
 de Google o filtra con `equals` y el valor `BRANDED` o `NON_BRANDED`. Si
 agrupas o filtras por marca, omite los filtros sobre `query`. Puedes incluir
 `query` como dimensión. La API ofrece datos de marca desde el 21 de febrero de
-2026 en propiedades elegibles. Una respuesta vacía deja el tráfico y la
+2026 en propiedades de nivel superior con suficiente volumen de consultas e
+impresiones. Una respuesta vacía deja el tráfico y la
 clasificación sin determinar. `gsc_analyze_segments` sigue usando las
 coincidencias literales de `brandTerms` que proporciones.
 [Referencia de Search Analytics](https://developers.google.com/webmaster-tools/v1/searchanalytics/query).
@@ -285,6 +291,10 @@ menos una lista cuando envías el campo y un valor como mínimo en cada lista.
 
 Si `maxFetchRows` recorta las filas recuperadas, `meta.coverage` indica
 `truncatedByProduct` y registra `maxFetchRows` en `stoppedBecause`.
+`meta.googleDataAttempts` cuenta los intentos de esta consulta, incluidos los
+reintentos. Un error local de validación devuelve cero intentos de datos.
+
+#### Cronología de canibalización
 
 `gsc_detect_cannibalization` admite `includeTimeline=false`,
 `timelineQueryLimit=5` (1–10) y `minDailyImpressions=10`.
@@ -366,6 +376,11 @@ Para la evidencia completa usa el `meta.datasetId` devuelto y sigue el
 {"tool":"gsc_get_dataset","arguments":{"datasetId":"DATASET_DEVUELTO","limit":100}}
 ```
 
+### Ejemplos de Search Analytics
+
+Usa el identificador exacto de tu propiedad y ajusta las fechas. Los ejemplos de
+marca, listas y web multimodal requieren los [nuevos parámetros](#novedades-de-search-analytics).
+
 Ejemplo horario con fechas ilustrativas: sustitúyelas por días dentro de los
 últimos diez días. Las fechas son inclusivas y se conservan los offsets recibidos:
 
@@ -384,6 +399,13 @@ Consulta la clasificación de marca para Perú o México en móvil o tablet.
 
 ```json
 {"tool":"gsc_search_analytics","arguments":{"siteUrl":"https://example.com/","startDate":"2026-10-01","endDate":"2026-10-28","dimensions":["brandedClassification"],"filterLists":[{"dimension":"country","expressions":["PER","MEX"]},{"dimension":"device","expressions":["MOBILE","TABLET"]}]}}
+```
+
+Para obtener las páginas con tráfico de búsquedas de marca, agrupa por `page`
+y filtra por `BRANDED`. Usa `NON_BRANDED` para consultar la otra clasificación.
+
+```json
+{"tool":"gsc_search_analytics","arguments":{"siteUrl":"https://example.com/","startDate":"2026-10-01","endDate":"2026-10-28","dimensions":["page"],"filters":[{"dimension":"brandedClassification","operator":"equals","expression":"BRANDED"}]}}
 ```
 
 Consulta el rendimiento web multimodal por página.

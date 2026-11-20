@@ -102,7 +102,7 @@ const ROUTES = [
   {
     path: "/docs/analytics", changefreq: "monthly", priority: "0.8",
     sources: [...SHELL, ...DOC_CHROME, EXAMPLE_COMPONENT, "web/src/routes/docs.analytics.tsx"],
-    examples: ["hourly", "appearance", "appearanceDetail", "brandWithLists", "webMultimodal", "timeline"],
+    examples: ["brandedPages", "brandWithLists", "webMultimodal", "hourly", "appearance", "appearanceDetail", "timeline"],
   },
   { path: "/docs/troubleshooting", changefreq: "monthly", priority: "0.8", sources: [...SHELL, ...DOC_CHROME, "web/src/routes/docs.troubleshooting.tsx"] },
   { path: "/docs/uninstall", changefreq: "monthly", priority: "0.6", sources: [...SHELL, ...DOC_CHROME, ...TABS, "web/src/routes/docs.uninstall.tsx"] },

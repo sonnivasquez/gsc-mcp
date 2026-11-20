@@ -1,7 +1,7 @@
 // Single source of truth for product facts shown on this site.
 // Values mirror the MCP package root: package.json, README.md, PRIVACY.md.
 export const PKG_NAME = "@sonnivasquez/gsc-mcp";
-export const PKG_VERSION = "1.1.0";
+export const PKG_VERSION = "1.2.0";
 export const PINNED_SPEC = `${PKG_NAME}@${PKG_VERSION}`;
 
 export const TOKEN_DIR = "~/.gsc-mcp/";
@@ -179,7 +179,7 @@ export const DOC_NAV: readonly DocNavItem[] = [
   { to: "/docs/tools", label: "MCP tools", blurb: "Complete tool catalog and access" },
   { to: "/docs/audits", label: "On-demand audits", blurb: "Inputs, limits, and continuation" },
   { to: "/docs/history", label: "Change history", blurb: "Optional records and snapshots" },
-  { to: "/docs/analytics", label: "Analytics", blurb: "Hourly data and search appearance" },
+  { to: "/docs/analytics", label: "Analytics", blurb: "Brand filters, multimodal reports, hourly data and search appearance" },
   {
     to: "/docs/troubleshooting",
     label: "Troubleshooting",

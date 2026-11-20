@@ -92,6 +92,10 @@ de las exportaciones. Consulta [entradas, límites y ejemplos](tools.md#auditor�
 Comprueba la versión con `gsc --version` y `gsc_capabilities` tras reiniciar
 el cliente; 1.0.0 no incluye estas cinco auditorías.
 
+Para analizar búsquedas de marca y sin marca, rendimiento web multimodal o
+varios países o dispositivos, usa `gsc_search_analytics` a partir de la
+versión 1.2.0. [Ejemplos de Search Analytics](tools.md#ejemplos-de-search-analytics).
+
 ## Actualiza o desinstala
 
 El actualizador conserva tus tokens de Google, perfiles y configuraciones de clientes. Revisa las notas de la versión por si necesita pasos específicos y reinicia tu cliente MCP después de actualizar.

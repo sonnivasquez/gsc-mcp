@@ -129,6 +129,22 @@
       ]
     }
   },
+  "brandedPages": {
+    "name": "gsc_search_analytics",
+    "arguments": {
+      "siteUrl": "https://example.com/",
+      "startDate": "2026-10-01",
+      "endDate": "2026-10-28",
+      "dimensions": ["page"],
+      "filters": [
+        {
+          "dimension": "brandedClassification",
+          "operator": "equals",
+          "expression": "BRANDED"
+        }
+      ]
+    }
+  },
   "brandWithLists": {
     "name": "gsc_search_analytics",
     "arguments": {

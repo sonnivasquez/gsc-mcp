@@ -85,6 +85,16 @@ Quick Connect is the path that skips creating a Google Cloud OAuth client. Custo
 
 These are analysis tools. Opportunity and cannibalization results are candidates to review, not proof that a particular SEO change will improve rankings.
 
+### Search Analytics in 1.2.0
+
+Version 1.2.0 extends `gsc_search_analytics` with three options for performance reports.
+
+- **Branded and non-branded traffic.** Group or filter using Google's `brandedClassification` on eligible properties.
+- **Web multimodal performance.** Use `searchType: "webMultimodal"` to see which pages earn clicks and impressions from Google Lens, Circle to Search, and image uploads in Google Search.
+- **Multiple countries or devices.** Use `filterLists` to bring several markets or device types into one report.
+
+[Search Analytics examples](https://gscmcp.dev/docs/analytics) · [Input rules and coverage](docs/tools.md#novedades-de-search-analytics) · [Changelog](CHANGELOG.md)
+
 ## Get started
 
 You need **Node.js 22 or newer**, npm or Bun, and a Google account with access to a Search Console property. Bun can install the package and run the MCP server; the global `gsc` CLI still requires Node.js.
