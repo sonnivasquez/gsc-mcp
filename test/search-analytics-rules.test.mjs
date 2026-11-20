@@ -140,6 +140,41 @@ test('analytics failures report the Google attempts spent by the request', async
   }
 });
 
+test('concurrent analytics calls report their own attempts and share the budget limit', async () => {
+  const input = { ...range, siteUrl: SITE };
+  const budget = new RequestBudget(2);
+  const { promise: bothStarted, resolve: startResponses } = Promise.withResolvers();
+  let calls = 0;
+  const deps = {
+    provider,
+    allowlist: [SITE],
+    budget,
+    fetchImpl: async (_url, init) => {
+      const { dimensions } = JSON.parse(init.body);
+      if (++calls === 2) startResponses();
+      await bothStarted;
+      return dimensions.includes('page')
+        ? Response.json({ rows: [] })
+        : Response.json({ error: { message: 'fixture provider error' } }, { status: 400 });
+    },
+  };
+
+  const [success, failure] = await Promise.all([
+    gscSearchAnalytics({ ...input, dimensions: ['page'] }, deps),
+    gscSearchAnalytics({ ...input, dimensions: ['date'] }, deps),
+  ]);
+  assert.equal(success.status, 'ok');
+  assert.equal(success.meta.googleDataAttempts, 1);
+  assert.equal(failure.error.code, 'INVALID_ARGUMENT');
+  assert.equal(failure.meta.googleDataAttempts, 1);
+
+  const exhausted = await gscSearchAnalytics({ ...input, dimensions: ['page'] }, deps);
+  assert.equal(exhausted.error.code, 'REQUEST_BUDGET_EXCEEDED');
+  assert.equal(exhausted.meta.googleDataAttempts, 0);
+  assert.equal(budget.attemptsUsed, 2);
+  assert.equal(calls, 2);
+});
+
 test('brand grouping and exact filter preserve query grouping, key order and metrics', async () => {
   const dimensions = ['query', 'brandedClassification'];
   const filters = [filter('brandedClassification', 'BRANDED')];

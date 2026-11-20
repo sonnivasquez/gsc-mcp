@@ -247,11 +247,10 @@ function registerDataset(deps, dimensions, rows) {
 }
 async function gscSearchAnalytics(input, deps = {}) {
     const fetchedAt = new Date().toISOString();
-    const budget = deps.budget ?? new budget_js_1.RequestBudget();
-    const initialAttempts = budget.attemptsUsed;
+    let ds;
     try {
         const { query, sortBy, desc, limit } = validatedQuery(input);
-        const { ds } = source({ ...deps, budget });
+        ds = source(deps).ds;
         const result = await ds.queryAnalytics(input.siteUrl, query);
         const sorted = sortRows(result.rows, sortBy, desc);
         const returned = sorted.slice(0, limit);
@@ -279,7 +278,7 @@ async function gscSearchAnalytics(input, deps = {}) {
             dataState: query.dataState,
         }, {
             coverage,
-            attempts: budget.attemptsUsed,
+            attempts: ds.dataAttemptsUsed,
             ...registerDataset(deps, query.dimensions, sorted),
             warnings: [sourceWarning, ...(result.metadata ? [{ code: "PROVISIONAL_DATA", message: "Data at or after the incomplete date/hour may change; timestamps retain provider offsets.", details: result.metadata }] : [])],
             shrink: (data) => {
@@ -294,7 +293,7 @@ async function gscSearchAnalytics(input, deps = {}) {
         });
     }
     catch (err) {
-        return (0, envelope_js_1.fail)(err, { attempts: budget.attemptsUsed - initialAttempts });
+        return (0, envelope_js_1.fail)(err, { attempts: ds?.dataAttemptsUsed ?? 0 });
     }
 }
 async function inspectOne(ds, siteUrl, url, languageCode) {

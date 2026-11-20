@@ -308,11 +308,10 @@ function registerDataset(deps: ToolDeps, dimensions: string[], rows: AnalyticsRo
 }
 export async function gscSearchAnalytics(input: SearchAnalyticsInput, deps: ToolDeps = {}): Promise<ToolEnvelope<unknown>> {
   const fetchedAt = new Date().toISOString();
-  const budget = deps.budget ?? new RequestBudget();
-  const initialAttempts = budget.attemptsUsed;
+  let ds: FetchGscDataSource | undefined;
   try {
     const { query, sortBy, desc, limit } = validatedQuery(input);
-    const { ds } = source({ ...deps, budget });
+    ds = source(deps).ds;
     const result = await ds.queryAnalytics(input.siteUrl, query);
     const sorted = sortRows(result.rows, sortBy, desc);
     const returned = sorted.slice(0, limit);
@@ -343,7 +342,7 @@ export async function gscSearchAnalytics(input: SearchAnalyticsInput, deps: Tool
       },
       {
         coverage,
-        attempts: budget.attemptsUsed,
+        attempts: ds.dataAttemptsUsed,
         ...registerDataset(deps, query.dimensions, sorted),
         warnings: [sourceWarning, ...(result.metadata ? [{ code: "PROVISIONAL_DATA", message: "Data at or after the incomplete date/hour may change; timestamps retain provider offsets.", details: result.metadata }] : [])],
         shrink: (data) => {
@@ -357,7 +356,7 @@ export async function gscSearchAnalytics(input: SearchAnalyticsInput, deps: Tool
       }
     );
   } catch (err) {
-    return fail(err, { attempts: budget.attemptsUsed - initialAttempts });
+    return fail(err, { attempts: ds?.dataAttemptsUsed ?? 0 });
   }
 }
 

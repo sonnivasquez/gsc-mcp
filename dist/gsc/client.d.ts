@@ -63,7 +63,9 @@ export declare class FetchGscDataSource {
     private readonly timeoutMs;
     private readonly deadline?;
     private readonly signal?;
+    private dataAttempts;
     constructor(provider: AuthProvider, opts?: DataSourceOpts);
+    get dataAttemptsUsed(): number;
     private checkSite;
     private fetchOnce;
     private call;

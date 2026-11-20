@@ -142,6 +142,7 @@ export class FetchGscDataSource {
   private readonly timeoutMs: number | undefined;
   private readonly deadline?: number;
   private readonly signal?: AbortSignal;
+  private dataAttempts = 0;
 
   constructor(
     private readonly provider: AuthProvider,
@@ -153,6 +154,10 @@ export class FetchGscDataSource {
     this.timeoutMs = opts.timeoutMs;
     this.deadline = opts.deadline;
     this.signal = opts.signal;
+  }
+
+  get dataAttemptsUsed(): number {
+    return this.dataAttempts;
   }
 
   private checkSite(siteUrl: string): void {
@@ -188,6 +193,7 @@ export class FetchGscDataSource {
       throw new GscError("AUTH_REQUIRED", "unreachable");
     }
     return this.budget.run(async (_attempt, signal) => {
+      this.dataAttempts++;
       const response = await this.fetchOnce(path, init, token, signal);
       let body: unknown = null;
       try {

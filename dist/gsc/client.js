@@ -75,6 +75,7 @@ class FetchGscDataSource {
     timeoutMs;
     deadline;
     signal;
+    dataAttempts = 0;
     constructor(provider, opts = {}) {
         this.provider = provider;
         this.budget = opts.budget ?? new budget_js_1.RequestBudget();
@@ -83,6 +84,9 @@ class FetchGscDataSource {
         this.timeoutMs = opts.timeoutMs;
         this.deadline = opts.deadline;
         this.signal = opts.signal;
+    }
+    get dataAttemptsUsed() {
+        return this.dataAttempts;
     }
     checkSite(siteUrl) {
         if (this.allowlist === null)
@@ -120,6 +124,7 @@ class FetchGscDataSource {
             throw new errors_js_1.GscError("AUTH_REQUIRED", "unreachable");
         }
         return this.budget.run(async (_attempt, signal) => {
+            this.dataAttempts++;
             const response = await this.fetchOnce(path, init, token, signal);
             let body = null;
             try {
