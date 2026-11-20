@@ -1,7 +1,9 @@
+import type { searchconsole_v1 } from "googleapis";
 import { getSearchConsoleClient, resolveSiteUrl, type SearchConsoleClient } from "./auth.js";
 import { assertSiteAllowed } from "./profiles.js";
 import { GscError } from "./gsc/errors.js";
-import { assertSearchAnalyticsRules } from "./gsc/analytics-rules.js";
+import { assertSearchAnalyticsRules, type AnalyticsFilterList } from "./gsc/analytics-rules.js";
+import type { AnalyticsFilter, SearchType } from "./gsc/client.js";
 
 export interface SearchAnalyticsRow {
   keys: string[];
@@ -16,15 +18,13 @@ export interface QueryParams {
   endDate: string;
   dimensions: string[];
   dimensionFilterGroups?: Array<{
-    filters: Array<{
-      dimension: string;
-      operator: string;
-      expression: string;
-    }>;
+    groupType?: string;
+    filters?: AnalyticsFilter[];
+    filterLists?: AnalyticsFilterList[];
   }>;
   rowLimit?: number;
   maxTotalRows?: number;
-  type?: "web" | "image" | "video" | "news" | "discover" | "googleNews";
+  type?: SearchType;
   aggregationType?: string;
 }
 
@@ -87,8 +87,11 @@ function asRow(raw: AnalyticsPage): SearchAnalyticsRow {
   };
 }
 
-function requestBody(params: QueryParams, startRow: number, pageSize: number): Record<string, unknown> {
-  const body: Record<string, unknown> = {
+// The installed SDK forwards the JSON body and its generated group type predates filterLists.
+type AnalyticsRequestBody = searchconsole_v1.Schema$SearchAnalyticsQueryRequest & Pick<QueryParams, "dimensionFilterGroups">;
+
+function requestBody(params: QueryParams, startRow: number, pageSize: number): AnalyticsRequestBody {
+  const body: AnalyticsRequestBody = {
     startDate: params.startDate,
     endDate: params.endDate,
     dimensions: params.dimensions,
@@ -107,7 +110,7 @@ export async function fetchAllRows(
   siteUrlOverride?: string,
   clientOverride?: SearchConsoleClient,
 ): Promise<SearchAnalyticsRow[]> {
-  assertSearchAnalyticsRules({ dimensions: params.dimensions, filters: (params.dimensionFilterGroups ?? []).flatMap(group => group.filters), type: params.type, aggregationType: params.aggregationType });
+  assertSearchAnalyticsRules(params);
   const client = clientOverride ?? (await getSearchConsoleClient());
   const siteUrl = resolveSiteUrl(siteUrlOverride);
   assertSiteAllowed(siteUrl);

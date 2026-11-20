@@ -3,10 +3,10 @@ import { withAbort } from "../fetch-guard.js";
 import type { AuthProvider } from "../auth-provider.js";
 import { isAllowAllAllowlist } from "../profiles.js";
 import { RequestBudget } from "./budget.js";
-import { assertSearchAnalyticsRules } from "./analytics-rules.js";
+import { assertSearchAnalyticsRules, type AnalyticsFilterList } from "./analytics-rules.js";
 import { GscError, propertyNotAllowed, throwForResponse, throwForTransport } from "./errors.js";
 
-export type SearchType = "web" | "image" | "video" | "news" | "discover" | "googleNews";
+export type SearchType = "web" | "image" | "video" | "news" | "discover" | "googleNews" | "webMultimodal";
 export type DataState = "final" | "all" | "hourly_all";
 
 export interface AnalyticsFilter {
@@ -20,6 +20,7 @@ export interface AnalyticsQuery {
   endDate: string;
   dimensions: string[];
   filters?: AnalyticsFilter[];
+  filterLists?: AnalyticsFilterList[];
   searchType?: SearchType;
   dataState?: DataState;
   rowLimit?: number;
@@ -216,6 +217,16 @@ export class FetchGscDataSource {
   async queryAnalytics(siteUrl: string, q: AnalyticsQuery): Promise<QueryResult> {
     this.checkSite(siteUrl);
     assertSearchAnalyticsRules(q);
+    const dimensionFilterGroups = q.filters?.length || q.filterLists?.length
+      ? [{
+          filters: q.filters?.length ? q.filters.map(({ dimension, operator, expression }) => ({
+            dimension,
+            operator,
+            expression,
+          })) : undefined,
+          filterLists: q.filterLists,
+        }]
+      : undefined;
     const pageSize = Math.min(q.rowLimit ?? MAX_PAGE, MAX_PAGE);
     const maxFetch = q.maxFetchRows ?? 5_000;
     const rows: AnalyticsRow[] = [];
@@ -232,17 +243,7 @@ export class FetchGscDataSource {
             startDate: q.startDate,
             endDate: q.endDate,
             dimensions: q.dimensions,
-            dimensionFilterGroups: q.filters?.length
-              ? [
-                  {
-                    filters: q.filters.map((f) => ({
-                      dimension: f.dimension,
-                      operator: f.operator,
-                      expression: f.expression,
-                    })),
-                  },
-                ]
-              : undefined,
+            dimensionFilterGroups,
             type: q.searchType ?? "web",
             ...(q.aggregationType ? { aggregationType: q.aggregationType } : {}),
             dataState: q.dataState ?? "final",
@@ -266,7 +267,7 @@ export class FetchGscDataSource {
       const room = maxFetch - rows.length;
       if (room <= 0) return { rows, pagesFetched, truncated: true, upstreamAggregationType, metadata };
       rows.push(...page.slice(0, room));
-      if (page.length < pageSize) return { rows, pagesFetched, truncated: false, upstreamAggregationType, metadata };
+      if (page.length < pageSize) return { rows, pagesFetched, truncated: page.length > room, upstreamAggregationType, metadata };
       if (rows.length >= maxFetch) return { rows, pagesFetched, truncated: true, upstreamAggregationType, metadata };
       startRow += pageSize;
     }

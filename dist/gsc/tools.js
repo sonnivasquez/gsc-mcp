@@ -54,8 +54,9 @@ function source(deps = {}) {
     });
     return { ds, budget, allowlist };
 }
-exports.SUPPORTED_DIMENSIONS = ["date", "page", "query", "country", "device", "hour", "searchAppearance"];
-exports.SUPPORTED_SEARCH_TYPES = ["web", "image", "video", "news", "discover", "googleNews"];
+exports.SUPPORTED_DIMENSIONS = ["date", "page", "query", "country", "device", "hour", "searchAppearance", "brandedClassification"];
+const WINDOW_SEARCH_TYPES = ["web", "image", "video", "news", "discover", "googleNews"];
+exports.SUPPORTED_SEARCH_TYPES = [...WINDOW_SEARCH_TYPES, "webMultimodal"];
 function gscCapabilities(deps = {}) {
     const allowlist = deps.allowlist !== undefined ? deps.allowlist : (0, profiles_js_1.getInstanceAllowlist)();
     const provider = deps.provider ?? (0, auth_provider_js_1.getAuthProvider)();
@@ -92,6 +93,7 @@ function gscCapabilities(deps = {}) {
         },
         supportedDimensions: exports.SUPPORTED_DIMENSIONS,
         supportedSearchTypes: exports.SUPPORTED_SEARCH_TYPES,
+        searchAnalyticsFilterListDimensions: analytics_rules_js_1.FILTER_LIST_DIMENSIONS,
         dataStates: ["final", "all", "hourly_all"],
         historyEnabled: process.env.GSC_HISTORY === "1",
         auditLimits: { deadlineMs: 60000, idleTtlMs: 900000, sessionsMax: 100, memoryBytesMax: 67108864, inspectUrlsMax: 10, crawlPagesDefault: 100, crawlPagesMax: 500 },
@@ -198,13 +200,14 @@ function validatedQuery(input) {
             throw new errors_js_1.GscError("INVALID_ARGUMENT", "filters need string dimension, operator and expression");
         }
     }
-    (0, analytics_rules_js_1.assertSearchAnalyticsRules)({ dimensions: input.dimensions, filters: input.filters, searchType, aggregationType: input.aggregationType });
+    (0, analytics_rules_js_1.assertSearchAnalyticsRules)(input);
     return {
         query: {
             startDate,
             endDate,
             dimensions: input.dimensions,
             filters: input.filters,
+            filterLists: input.filterLists,
             searchType: searchType,
             dataState: dataState,
             aggregationType: input.aggregationType || undefined,
@@ -421,7 +424,7 @@ async function fetchWindows(siteUrl, dimensions, period, common, deps) {
     const canReuse = dimensions.length === 1 && dimensions[0] === "page" && reuse?.periodSpecKey === periodSpecKey(period);
     const periods = canReuse && reuse ? (reuse.periods ??= (0, periods_js_1.resolvePeriods)(period)) : (0, periods_js_1.resolvePeriods)(period);
     const searchType = common.searchType ?? "web";
-    if (!exports.SUPPORTED_SEARCH_TYPES.includes(searchType)) {
+    if (!WINDOW_SEARCH_TYPES.includes(searchType)) {
         throw new errors_js_1.GscError("INVALID_ARGUMENT", `searchType "${searchType}" is not supported`);
     }
     const dataState = common.dataState ?? "final";
@@ -608,6 +611,7 @@ async function gscPageQueries(input, deps = {}) {
         const periods = (0, periods_js_1.resolvePeriods)(input);
         return gscSearchAnalytics({
             ...input,
+            filterLists: undefined,
             startDate: periods.current.startDate,
             endDate: periods.current.endDate,
             dimensions: ["query"],
@@ -623,9 +627,15 @@ async function gscQueryPages(input, deps = {}) {
         if (typeof input.query !== "string" || input.query.trim() === "") {
             throw new errors_js_1.GscError("INVALID_ARGUMENT", "query is required: the exact query string");
         }
+        if (input.searchType === "webMultimodal") {
+            throw new errors_js_1.GscError("INVALID_ARGUMENT", 'searchType "webMultimodal" is not supported by gsc_query_pages', {
+                suggestedAction: 'Use gsc_search_analytics with searchType "webMultimodal" and a supported grouping.',
+            });
+        }
         const periods = (0, periods_js_1.resolvePeriods)(input);
         return gscSearchAnalytics({
             ...input,
+            filterLists: undefined,
             startDate: periods.current.startDate,
             endDate: periods.current.endDate,
             dimensions: ["page"],
@@ -958,6 +968,11 @@ async function gscContentDecay(input, deps = {}) {
             throw new errors_js_1.GscError("INVALID_ARGUMENT", "windowDays must be an integer between 7 and 90");
         }
         const searchType = input.searchType ?? "web";
+        if (searchType === "webMultimodal") {
+            throw new errors_js_1.GscError("INVALID_ARGUMENT", 'searchType "webMultimodal" is not supported by gsc_content_decay', {
+                suggestedAction: 'Use gsc_search_analytics with searchType "webMultimodal" for each period.',
+            });
+        }
         const minBaseClicks = input.minBaseClicks ?? (searchType === "image" ? 5 : 50);
         const limit = input.resultLimit ?? 50;
         const ref = (0, periods_js_1.resolvePeriods)({ preset: input.preset, startDate: input.startDate, endDate: input.endDate });

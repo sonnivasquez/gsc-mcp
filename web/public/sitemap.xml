@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://gscmcp.dev/</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-11-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -32,25 +32,25 @@
   </url>
   <url>
     <loc>https://gscmcp.dev/docs/tools</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-11-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://gscmcp.dev/docs/audits</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-11-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://gscmcp.dev/docs/history</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-11-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://gscmcp.dev/docs/analytics</loc>
-    <lastmod>2026-10-28</lastmod>
+    <lastmod>2026-11-20</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

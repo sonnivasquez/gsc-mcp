@@ -9,7 +9,7 @@ exports.CANONICAL_TOOLS = [
     { name: "gsc_migration_audit", description: "Explicit route/domain migration map audit; current HTTP and historical GSC evidence.", kind: "fetch" },
     { name: "gsc_capabilities", description: "What this server can do, its auth state and limits. Works offline.", kind: "read" },
     { name: "gsc_list_sites", description: "GSC properties visible to this instance.", kind: "read" },
-    { name: "gsc_search_analytics", description: "Flexible performance query with explicit coverage.", kind: "read" },
+    { name: "gsc_search_analytics", description: "Flexible performance query with explicit coverage, brand classification, web multimodal, and country/device filter lists.", kind: "read" },
     { name: "gsc_inspect_urls", description: "Index inspection for 1-10 URLs with per-URL results.", kind: "read" },
     { name: "gsc_list_sitemaps", description: "Registered sitemaps and their reported states.", kind: "read" },
     { name: "gsc_get_dataset", description: "Page through a previous result with zero new Google calls.", kind: "read" },

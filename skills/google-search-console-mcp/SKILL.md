@@ -66,6 +66,11 @@ Do not use for general SEO advice without data; run the tools first.
    `hour` and `hourly_all` require each other and dates within the last ten days.
    Query `searchAppearance`
    alone, then filter a returned appearance with `equals` in a second query.
+   Group by `brandedClassification` or filter with `equals` and `BRANDED` or
+   `NON_BRANDED` on eligible properties. Omit `query` filters when using brand
+   classification. For `webMultimodal` group by a dimension such as `page`.
+   Use `filterLists` for exact country or device values. Values within a list
+   are ORed and conditions are ANDed. Use each dimension in only one filter form.
 4. Page datasets via `gsc_get_dataset`; never re-query for pagination.
    Continue an audit explicitly with its own `nextCursor`; sessions expire
    after 15 idle minutes or server restart. Large saved history has a separate

@@ -38,6 +38,7 @@ import { imagePageAudit } from "./tools/image-page-audit.js";
 import { checkUpdateImpact } from "./tools/update-impact.js";
 import { registerAudits } from "./audits/register.js";
 import { toolDescription } from "./tool-descriptions.js";
+import { analyticsFilterListsSchema } from "./gsc/analytics-rules.js";
 
 function phrase(parts: readonly string[]): string {
   return parts.join("");
@@ -231,14 +232,15 @@ export async function serve(opts: ServeOpts): Promise<void> {
       siteUrl: described("Exact GSC property identifier"),
       startDate: described("Inclusive start, YYYY-MM-DD"),
       endDate: described("Inclusive end, YYYY-MM-DD"),
-      dimensions: z.array(z.string()).describe("Subset of date, page, query, country, device, hour, searchAppearance (appearance alone)"),
+      dimensions: z.array(z.string()).describe("Subset of date, page, query, country, device, hour, searchAppearance (appearance alone), brandedClassification"),
       filters: z.array(z.object({
         dimension: z.string(),
         operator: z.string(),
         expression: z.string(),
-      })).optional(),
+      })).optional().describe('brandedClassification requires equals with BRANDED or NON_BRANDED. Grouping or filtering by brand excludes query filters.'),
+      filterLists: analyticsFilterListsSchema.optional().describe("Exact country (ISO alpha-3) or device (DESKTOP, MOBILE, TABLET) values. OR within each list, AND across conditions. Keep each dimension in either filters or filterLists."),
       searchType: z.string().optional().describe(
-        phrase(["web, image, video, news, discover, ", "googleNews (default web)"]),
+        "web, image, video, news, discover, googleNews, webMultimodal (default web)",
       ),
       aggregationType: z.enum(["auto", "byPage", "byProperty", "byNewsShowcasePanel"]).optional()
         .describe("Google aggregation; page grouping/filtering excludes byProperty"),

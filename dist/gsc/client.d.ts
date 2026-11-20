@@ -1,6 +1,7 @@
 import type { AuthProvider } from "../auth-provider.js";
 import { RequestBudget } from "./budget.js";
-export type SearchType = "web" | "image" | "video" | "news" | "discover" | "googleNews";
+import { type AnalyticsFilterList } from "./analytics-rules.js";
+export type SearchType = "web" | "image" | "video" | "news" | "discover" | "googleNews" | "webMultimodal";
 export type DataState = "final" | "all" | "hourly_all";
 export interface AnalyticsFilter {
     dimension: string;
@@ -12,6 +13,7 @@ export interface AnalyticsQuery {
     endDate: string;
     dimensions: string[];
     filters?: AnalyticsFilter[];
+    filterLists?: AnalyticsFilterList[];
     searchType?: SearchType;
     dataState?: DataState;
     rowLimit?: number;

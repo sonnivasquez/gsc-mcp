@@ -148,6 +148,16 @@ class FetchGscDataSource {
     async queryAnalytics(siteUrl, q) {
         this.checkSite(siteUrl);
         (0, analytics_rules_js_1.assertSearchAnalyticsRules)(q);
+        const dimensionFilterGroups = q.filters?.length || q.filterLists?.length
+            ? [{
+                    filters: q.filters?.length ? q.filters.map(({ dimension, operator, expression }) => ({
+                        dimension,
+                        operator,
+                        expression,
+                    })) : undefined,
+                    filterLists: q.filterLists,
+                }]
+            : undefined;
         const pageSize = Math.min(q.rowLimit ?? MAX_PAGE, MAX_PAGE);
         const maxFetch = q.maxFetchRows ?? 5_000;
         const rows = [];
@@ -162,17 +172,7 @@ class FetchGscDataSource {
                     startDate: q.startDate,
                     endDate: q.endDate,
                     dimensions: q.dimensions,
-                    dimensionFilterGroups: q.filters?.length
-                        ? [
-                            {
-                                filters: q.filters.map((f) => ({
-                                    dimension: f.dimension,
-                                    operator: f.operator,
-                                    expression: f.expression,
-                                })),
-                            },
-                        ]
-                        : undefined,
+                    dimensionFilterGroups,
                     type: q.searchType ?? "web",
                     ...(q.aggregationType ? { aggregationType: q.aggregationType } : {}),
                     dataState: q.dataState ?? "final",
@@ -197,7 +197,7 @@ class FetchGscDataSource {
                 return { rows, pagesFetched, truncated: true, upstreamAggregationType, metadata };
             rows.push(...page.slice(0, room));
             if (page.length < pageSize)
-                return { rows, pagesFetched, truncated: false, upstreamAggregationType, metadata };
+                return { rows, pagesFetched, truncated: page.length > room, upstreamAggregationType, metadata };
             if (rows.length >= maxFetch)
                 return { rows, pagesFetched, truncated: true, upstreamAggregationType, metadata };
             startRow += pageSize;

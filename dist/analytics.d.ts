@@ -1,4 +1,6 @@
 import { type SearchConsoleClient } from "./auth.js";
+import { type AnalyticsFilterList } from "./gsc/analytics-rules.js";
+import type { AnalyticsFilter, SearchType } from "./gsc/client.js";
 export interface SearchAnalyticsRow {
     keys: string[];
     clicks: number;
@@ -11,15 +13,13 @@ export interface QueryParams {
     endDate: string;
     dimensions: string[];
     dimensionFilterGroups?: Array<{
-        filters: Array<{
-            dimension: string;
-            operator: string;
-            expression: string;
-        }>;
+        groupType?: string;
+        filters?: AnalyticsFilter[];
+        filterLists?: AnalyticsFilterList[];
     }>;
     rowLimit?: number;
     maxTotalRows?: number;
-    type?: "web" | "image" | "video" | "news" | "discover" | "googleNews";
+    type?: SearchType;
     aggregationType?: string;
 }
 export declare function getDateRange(days: number): {

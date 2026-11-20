@@ -1,5 +1,10 @@
 # Changelog
 
+## Próximos cambios
+
+- `gsc_search_analytics` admite la clasificación de marca de Google, tráfico web multimodal y listas de países o dispositivos en una consulta.
+- La cobertura indica cuándo `maxFetchRows` descarta filas de la última página devuelta por Google.
+
 ## 1.1.0
 
 Fecha: 2026-10-28.

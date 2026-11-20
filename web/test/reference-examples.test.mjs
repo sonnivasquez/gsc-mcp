@@ -30,15 +30,15 @@ test('every published example matches the real MCP SDK tools/list input schema',
     await withClient({ name: 'web-reference-test', env: { GSC_SITE_URLS: 'https://example.com/,https://old.example.com/' } }, async (client, options) => {
       const { tools } = await client.listTools(undefined, options);
       const validator = new AjvJsonSchemaValidator();
+      const { assertSearchAnalyticsRules } = await import(pathToFileURL(join(build, 'gsc/analytics-rules.js')).href);
       for (const [key, example] of Object.entries(examples)) {
         const tool = tools.find((entry) => entry.name === example.name);
         assert.ok(tool, `${key}: tool exists`);
         const result = validator.getValidator(tool.inputSchema)(example.arguments);
         assert.ok(result.valid, `${key}: ${result.errorMessage}`);
         for (const field of Object.keys(example.arguments)) assert.ok(field in tool.inputSchema.properties, `${key}: exposed field ${field}`);
+        if (example.name === 'gsc_search_analytics') assert.doesNotThrow(() => assertSearchAnalyticsRules(example.arguments), key);
       }
-      const { assertSearchAnalyticsRules } = await import(pathToFileURL(join(build, 'gsc/analytics-rules.js')).href);
-      for (const key of ['hourly', 'appearance', 'appearanceDetail']) assert.doesNotThrow(() => assertSearchAnalyticsRules(examples[key].arguments));
     });
   } finally {
     // The runner waits for transport close; retain the build if close was not confirmed.

@@ -617,7 +617,7 @@
   },
   {
     "name": "gsc_search_analytics",
-    "description": "Flexible performance query with explicit coverage. Sort applies to the retrieved dataset, not to all Google data.",
+    "description": "Flexible performance query with explicit coverage. Supports Google brand classification, web multimodal results, and country/device filter lists. Sort applies to the retrieved dataset, not to all Google data.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -638,7 +638,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Subset of date, page, query, country, device, hour, searchAppearance (appearance alone)"
+          "description": "Subset of date, page, query, country, device, hour, searchAppearance (appearance alone), brandedClassification"
         },
         "filters": {
           "type": "array",
@@ -661,11 +661,41 @@
               "expression"
             ],
             "additionalProperties": false
-          }
+          },
+          "description": "brandedClassification requires equals with BRANDED or NON_BRANDED. Grouping or filtering by brand excludes query filters."
+        },
+        "filterLists": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "dimension": {
+                "type": "string",
+                "enum": [
+                  "country",
+                  "device"
+                ]
+              },
+              "expressions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "dimension",
+              "expressions"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "description": "Exact country (ISO alpha-3) or device (DESKTOP, MOBILE, TABLET) values. OR within each list, AND across conditions. Keep each dimension in either filters or filterLists."
         },
         "searchType": {
           "type": "string",
-          "description": "web, image, video, news, discover, googleNews (default web)"
+          "description": "web, image, video, news, discover, googleNews, webMultimodal (default web)"
         },
         "aggregationType": {
           "type": "string",
