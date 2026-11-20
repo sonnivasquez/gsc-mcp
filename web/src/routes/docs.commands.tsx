@@ -107,7 +107,7 @@ function CommandsPage() {
       <H2 id="audits">On-demand audits</H2>
       <p className="mt-3 text-base leading-relaxed text-ink-soft">See the <a href="/docs/audits" className="text-cobalt-deep underline">audit guide</a> for inputs, limits, continuation, and evidence. The <a href="/docs/history" className="text-cobalt-deep underline">history guide</a> covers optional local records and snapshots.</p>
       <H2 id="analytics">Analytics dimensions</H2>
-      <p className="mt-3 text-base leading-relaxed text-ink-soft">See <a href="/docs/analytics" className="text-cobalt-deep underline">analytics and timelines</a> for hourly data, search appearances, report rules, and coverage.</p>
+      <p className="mt-3 text-base leading-relaxed text-ink-soft">See <a href="/docs/analytics" className="text-cobalt-deep underline">analytics and timelines</a> for brand classification, country and device lists, web multimodal reports, hourly data, and search appearances.</p>
 
       <H2 id="doctor">Diagnose the installation</H2>
       <CmdBlock

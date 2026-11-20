@@ -45,3 +45,11 @@ Se mantiene la licencia Apache-2.0. Copyright Sonni Vasquez ([NOTICE](NOTICE)).
 
 Estas funciones requieren 1.1.0 o posterior y reiniciar el cliente MCP tras
 actualizar. La versión instalada se verifica con `gsc --version`.
+
+## Funcionalidades de 1.2.0
+
+- Clasificación de búsquedas de marca y sin marca en propiedades elegibles.
+- Rendimiento web multimodal de Google Lens, Rodea para Buscar y búsquedas con imágenes.
+- Listas de países y dispositivos para acotar una consulta de Search Analytics.
+
+[Parámetros y ejemplos](docs/tools.md#novedades-de-search-analytics).

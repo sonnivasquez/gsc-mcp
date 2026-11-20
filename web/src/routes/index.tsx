@@ -234,6 +234,15 @@ function HomePage() {
             </div>
           ))}
         </div>
+        <div className="home-tool-group mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+          <div className="min-w-0 flex-1 basis-80">
+            <h3>Search Analytics in 1.2.0</h3>
+            <p>Compare branded and non-branded traffic, report on Google Lens and Circle to Search, and filter by multiple countries or devices.</p>
+          </div>
+          <Link to="/docs/analytics" className="home-text-link">
+            See Search Analytics examples<ArrowRight aria-hidden="true" />
+          </Link>
+        </div>
       </section>
 
       <section className="home-container home-question-section" aria-label="Copy an example question"><QuestionLibrary value={question} onValueChange={setQuestion} /></section>
