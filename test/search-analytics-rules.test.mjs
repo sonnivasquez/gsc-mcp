@@ -104,6 +104,42 @@ test('the stdio MCP tool rejects multimodal query grouping and filtering before 
   });
 });
 
+test('analytics failures report the Google attempts spent by the request', async () => {
+  const input = { ...range, siteUrl: SITE, dimensions: ['page'] };
+  const cases = [
+    { status: 400, code: 'INVALID_ARGUMENT', retryable: false, attempts: 1, priorAttempts: 1 },
+    { status: 429, code: 'RATE_LIMITED', retryable: true, attempts: 2, priorAttempts: 0 },
+  ];
+  for (const expected of cases) {
+    const budget = new RequestBudget(expected.attempts + expected.priorAttempts);
+    if (expected.priorAttempts) await budget.run(async () => undefined);
+    let calls = 0;
+    const deps = {
+      provider,
+      allowlist: [SITE],
+      budget,
+      fetchImpl: async () => {
+        calls++;
+        return Response.json({ error: { message: 'fixture provider error' } }, {
+          status: expected.status,
+          headers: { 'retry-after': '0' },
+        });
+      },
+    };
+    const rejected = await gscSearchAnalytics({ ...input, searchType: 'webMultimodal', dimensions: ['query'] }, deps);
+    assert.equal(rejected.error.code, 'INVALID_ARGUMENT');
+    assert.equal(rejected.meta.googleDataAttempts, 0);
+    assert.equal(calls, 0);
+
+    const failure = await gscSearchAnalytics(input, deps);
+    assert.equal(failure.status, 'error');
+    assert.equal(failure.error.code, expected.code);
+    assert.equal(failure.error.retryable, expected.retryable);
+    assert.equal(calls, expected.attempts);
+    assert.equal(failure.meta.googleDataAttempts, expected.attempts);
+  }
+});
+
 test('brand grouping and exact filter preserve query grouping, key order and metrics', async () => {
   const dimensions = ['query', 'brandedClassification'];
   const filters = [filter('brandedClassification', 'BRANDED')];

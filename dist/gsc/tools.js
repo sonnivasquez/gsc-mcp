@@ -247,9 +247,11 @@ function registerDataset(deps, dimensions, rows) {
 }
 async function gscSearchAnalytics(input, deps = {}) {
     const fetchedAt = new Date().toISOString();
+    const budget = deps.budget ?? new budget_js_1.RequestBudget();
+    const initialAttempts = budget.attemptsUsed;
     try {
         const { query, sortBy, desc, limit } = validatedQuery(input);
-        const { ds, budget } = source(deps);
+        const { ds } = source({ ...deps, budget });
         const result = await ds.queryAnalytics(input.siteUrl, query);
         const sorted = sortRows(result.rows, sortBy, desc);
         const returned = sorted.slice(0, limit);
@@ -292,7 +294,7 @@ async function gscSearchAnalytics(input, deps = {}) {
         });
     }
     catch (err) {
-        return (0, envelope_js_1.fail)(err);
+        return (0, envelope_js_1.fail)(err, { attempts: budget.attemptsUsed - initialAttempts });
     }
 }
 async function inspectOne(ds, siteUrl, url, languageCode) {

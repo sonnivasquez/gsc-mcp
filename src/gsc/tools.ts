@@ -308,9 +308,11 @@ function registerDataset(deps: ToolDeps, dimensions: string[], rows: AnalyticsRo
 }
 export async function gscSearchAnalytics(input: SearchAnalyticsInput, deps: ToolDeps = {}): Promise<ToolEnvelope<unknown>> {
   const fetchedAt = new Date().toISOString();
+  const budget = deps.budget ?? new RequestBudget();
+  const initialAttempts = budget.attemptsUsed;
   try {
     const { query, sortBy, desc, limit } = validatedQuery(input);
-    const { ds, budget } = source(deps);
+    const { ds } = source({ ...deps, budget });
     const result = await ds.queryAnalytics(input.siteUrl, query);
     const sorted = sortRows(result.rows, sortBy, desc);
     const returned = sorted.slice(0, limit);
@@ -355,7 +357,7 @@ export async function gscSearchAnalytics(input: SearchAnalyticsInput, deps: Tool
       }
     );
   } catch (err) {
-    return fail(err);
+    return fail(err, { attempts: budget.attemptsUsed - initialAttempts });
   }
 }
 
