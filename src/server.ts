@@ -37,6 +37,7 @@ import { genaiConversationQueries } from "./tools/genai-conversation-queries.js"
 import { imagePageAudit } from "./tools/image-page-audit.js";
 import { checkUpdateImpact } from "./tools/update-impact.js";
 import { registerAudits } from "./audits/register.js";
+import { createReadToolRegistrar } from "./mcp-update-notice.js";
 import { toolDescription } from "./tool-descriptions.js";
 import { analyticsFilterListsSchema } from "./gsc/analytics-rules.js";
 
@@ -80,6 +81,7 @@ const IMAGE_NOTE = phrase([
 export async function serve(opts: ServeOpts): Promise<void> {
   const server = new McpServer({ name: "gsc-mcp", version: CLI_VERSION });
   registerPrompts(server);
+  const readTool = createReadToolRegistrar(server);
   registerAudits(server);
 
   server.tool(
@@ -116,7 +118,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async ({ sitemap_url, site_url }) => textResult(await submitSitemap(sitemap_url, site_url)),
   );
 
-  server.tool(
+  readTool(
     "gsc_genai_conversation_queries",
     toolDescription("gsc_genai_conversation_queries", GUARDRAIL_SUFFIX + VISUAL_SUFFIX + POSITION_CAVEAT),
     {
@@ -164,7 +166,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     },
   );
 
-  server.tool(
+  readTool(
     "gsc_image_page_audit",
     toolDescription("gsc_image_page_audit", GUARDRAIL_SUFFIX + VISUAL_SUFFIX),
     {
@@ -218,14 +220,14 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async () => textResult(gscCapabilities()),
   );
 
-  server.tool(
+  readTool(
     "gsc_list_sites",
     toolDescription("gsc_list_sites"),
     {},
     async () => textResult(await gscListSites()),
   );
 
-  server.tool(
+  readTool(
     "gsc_search_analytics",
     toolDescription("gsc_search_analytics"),
     {
@@ -255,7 +257,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscSearchAnalytics(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_inspect_urls",
     toolDescription("gsc_inspect_urls"),
     {
@@ -266,7 +268,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscInspectUrls(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_list_sitemaps",
     toolDescription("gsc_list_sitemaps"),
     { siteUrl: described("Exact GSC property identifier") },
@@ -285,7 +287,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscGetDataset(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_performance_overview",
     toolDescription("gsc_performance_overview"),
     {
@@ -302,7 +304,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscPerformanceOverview(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_compare_periods",
     toolDescription("gsc_compare_periods"),
     {
@@ -320,7 +322,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscComparePeriods(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_page_queries",
     toolDescription("gsc_page_queries"),
     {
@@ -335,7 +337,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscPageQueries(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_query_pages",
     toolDescription("gsc_query_pages"),
     {
@@ -350,7 +352,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscQueryPages(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_find_opportunities",
     toolDescription("gsc_find_opportunities"),
     {
@@ -375,7 +377,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscFindOpportunities(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_detect_cannibalization",
     toolDescription("gsc_detect_cannibalization"),
     {
@@ -395,7 +397,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscDetectCannibalization(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_analyze_segments",
     toolDescription("gsc_analyze_segments"),
     {
@@ -428,7 +430,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscExportDataset(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_analyze_traffic_drop",
     toolDescription("gsc_analyze_traffic_drop"),
     {
@@ -445,7 +447,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscAnalyzeTrafficDrop(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_content_decay",
     toolDescription("gsc_content_decay"),
     {
@@ -464,7 +466,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscContentDecay(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_check_alerts",
     toolDescription("gsc_check_alerts"),
     {
@@ -484,7 +486,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscCheckAlerts(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_content_candidates",
     toolDescription("gsc_content_candidates"),
     {
@@ -501,7 +503,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscContentCandidates(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_content_recommendations",
     toolDescription("gsc_content_recommendations"),
     {
@@ -517,7 +519,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscContentRecommendations(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_multi_site_overview",
     toolDescription("gsc_multi_site_overview"),
     {
@@ -547,7 +549,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscGenerateReport(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_verify_claim",
     toolDescription("gsc_verify_claim"),
     {
@@ -566,7 +568,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscVerifyClaim(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_compare_web_image",
     toolDescription("gsc_compare_web_image"),
     {
@@ -581,7 +583,7 @@ export async function serve(opts: ServeOpts): Promise<void> {
     async (args) => textResult(await gscCompareWebImage(args)),
   );
 
-  server.tool(
+  readTool(
     "gsc_check_update_impact",
     toolDescription("gsc_check_update_impact"),
     {

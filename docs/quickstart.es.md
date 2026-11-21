@@ -108,6 +108,13 @@ gsc update
 
 Para comparar la versión instalada con la última del registro sin instalar nada, ejecuta `gsc update --check`. `gsc doctor --online` muestra la misma comparación.
 
+En instalaciones globales con npm o Bun, `gsc setup` y `gsc auth login` pueden
+ofrecerte una actualización en una terminal interactiva antes de continuar.
+GSC MCP también puede avisarte una vez por versión durante una consulta de
+lectura. Si eliges actualizar desde el chat, ejecuta el comando sugerido
+`gsc update --to <versión>`, reconecta el servidor y repite la consulta. Define
+`GSC_UPDATE_CHECK=0` en el entorno del CLI o del MCP para desactivar la detección automática.
+
 Vuelve a instalar con tu gestor preferido para actualizar:
 
 ```bash

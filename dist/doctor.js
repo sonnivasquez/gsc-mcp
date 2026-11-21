@@ -33,14 +33,16 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.REGISTRY_VERSION_CACHE_TTL_MS = exports.REGISTRY_VERSION_CACHE_FILE = exports.ALLOW_ALL_DISPLAY = exports.ALLOWLIST_ERROR_DETAIL = exports.DOCTOR_USAGE = exports.CLI_VERSION = void 0;
+exports.ALLOW_ALL_DISPLAY = exports.ALLOWLIST_ERROR_DETAIL = exports.DOCTOR_USAGE = exports.CLI_VERSION = exports.REGISTRY_VERSION_CACHE_TTL_MS = exports.REGISTRY_VERSION_CACHE_FILE = void 0;
 exports.runDoctor = runDoctor;
 exports.runDoctorOnline = runDoctorOnline;
 const catalog_js_1 = require("./gsc/catalog.js");
 const fs = __importStar(require("node:fs"));
-const path = __importStar(require("node:path"));
 const profiles_js_1 = require("./profiles.js");
 const registry_version_js_1 = require("./registry-version.js");
+var registry_version_js_2 = require("./registry-version.js");
+Object.defineProperty(exports, "REGISTRY_VERSION_CACHE_FILE", { enumerable: true, get: function () { return registry_version_js_2.REGISTRY_VERSION_CACHE_FILE; } });
+Object.defineProperty(exports, "REGISTRY_VERSION_CACHE_TTL_MS", { enumerable: true, get: function () { return registry_version_js_2.REGISTRY_VERSION_CACHE_TTL_MS; } });
 const oauth_js_1 = require("./oauth.js");
 const access_js_1 = require("./access.js");
 const auth_provider_js_1 = require("./auth-provider.js");
@@ -153,40 +155,6 @@ function runDoctor() {
     const failed = checks.filter((c) => !c.ok).length;
     return { ok: checks.length - failed, failed, checks };
 }
-/**
- * Registry version cache: a best-effort 1-hour file under dataDir(),
- * mirroring the update-feed cache. Fresh entries skip the registry GET on
- * repeated doctor runs; stale or missing entries are bypassed, never
- * trusted. A failed write never fails the check.
- */
-exports.REGISTRY_VERSION_CACHE_FILE = "registry-version-cache.json";
-exports.REGISTRY_VERSION_CACHE_TTL_MS = 3600 * 1000;
-function readRegistryVersionCache(cacheDir) {
-    try {
-        const raw = fs.readFileSync(path.join(cacheDir, exports.REGISTRY_VERSION_CACHE_FILE), "utf8");
-        const parsed = JSON.parse(raw);
-        if (parsed === null || typeof parsed !== "object" || !("latest" in parsed) || !("fetchedAt" in parsed)) {
-            return null;
-        }
-        const { latest, fetchedAt } = parsed;
-        if (typeof latest !== "string" || latest.trim() === "" || typeof fetchedAt !== "string")
-            return null;
-        return { fetchedAt, latest };
-    }
-    catch {
-        return null;
-    }
-}
-function writeRegistryVersionCache(cacheDir, latest, nowMs) {
-    try {
-        fs.mkdirSync(cacheDir, { recursive: true });
-        const payload = { fetchedAt: new Date(nowMs).toISOString(), latest };
-        fs.writeFileSync(path.join(cacheDir, exports.REGISTRY_VERSION_CACHE_FILE), JSON.stringify(payload), "utf8");
-    }
-    catch {
-        // Cache is best-effort: a failed write never fails the check.
-    }
-}
 function formatVersionCheck(installed, latest) {
     const cmp = (0, registry_version_js_1.compareSemver)(installed, latest);
     if (cmp === null) {
@@ -206,18 +174,10 @@ function formatVersionCheck(installed, latest) {
  * timeout, and shape answers with a fixed reason class only.
  */
 async function resolveVersionCheck(opts) {
-    const cached = readRegistryVersionCache(opts.cacheDir);
-    if (cached !== null) {
-        const fetchedAt = Date.parse(cached.fetchedAt);
-        if (Number.isFinite(fetchedAt) && opts.nowMs - fetchedAt < exports.REGISTRY_VERSION_CACHE_TTL_MS) {
-            return formatVersionCheck(version_js_1.CLI_VERSION, cached.latest);
-        }
-    }
-    const result = await (0, registry_version_js_1.fetchRegistryLatest)(opts.fetchImpl, registry_version_js_1.REGISTRY_TIMEOUT_MS);
+    const result = await (0, registry_version_js_1.cachedRegistryLatest)(opts);
     if (!result.ok) {
         return { id: "version", ok: true, detail: `registry latest unknown (${result.reason}); retry later` };
     }
-    writeRegistryVersionCache(opts.cacheDir, result.latest, opts.nowMs);
     return formatVersionCheck(version_js_1.CLI_VERSION, result.latest);
 }
 /**

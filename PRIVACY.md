@@ -50,6 +50,15 @@ que excluyan tus datos del entrenamiento.
 Reglas de datos de Google: https://developers.google.com/terms/api-services-user-data-policy
 Esta página no afirma estado de verificación o aprobación.
 
+## Comprobación de actualizaciones
+
+Las instalaciones globales de npm y Bun pueden consultar el registro público de
+npm al usar el CLI interactivo o una consulta de lectura del MCP. Esa petición
+solo solicita la versión del paquete y no envía credenciales, propiedades ni
+datos de Search Console. El resultado se guarda en caché local durante una hora.
+Define `GSC_UPDATE_CHECK=0` en el entorno del CLI o del MCP para desactivar la
+comprobación automática.
+
 ## Contacto
 
 Mantenedor: Sonni Vasquez — https://sonnivasquez.com — https://github.com/sonnivasquez
