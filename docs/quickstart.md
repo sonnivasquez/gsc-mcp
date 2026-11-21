@@ -106,6 +106,12 @@ gsc update
 
 To compare the installed version against the latest release without installing, run `gsc update --check`. `gsc doctor --online` reports the same comparison.
 
+For global npm and Bun installations, interactive `gsc setup` and `gsc auth login`
+can offer an update before continuing. GSC MCP can also notify you once per
+version during a read request. If you choose to update from chat, run the
+suggested `gsc update --to <version>` command, reconnect the server, and retry.
+Set `GSC_UPDATE_CHECK=0` in the CLI or MCP environment to disable automatic checks.
+
 You can also install again with your preferred package manager to update:
 
 ```bash

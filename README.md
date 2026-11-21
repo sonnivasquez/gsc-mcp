@@ -239,6 +239,13 @@ When interpreting results:
 
 ## Update or uninstall
 
+On a global npm or Bun installation, `gsc setup` and `gsc auth login` can offer
+updates in an interactive terminal. GSC MCP also checks during read requests.
+Clients that support confirmation can ask before the request runs. Other
+clients receive the notice with the result. To update from a chat notice,
+run the suggested `gsc update --to <version>` command and reconnect the MCP server.
+Set `GSC_UPDATE_CHECK=0` to turn off automatic checks.
+
 Check for a newer release without installing it:
 
 ```bash

@@ -2,6 +2,8 @@
 export declare const REGISTRY_URL = "https://registry.npmjs.org/@sonnivasquez/gsc-mcp";
 /** Single bounded GET, same budget as the update-feed fetch. */
 export declare const REGISTRY_TIMEOUT_MS = 10000;
+export declare const REGISTRY_VERSION_CACHE_FILE = "registry-version-cache.json";
+export declare const REGISTRY_VERSION_CACHE_TTL_MS: number;
 /** Fixed reason classes for an unknown registry answer; raw text never escapes. */
 export type RegistryUnknownReason = "timeout" | "network_error" | "unexpected-response";
 export type RegistryLatestResult = {
@@ -11,6 +13,7 @@ export type RegistryLatestResult = {
     ok: false;
     reason: RegistryUnknownReason;
 };
+export declare function isStableVersion(value: unknown): value is string;
 /** Strict numeric semver core, or null when the string is not a version. */
 export declare function parseSemver(version: string): [number, number, number] | null;
 /** Numeric semver comparison, or null when either side is unparseable. */
@@ -24,3 +27,10 @@ export declare function classifyRegistryError(err: unknown): "timeout" | "networ
  * `unexpected-response`; non-2xx answers report `network_error`.
  */
 export declare function fetchRegistryLatest(fetchImpl: typeof fetch, timeoutMs?: number): Promise<RegistryLatestResult>;
+/** Best-effort shared cache. Readers see a complete record or a cache miss. */
+export declare function cachedRegistryLatest(opts: {
+    fetchImpl: typeof fetch;
+    cacheDir: string;
+    nowMs: number;
+    timeoutMs?: number;
+}): Promise<RegistryLatestResult>;

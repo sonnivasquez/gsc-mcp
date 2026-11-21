@@ -1,3 +1,4 @@
+export { REGISTRY_VERSION_CACHE_FILE, REGISTRY_VERSION_CACHE_TTL_MS } from "./registry-version.js";
 import type { AuthProvider } from "./auth-provider.js";
 import { CLI_VERSION } from "./version.js";
 /** Re-exported single source of truth; canonical definition lives in version.ts. */
@@ -33,14 +34,6 @@ export interface DoctorOnlineDeps {
     /** Clock override (tests); defaults to Date.now. */
     now?: () => number;
 }
-/**
- * Registry version cache: a best-effort 1-hour file under dataDir(),
- * mirroring the update-feed cache. Fresh entries skip the registry GET on
- * repeated doctor runs; stale or missing entries are bypassed, never
- * trusted. A failed write never fails the check.
- */
-export declare const REGISTRY_VERSION_CACHE_FILE = "registry-version-cache.json";
-export declare const REGISTRY_VERSION_CACHE_TTL_MS: number;
 /**
  * Bounded online diagnostics: the offline checks plus exactly one `sites.list`
  * call through the shared provider (the same provider serve uses: cached

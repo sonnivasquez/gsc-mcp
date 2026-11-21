@@ -159,13 +159,13 @@ test("cli rejects unknown commands with exit 2", { timeout: CLI_TEST_TIMEOUT_MS 
 test("cli --help documents update", { timeout: CLI_TEST_TIMEOUT_MS }, () => {
   const r = spawnSync(process.execPath, [entry, "--help"], { encoding: "utf8" });
   assert.equal(r.status, 0);
-  assert.match(r.stdout, /gsc update \[--check\]/);
+  assert.match(r.stdout, /gsc update \[--check \| --to <ver>\]/);
 });
 
 test("cli update --help shows usage with exit 0", { timeout: CLI_TEST_TIMEOUT_MS }, () => {
   const r = spawnSync(process.execPath, [entry, "update", "--help"], { encoding: "utf8" });
   assert.equal(r.status, 0);
-  assert.match(r.stdout, /Usage: gsc update \[--check\]/);
+  assert.match(r.stdout, /Usage: gsc update \[--check \| --to <version>\]/);
 });
 
 test("cli update rejects unknown flags without echoing them", { timeout: CLI_TEST_TIMEOUT_MS }, () => {

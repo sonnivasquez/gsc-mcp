@@ -1,8 +1,8 @@
 import { CANONICAL_TOOLS } from "./gsc/catalog.js";
 import * as fs from "node:fs";
-import * as path from "node:path";
 import { dataDir, envAllowlist, isAllowAllAllowlist } from "./profiles.js";
-import { compareSemver, fetchRegistryLatest, REGISTRY_TIMEOUT_MS } from "./registry-version.js";
+import { cachedRegistryLatest, compareSemver } from "./registry-version.js";
+export { REGISTRY_VERSION_CACHE_FILE, REGISTRY_VERSION_CACHE_TTL_MS } from "./registry-version.js";
 import { cachedTokenPath } from "./oauth.js";
 import { INVALID_ACCESS_MODE, resolveAccessPolicy } from "./access.js";
 import { fetchSitesList, getAuthProvider } from "./auth-provider.js";
@@ -149,45 +149,6 @@ export interface DoctorOnlineDeps {
   now?: () => number;
 }
 
-/**
- * Registry version cache: a best-effort 1-hour file under dataDir(),
- * mirroring the update-feed cache. Fresh entries skip the registry GET on
- * repeated doctor runs; stale or missing entries are bypassed, never
- * trusted. A failed write never fails the check.
- */
-export const REGISTRY_VERSION_CACHE_FILE = "registry-version-cache.json";
-export const REGISTRY_VERSION_CACHE_TTL_MS = 3600 * 1000;
-
-interface RegistryVersionCache {
-  fetchedAt: string;
-  latest: string;
-}
-
-function readRegistryVersionCache(cacheDir: string): RegistryVersionCache | null {
-  try {
-    const raw = fs.readFileSync(path.join(cacheDir, REGISTRY_VERSION_CACHE_FILE), "utf8");
-    const parsed: unknown = JSON.parse(raw);
-    if (parsed === null || typeof parsed !== "object" || !("latest" in parsed) || !("fetchedAt" in parsed)) {
-      return null;
-    }
-    const { latest, fetchedAt } = parsed;
-    if (typeof latest !== "string" || latest.trim() === "" || typeof fetchedAt !== "string") return null;
-    return { fetchedAt, latest };
-  } catch {
-    return null;
-  }
-}
-
-function writeRegistryVersionCache(cacheDir: string, latest: string, nowMs: number): void {
-  try {
-    fs.mkdirSync(cacheDir, { recursive: true });
-    const payload: RegistryVersionCache = { fetchedAt: new Date(nowMs).toISOString(), latest };
-    fs.writeFileSync(path.join(cacheDir, REGISTRY_VERSION_CACHE_FILE), JSON.stringify(payload), "utf8");
-  } catch {
-    // Cache is best-effort: a failed write never fails the check.
-  }
-}
-
 function formatVersionCheck(installed: string, latest: string): DoctorCheck {
   const cmp = compareSemver(installed, latest);
   if (cmp === null) {
@@ -208,18 +169,10 @@ function formatVersionCheck(installed: string, latest: string): DoctorCheck {
  * timeout, and shape answers with a fixed reason class only.
  */
 async function resolveVersionCheck(opts: { fetchImpl: typeof fetch; cacheDir: string; nowMs: number }): Promise<DoctorCheck> {
-  const cached = readRegistryVersionCache(opts.cacheDir);
-  if (cached !== null) {
-    const fetchedAt = Date.parse(cached.fetchedAt);
-    if (Number.isFinite(fetchedAt) && opts.nowMs - fetchedAt < REGISTRY_VERSION_CACHE_TTL_MS) {
-      return formatVersionCheck(CLI_VERSION, cached.latest);
-    }
-  }
-  const result = await fetchRegistryLatest(opts.fetchImpl, REGISTRY_TIMEOUT_MS);
+  const result = await cachedRegistryLatest(opts);
   if (!result.ok) {
     return { id: "version", ok: true, detail: `registry latest unknown (${result.reason}); retry later` };
   }
-  writeRegistryVersionCache(opts.cacheDir, result.latest, opts.nowMs);
   return formatVersionCheck(CLI_VERSION, result.latest);
 }
 

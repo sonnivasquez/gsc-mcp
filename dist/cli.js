@@ -19,7 +19,7 @@ exports.HELP_TEXT = `gsc ${version_js_1.CLI_VERSION} — Google Search Console M
                                        Deprecated: remove legacy GSC_ENABLE_WRITE
   gsc doctor [--online]                Offline check: runtime, paths, env, auth state
                                      (--online adds one bounded sites.list call)
-  gsc update [--check]                Assisted update: reinstall the latest release
+  gsc update [--check | --to <ver>]   Check for or install a release
   gsc auth login                        Connect Google in this terminal (browser)
   gsc auth status [--online]            Show session state without secrets
   gsc auth logout                       Delete the local OAuth session
@@ -37,6 +37,7 @@ Environment:
   GSC_ENABLE_WRITE=1          Legacy write opt-in (only without GSC_ACCESS_MODE)
   GSC_SITE_URLS               JSON array of exact property IDs, or "all" alone for all current + future properties (explicit opt-in; legacy comma list read)
   GSC_DATA_DIR                Local state dir (default ~/.gsc-mcp)
+  GSC_UPDATE_CHECK=0          Turn off automatic update checks
   GSC_KEY_FILE                Service account JSON (service_account mode)
   GSC_SCOPES=readonly|full    Legacy scope tier (only without GSC_ACCESS_MODE)
 `;
@@ -85,11 +86,18 @@ async function runCli(argv, handlers) {
                     console.error("auth: expected login|status|logout|revoke. See --help.");
                     return 2;
                 }
-                const { authLogin, authLogout, authRevoke, authStatusOffline, authStatusOnline } = await import("./auth-provider.js");
                 if (sub === "login") {
+                    if (argv.length === 2 && process.stdin.isTTY && process.stdout.isTTY) {
+                        const { offerTerminalUpdate } = await import("./update-notice.js");
+                        const resumed = await offerTerminalUpdate(argv);
+                        if (resumed !== undefined)
+                            return resumed;
+                    }
+                    const { authLogin } = await import("./auth-provider.js");
                     console.log(await authLogin());
                     return 0;
                 }
+                const { authLogout, authRevoke, authStatusOffline, authStatusOnline } = await import("./auth-provider.js");
                 if (sub === "status") {
                     const online = argv.includes("--online");
                     console.log(JSON.stringify(online ? await authStatusOnline() : authStatusOffline(), null, 2));

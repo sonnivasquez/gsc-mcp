@@ -695,6 +695,12 @@ export async function runSetup(argv: string[], deps: RunSetupDeps = {}): Promise
     return 0;
   }
 
+  if (!opts.dryRun && !opts.yes && process.stdin.isTTY && process.stdout.isTTY) {
+    const { offerTerminalUpdate } = await import("./update-notice.js");
+    const resumed = await offerTerminalUpdate(["setup", ...argv], locale);
+    if (resumed !== undefined) return resumed;
+  }
+
   const verbose = opts.verbose === true;
 
   console.log(translateSetup(locale, "welcomeTitle"));
