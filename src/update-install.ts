@@ -91,6 +91,11 @@ export async function findGlobalInstallation(file: string): Promise<GlobalInstal
   if (!entrypoint) return undefined;
   const modules = path.resolve(entrypoint, "../../../..");
   if (path.basename(modules) !== "node_modules") return "not-global";
+  const cacheEntry = path.dirname(modules);
+  // npm exec installs into _npx/<16-hex hash>/node_modules under its cache.
+  if (path.basename(path.dirname(cacheEntry)) === "_npx" && /^[0-9a-f]{16}$/.test(path.basename(cacheEntry))) {
+    return "not-global";
+  }
   if (!matchesEntrypoint(modules, entrypoint)) return undefined;
 
   const npm = npmCommand();
@@ -131,10 +136,12 @@ export function installVersion(installation: GlobalInstallation, latest: string,
     const order = typeof current === "string" ? compareSemver(current, latest) : null;
     if (order === null || order > 0) return "changed";
     if (order < 0 || current !== latest) {
+      const artifact = `https://registry.npmjs.org/${UPDATE_PACKAGE_SPEC}/-/gsc-mcp-${latest}.tgz`;
       const args = [
         ...command.args, "install", "--global", "--ignore-scripts",
         "--registry=https://registry.npmjs.org/",
-        `https://registry.npmjs.org/${UPDATE_PACKAGE_SPEC}/-/gsc-mcp-${latest}.tgz`,
+        // A named tarball replaces Bun's existing registry dependency under the same key.
+        installation.manager === "bun" ? `${UPDATE_PACKAGE_SPEC}@${artifact}` : artifact,
       ];
       if (installation.manager === "npm") {
         args.push("--prefix", installation.prefix, "--no-audit", "--no-fund");
